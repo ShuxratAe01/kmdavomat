@@ -15,7 +15,16 @@ let state = {
   month: null,
   today: null,
   calendar: null,
-  config: { maxVideoMb: 60, maxVideoSeconds: 30, cameraFacing: 'user', allowMultiplePerDay: false },
+  config: {
+    maxVideoMb: 60,
+    maxVideoSeconds: 30,
+    cameraFacing: 'user',
+    videoSize: 640,
+    videoBitrateKbps: 1200,
+    audioBitrateKbps: 64,
+    videoFps: 30,
+    allowMultiplePerDay: false,
+  },
   pickedBlob: null,
   pickedName: '',
 };
@@ -26,7 +35,9 @@ async function init() {
   try {
     const [me, cfg] = await Promise.all([api('/api/auth/me'), api('/api/config')]);
     state.user = me.user;
-    state.config = cfg;
+    // Butunlay almashtirmaymiz: serverda yo'q sozlama standart qiymatida qolsin,
+    // aks holda undefined qiymatlar kamera va yozuvchini buzadi.
+    state.config = { ...state.config, ...cfg };
   } catch {
     return;
   }
@@ -220,8 +231,6 @@ let recorder = null;
 let chunks = [];
 let timerId = null;
 
-const ROUND_SIZE = 480; // yoziladigan kvadrat videoning tomoni (piksel)
-
 /**
  * Kameradan kelayotgan tasvirning o'rtasidan kvadrat qirqib,
  * doimiy ravishda canvasga chizadi. Telegram'dagi yumaloq video
@@ -230,10 +239,15 @@ const ROUND_SIZE = 480; // yoziladigan kvadrat videoning tomoni (piksel)
 function makeSquareStream(video, audioTrack) {
   if (typeof document.createElement('canvas').captureStream !== 'function') return null;
 
+  const size = state.config.videoSize;
   const canvas = document.createElement('canvas');
-  canvas.width = ROUND_SIZE;
-  canvas.height = ROUND_SIZE;
-  const ctx = canvas.getContext('2d');
+  canvas.width = size;
+  canvas.height = size;
+
+  const ctx = canvas.getContext('2d', { alpha: false });
+  // Kamera tasviri kattaroq bo'lgani uchun kichraytirganda sifat muhim
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
 
   const draw = () => {
     const vw = video.videoWidth;
@@ -243,14 +257,14 @@ function makeSquareStream(video, audioTrack) {
       ctx.drawImage(
         video,
         (vw - side) / 2, (vh - side) / 2, side, side, // manbadan o'rtadagi kvadrat
-        0, 0, ROUND_SIZE, ROUND_SIZE
+        0, 0, size, size
       );
     }
     drawFrame = requestAnimationFrame(draw);
   };
   draw();
 
-  const stream = canvas.captureStream(30);
+  const stream = canvas.captureStream(state.config.videoFps);
   if (audioTrack) stream.addTrack(audioTrack);
   return stream;
 }
@@ -312,14 +326,22 @@ async function startCamera() {
 
   try {
     mediaStream = await navigator.mediaDevices.getUserMedia({
-      // Kvadrat so'raymiz — yumaloq video uchun eng mosi
+      // Kvadrat so'raymiz. Kerakligidan kattaroq olamiz — kichraytirilganda
+      // tasvir tiniqroq chiqadi.
       video: {
         facingMode: state.config.cameraFacing,
-        width: { ideal: 720 },
-        height: { ideal: 720 },
+        width: { ideal: state.config.videoSize * 1.5 },
+        height: { ideal: state.config.videoSize * 1.5 },
         aspectRatio: { ideal: 1 },
+        frameRate: { ideal: state.config.videoFps },
       },
-      audio: true,
+      // Nutq uchun: aks-sado va shovqin tozalanadi, ovoz tenglashtiriladi
+      audio: {
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: true,
+        channelCount: 1, // mono — nutqqa yetarli, fayl kichikroq
+      },
     });
   } catch (err) {
     // So'ralgan kamera yo'q bo'lsa — istalgan kamera bilan qayta urinamiz
@@ -415,9 +437,24 @@ function bindUpload() {
     }
     const source = squareStream || mediaStream;
 
-    const types = ['video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm'];
+    // Kodek tanlash: mp4/H.264 hamma joyda ochiladi, VP9 esa yaxshi siqadi.
+    // Ikkalasi ham bo'lmasa VP8 ga tushamiz.
+    const types = [
+      'video/mp4;codecs=avc1.42E01E,mp4a.40.2',
+      'video/mp4',
+      'video/webm;codecs=vp9,opus',
+      'video/webm;codecs=vp8,opus',
+      'video/webm',
+    ];
     const mimeType = types.find((t) => MediaRecorder.isTypeSupported(t)) || '';
-    recorder = new MediaRecorder(source, mimeType ? { mimeType } : undefined);
+
+    // Oqim tezligini o'zimiz belgilaymiz — brauzerning standarti (~2.5 Mbit/s)
+    // bunday kichik kvadrat uchun ortiqcha, fayl bekorga kattalashadi.
+    recorder = new MediaRecorder(source, {
+      ...(mimeType ? { mimeType } : {}),
+      videoBitsPerSecond: state.config.videoBitrateKbps * 1000,
+      audioBitsPerSecond: state.config.audioBitrateKbps * 1000,
+    });
     recorder.ondataavailable = (e) => e.data.size && chunks.push(e.data);
     recorder.onstop = () => {
       const type = recorder?.mimeType || mimeType || 'video/webm';

@@ -54,6 +54,10 @@ app.get('/api/config', (_req, res) => {
     maxVideoMb: config.maxVideoMb,
     maxVideoSeconds: config.maxVideoSeconds,
     cameraFacing: config.cameraFacing,
+    videoSize: config.videoSize,
+    videoBitrateKbps: config.videoBitrateKbps,
+    audioBitrateKbps: config.audioBitrateKbps,
+    videoFps: config.videoFps,
     allowMultiplePerDay: config.allowMultiplePerDay,
     tz: config.tz,
   });

@@ -118,6 +118,10 @@ cp .env.example .env
 | `TZ_NAME` | `Asia/Tashkent` | Sanalar shu mintaqa bo'yicha hisoblanadi |
 | `STORAGE` | `db` | `db` = SQLite ichida, `disk` = `uploads/` papkada |
 | `MAX_VIDEO_SECONDS` | `30` | Bitta video uchun maksimal davomiylik |
+| `VIDEO_SIZE` | `640` | Yumaloq videoning kvadrat tomoni (piksel) |
+| `VIDEO_BITRATE_KBPS` | `1200` | Video oqim tezligi — sifat/hajm muvozanati |
+| `AUDIO_BITRATE_KBPS` | `64` | Ovoz oqim tezligi (nutq uchun yetarli) |
+| `VIDEO_FPS` | `30` | Sekundiga kadrlar |
 | `CAMERA_FACING` | `user` | `user` = oldingi (selfi) kamera, `environment` = orqadagi |
 | `MAX_VIDEO_MB` | `60` | Bitta video uchun maksimal hajm |
 | `ALLOW_MULTIPLE_PER_DAY` | `false` | Kuniga bir nechta video yuborishga ruxsat |
@@ -167,13 +171,20 @@ Server va telefon bitta Wi-Fi tarmoqda bo'lsa, ishga tushirishda chiqadigan
 
 ### Yumaloq video (Telegram uslubida)
 
-Brauzer ichida yozilgan video **kvadrat** (480×480) qilib saqlanadi — xuddi Telegram’dagi
+Brauzer ichida yozilgan video **kvadrat** (640×640) qilib saqlanadi — xuddi Telegram’dagi
 yumaloq videolar kabi. Kameradan kelayotgan tasvirning o’rtasidan kvadrat qirqib olinadi,
 ekranda esa doira qilib ko’rsatiladi.
 
 - Yozayotganda jonli ko’rinish ham doira, selfi kamerada ko’zguga qaragandek aks etadi
 - Tayyor video bosilganda o’ynaydi, atrofida ko’k halqa vaqtni ko’rsatib aylanadi
 - Admin panelda **⤢ To’liq kadr** tugmasi bor — chetlari qirqilmagan holda ko’rish uchun
+
+**Hajmi va sifati.** Kamera 960×960 da olinib 640×640 ga kichraytiriladi — shunda tasvir
+tiniqroq chiqadi. Oqim tezligi 1200 kbit/s (video) va 64 kbit/s (ovoz) qilib belgilangan;
+brauzerning standarti (2500 + 128) bunday kichik kvadrat uchun ortiqcha edi. Natijada
+30 soniyalik video **~9,4 MB o’rniga ~4,5 MB** bo’ladi, aniqligi esa 480×480 dan 640×640 ga oshdi.
+Ovozda aks-sado va shovqin tozalanadi, mono yoziladi. Qiymatlarni `.env` dan o’zgartirasiz:
+`VIDEO_SIZE`, `VIDEO_BITRATE_KBPS`, `AUDIO_BITRATE_KBPS`, `VIDEO_FPS`.
 
 Galereyadan tanlangan yoki telefon kamerasida olingan video to’rtburchak bo’ladi —
 u ham doira ichida ko’rsatiladi, chetlari qirqiladi. To’liq kadrni admin ko’ra oladi.

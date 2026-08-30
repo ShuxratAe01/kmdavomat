@@ -126,6 +126,22 @@ a { color: var(--brand); }
   padding: 22px;
   box-shadow: var(--shadow);
   margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.today-info { min-width: 0; }
+
+/* O'ng tomondagi tashkilot logotipi */
+.today-logo {
+  flex: none;
+  width: 135px;
+  max-width: 34%;
+  height: auto;
+  /* Qorong'i fonda ajralib tursin */
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.35));
 }
 .today-label {
   font-size: 12px;
@@ -770,7 +786,9 @@ video { width: 100%; border-radius: var(--radius-sm); background: #000; display:
 @media (max-width: 560px) {
   .container { padding: 12px 12px 40px; }
   .card { padding: 15px; }
+  .today-card { padding: 18px; gap: 12px; }
   .today-date { font-size: 25px; }
+  .today-logo { width: 92px; }
   .day { font-size: 14px; }
   .calendar, .weekdays { gap: 5px; }
   .who strong { font-size: 13px; }

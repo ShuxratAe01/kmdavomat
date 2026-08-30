@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="uz">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Kirish — Davomat</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎥</text></svg>" />
+</head>
+<body>
+  <div class="login-wrap">
+    <form class="login-card" id="loginForm" autocomplete="on">
+      <div class="login-logo">🎥</div>
+      <h1>Davomat tizimi</h1>
+      <p class="sub">Hisobingizga kiring</p>
+
+      <div class="alert error" id="err" hidden></div>
+
+      <div class="field">
+        <label for="username">Login</label>
+        <input type="text" id="username" name="username" autocomplete="username"
+               autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="masalan: aliyev" required />
+      </div>
+
+      <div class="field">
+        <label for="password">Parol</label>
+        <input type="password" id="password" name="password" autocomplete="current-password"
+               placeholder="••••••••" required />
+      </div>
+
+      <button class="btn big" type="submit" id="submitBtn">Kirish</button>
+
+      <p class="small muted" style="text-align:center;margin:16px 0 0">
+        Login yoki parolni bilmasangiz administratorga murojaat qiling.
+      </p>
+    </form>
+  </div>
+
+  <script src="/js/login.js"></script>
+</body>
+</html>

@@ -1,0 +1,256 @@
+import express from 'express';
+import { db } from '../db.js';
+import { requireAdmin, hashPassword, destroyAllSessions } from '../auth.js';
+import { deleteVideoFile } from '../storage.js';
+import { dayStr, isDay, normalizeMonth, nowIso } from '../util/date.js';
+import { buildCalendar } from './videos.js';
+
+const router = express.Router();
+router.use(requireAdmin);
+
+const USER_COLS = 'id, username, full_name, position, role, is_active, created_at';
+
+/** GET /api/admin/overview?day=YYYY-MM-DD — kunlik davomat holati */
+router.get('/overview', (req, res) => {
+  const day = isDay(req.query.day) ? String(req.query.day) : dayStr();
+  const month = day.slice(0, 7);
+
+  const rows = db
+    .prepare(
+      `SELECT u.id, u.username, u.full_name, u.position, u.is_active,
+              v.id AS video_id, v.created_at AS sent_at, v.status, v.size
+       FROM users u
+       LEFT JOIN videos v ON v.user_id = u.id AND v.day = ?
+                          AND v.id = (SELECT MAX(id) FROM videos WHERE user_id = u.id AND day = ?)
+       WHERE u.role = 'user'
+       ORDER BY u.full_name COLLATE NOCASE, u.username`
+    )
+    .all(day, day);
+
+  const monthTotals = db
+    .prepare(
+      `SELECT user_id, COUNT(DISTINCT day) AS days FROM videos
+       WHERE day LIKE ? GROUP BY user_id`
+    )
+    .all(`${month}-%`);
+  const monthMap = new Map(monthTotals.map((r) => [r.user_id, r.days]));
+
+  const users = rows.map((r) => ({
+    id: r.id,
+    username: r.username,
+    full_name: r.full_name,
+    position: r.position,
+    is_active: r.is_active === 1,
+    sent: Boolean(r.video_id),
+    video_id: r.video_id,
+    sent_at: r.sent_at,
+    status: r.status,
+    size: r.size,
+    month_days: monthMap.get(r.id) || 0,
+  }));
+
+  const active = users.filter((u) => u.is_active);
+  res.json({
+    day,
+    users,
+    stats: {
+      total: active.length,
+      sent: active.filter((u) => u.sent).length,
+      missed: active.filter((u) => !u.sent).length,
+      videosToday: db.prepare('SELECT COUNT(*) n FROM videos WHERE day = ?').get(day).n,
+      videosTotal: db.prepare('SELECT COUNT(*) n FROM videos').get().n,
+      storageBytes: db.prepare('SELECT COALESCE(SUM(size),0) s FROM videos').get().s,
+    },
+  });
+});
+
+// ---------------- Foydalanuvchilar ----------------
+
+router.get('/users', (_req, res) => {
+  const users = db
+    .prepare(
+      `SELECT ${USER_COLS},
+              (SELECT COUNT(*) FROM videos v WHERE v.user_id = users.id) AS video_count,
+              (SELECT MAX(day) FROM videos v WHERE v.user_id = users.id) AS last_day
+       FROM users ORDER BY role DESC, full_name COLLATE NOCASE, username`
+    )
+    .all();
+  res.json({ users });
+});
+
+router.post('/users', (req, res) => {
+  const username = String(req.body?.username || '').trim().toLowerCase();
+  const password = String(req.body?.password || '');
+  const fullName = String(req.body?.full_name || '').trim();
+  const position = String(req.body?.position || '').trim();
+  const role = req.body?.role === 'admin' ? 'admin' : 'user';
+
+  if (!/^[a-z0-9._-]{3,32}$/.test(username)) {
+    return res
+      .status(400)
+      .json({ error: 'Login 3–32 ta lotin harf/raqamdan iborat bo‘lsin (. _ - belgilariga ruxsat)' });
+  }
+  if (password.length < 5) {
+    return res.status(400).json({ error: 'Parol kamida 5 ta belgidan iborat bo‘lsin' });
+  }
+  if (db.prepare('SELECT id FROM users WHERE username = ?').get(username)) {
+    return res.status(409).json({ error: 'Bunday login allaqachon mavjud' });
+  }
+
+  const info = db
+    .prepare(
+      `INSERT INTO users (username, password_hash, full_name, position, role, is_active, created_at)
+       VALUES (?, ?, ?, ?, ?, 1, ?)`
+    )
+    .run(username, hashPassword(password), fullName || username, position, role, nowIso());
+
+  res.status(201).json({
+    ok: true,
+    user: db.prepare(`SELECT ${USER_COLS} FROM users WHERE id = ?`).get(info.lastInsertRowid),
+  });
+});
+
+router.patch('/users/:id', (req, res) => {
+  const id = Number(req.params.id);
+  const user = db.prepare('SELECT * FROM users WHERE id = ?').get(id);
+  if (!user) return res.status(404).json({ error: 'Foydalanuvchi topilmadi' });
+
+  const fields = [];
+  const values = [];
+
+  if (typeof req.body?.full_name === 'string') {
+    fields.push('full_name = ?');
+    values.push(req.body.full_name.trim());
+  }
+  if (typeof req.body?.position === 'string') {
+    fields.push('position = ?');
+    values.push(req.body.position.trim());
+  }
+  if (typeof req.body?.is_active === 'boolean') {
+    if (user.id === req.user.id && !req.body.is_active) {
+      return res.status(400).json({ error: 'O‘zingizni bloklay olmaysiz' });
+    }
+    fields.push('is_active = ?');
+    values.push(req.body.is_active ? 1 : 0);
+  }
+  if (req.body?.role === 'admin' || req.body?.role === 'user') {
+    if (user.id === req.user.id && req.body.role !== 'admin') {
+      return res.status(400).json({ error: 'O‘zingizdan admin huquqini olib tashlay olmaysiz' });
+    }
+    fields.push('role = ?');
+    values.push(req.body.role);
+  }
+  if (typeof req.body?.password === 'string' && req.body.password) {
+    if (req.body.password.length < 5) {
+      return res.status(400).json({ error: 'Parol kamida 5 ta belgidan iborat bo‘lsin' });
+    }
+    fields.push('password_hash = ?');
+    values.push(hashPassword(req.body.password));
+  }
+
+  if (!fields.length) return res.status(400).json({ error: 'O‘zgartirish uchun maydon yo‘q' });
+
+  values.push(id);
+  db.prepare(`UPDATE users SET ${fields.join(', ')} WHERE id = ?`).run(...values);
+
+  // Parol o'zgarsa yoki bloklansa — barcha sessiyalari uziladi
+  if (req.body?.password || req.body?.is_active === false) destroyAllSessions(id);
+
+  res.json({ ok: true, user: db.prepare(`SELECT ${USER_COLS} FROM users WHERE id = ?`).get(id) });
+});
+
+router.delete('/users/:id', (req, res) => {
+  const id = Number(req.params.id);
+  if (id === req.user.id) return res.status(400).json({ error: 'O‘zingizni o‘chira olmaysiz' });
+  const user = db.prepare('SELECT id FROM users WHERE id = ?').get(id);
+  if (!user) return res.status(404).json({ error: 'Foydalanuvchi topilmadi' });
+
+  for (const v of db.prepare('SELECT id, storage, path FROM videos WHERE user_id = ?').all(id)) {
+    deleteVideoFile(v);
+  }
+  db.prepare('DELETE FROM users WHERE id = ?').run(id);
+  res.json({ ok: true });
+});
+
+/** Bitta xodimning oylik kalendari */
+router.get('/users/:id/calendar', (req, res) => {
+  const id = Number(req.params.id);
+  const user = db.prepare(`SELECT ${USER_COLS} FROM users WHERE id = ?`).get(id);
+  if (!user) return res.status(404).json({ error: 'Foydalanuvchi topilmadi' });
+  res.json({ user, ...buildCalendar(id, normalizeMonth(req.query.month)) });
+});
+
+// ---------------- Videolar ----------------
+
+router.get('/videos', (req, res) => {
+  const where = [];
+  const params = [];
+
+  if (req.query.user_id) {
+    where.push('v.user_id = ?');
+    params.push(Number(req.query.user_id));
+  }
+  if (isDay(req.query.from)) {
+    where.push('v.day >= ?');
+    params.push(String(req.query.from));
+  }
+  if (isDay(req.query.to)) {
+    where.push('v.day <= ?');
+    params.push(String(req.query.to));
+  }
+  if (['new', 'accepted', 'rejected'].includes(req.query.status)) {
+    where.push('v.status = ?');
+    params.push(String(req.query.status));
+  }
+  if (req.query.q) {
+    where.push('(u.full_name LIKE ? OR u.username LIKE ?)');
+    const like = `%${String(req.query.q).trim()}%`;
+    params.push(like, like);
+  }
+
+  const clause = where.length ? `WHERE ${where.join(' AND ')}` : '';
+  const limit = Math.min(Math.max(Number(req.query.limit) || 50, 1), 200);
+  const page = Math.max(Number(req.query.page) || 1, 1);
+
+  const total = db
+    .prepare(`SELECT COUNT(*) n FROM videos v JOIN users u ON u.id = v.user_id ${clause}`)
+    .get(...params).n;
+
+  const videos = db
+    .prepare(
+      `SELECT v.id, v.user_id, v.day, v.filename, v.mime, v.size, v.note, v.status, v.created_at,
+              u.username, u.full_name, u.position
+       FROM videos v JOIN users u ON u.id = v.user_id
+       ${clause}
+       ORDER BY v.day DESC, v.id DESC
+       LIMIT ? OFFSET ?`
+    )
+    .all(...params, limit, (page - 1) * limit);
+
+  res.json({ videos, total, page, limit, pages: Math.max(Math.ceil(total / limit), 1) });
+});
+
+router.patch('/videos/:id', (req, res) => {
+  const id = Number(req.params.id);
+  const row = db.prepare('SELECT id FROM videos WHERE id = ?').get(id);
+  if (!row) return res.status(404).json({ error: 'Video topilmadi' });
+
+  if (['new', 'accepted', 'rejected'].includes(req.body?.status)) {
+    db.prepare('UPDATE videos SET status = ? WHERE id = ?').run(req.body.status, id);
+  }
+  if (typeof req.body?.note === 'string') {
+    db.prepare('UPDATE videos SET note = ? WHERE id = ?').run(req.body.note.slice(0, 500), id);
+  }
+  res.json({ ok: true });
+});
+
+router.delete('/videos/:id', (req, res) => {
+  const id = Number(req.params.id);
+  const row = db.prepare('SELECT id, storage, path FROM videos WHERE id = ?').get(id);
+  if (!row) return res.status(404).json({ error: 'Video topilmadi' });
+  deleteVideoFile(row);
+  db.prepare('DELETE FROM videos WHERE id = ?').run(id);
+  res.json({ ok: true });
+});
+
+export default router;

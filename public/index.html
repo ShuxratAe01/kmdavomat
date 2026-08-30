@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="uz">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Mening davomatim</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎥</text></svg>" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><span class="brand-mark">🎥</span> Davomat</div>
+    <div class="spacer"></div>
+    <div class="who">
+      <strong id="whoName">—</strong>
+      <span id="whoRole"></span>
+    </div>
+    <button class="icon-btn" id="menuBtn" title="Sozlamalar" aria-label="Sozlamalar">⋮</button>
+  </header>
+
+  <main class="container">
+    <!-- Bugungi sana -->
+    <section class="today-card">
+      <div class="today-label">Bugun</div>
+      <div class="today-date" id="todayDate">—</div>
+      <div class="today-weekday" id="todayWeekday"></div>
+      <div class="today-status" id="todayStatus">Yuklanmoqda…</div>
+    </section>
+
+    <div class="alert ok" id="flash" hidden></div>
+
+    <!-- Kalendar -->
+    <section class="card">
+      <div class="cal-head">
+        <button class="icon-btn" id="prevMonth" aria-label="Oldingi oy">‹</button>
+        <div class="cal-month" id="monthLabel">—</div>
+        <button class="icon-btn" id="nextMonth" aria-label="Keyingi oy">›</button>
+      </div>
+
+      <div class="weekdays">
+        <span>Du</span><span>Se</span><span>Ch</span><span>Pa</span><span>Ju</span>
+        <span class="we">Sh</span><span class="we">Ya</span>
+      </div>
+      <div class="calendar" id="calendar"></div>
+
+      <div class="legend">
+        <span><i class="sw-sent"></i> Video yuborilgan</span>
+        <span><i class="sw-missed"></i> Yuborilmagan</span>
+        <span><i class="sw-upcoming"></i> Kelgusi kun</span>
+      </div>
+
+      <div class="stats" style="margin-top:16px">
+        <div class="stat green"><b id="stSent">0</b><span>Yuborilgan</span></div>
+        <div class="stat red"><b id="stMissed">0</b><span>Yuborilmagan</span></div>
+        <div class="stat blue"><b id="stPercent">0%</b><span>Bajarilish</span></div>
+      </div>
+    </section>
+
+    <!-- Video yuborish -->
+    <section class="card">
+      <div class="card-title">Bugungi video</div>
+      <div id="uploadArea">
+        <button class="btn big" id="sendBtn">🎬 Video yuborish</button>
+        <p class="small muted" style="margin:10px 0 0;text-align:center">
+          Maksimal <span class="max-secs">30</span> soniya · <span id="maxSize">60</span> MB gacha
+        </p>
+      </div>
+
+      <div id="uploadProgress" hidden>
+        <div class="small muted" id="progressText">Yuborilmoqda…</div>
+        <div class="progress"><i id="progressBar"></i></div>
+      </div>
+    </section>
+
+    <!-- Oy videolari -->
+    <section class="card">
+      <div class="card-title">Shu oydagi videolarim</div>
+      <div id="videoList"></div>
+    </section>
+  </main>
+
+  <!-- Video yuborish oynasi -->
+  <div class="modal-bg" id="sendModal" hidden>
+    <div class="modal">
+      <div class="modal-head">
+        <h3>Video yuborish</h3>
+        <button class="icon-btn" data-close="sendModal" aria-label="Yopish">✕</button>
+      </div>
+
+      <div class="alert error" id="sendErr" hidden></div>
+
+      <!-- 1-usul: fayl / kamera -->
+      <div id="pickStep">
+        <p class="choice-title">Videoni qanday qo‘shmoqchisiz?</p>
+
+        <div class="choice-grid">
+          <button type="button" class="choice" id="cameraBtn">
+            <span class="choice-ico">📹</span>
+            <span class="choice-label">Kamerada yozish</span>
+            <span class="choice-hint" id="cameraHint">Hoziroq yozib olasiz</span>
+          </button>
+          <button type="button" class="choice" id="galleryBtn">
+            <span class="choice-ico">🖼️</span>
+            <span class="choice-label">Galereyadan tanlash</span>
+            <span class="choice-hint">Tayyor videoni yuklaysiz</span>
+          </button>
+        </div>
+
+        <div class="alert info" style="margin:16px 0 0">
+          Video <b><span class="max-secs">30</span> soniyadan</b> uzun bo‘lmasin.
+        </div>
+
+        <input type="file" id="cameraInput" accept="video/*" capture="user" hidden />
+        <input type="file" id="galleryInput" accept="video/*" hidden />
+      </div>
+
+      <!-- 2-usul: brauzerda yozib olish -->
+      <div id="recordStep" hidden>
+        <video class="recorder-preview" id="recPreview" muted playsinline autoplay></video>
+        <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin:12px 0">
+          <span class="rec-dot" id="recDot" hidden></span>
+          <span id="recTimer" class="muted">00:00</span>
+          <span class="muted small">/ <span id="recLimit">00:30</span></span>
+        </div>
+        <p class="small muted" style="text-align:center;margin:0 0 12px">
+          <span class="max-secs">30</span> soniyadan keyin yozuv o‘zi to‘xtaydi
+        </p>
+        <div class="row">
+          <button class="btn" id="recStart">⏺ Yozishni boshlash</button>
+          <button class="btn danger" id="recStop" hidden>⏹ To‘xtatish</button>
+          <button class="btn ghost fixed" id="recCancel">Bekor qilish</button>
+        </div>
+      </div>
+
+      <!-- Ko'rib chiqish -->
+      <div id="previewStep" hidden>
+        <video id="preview" controls playsinline></video>
+        <div class="small muted" id="fileMeta" style="margin:8px 0 0"></div>
+        <div class="field" style="margin-top:14px">
+          <label for="note">Izoh (ixtiyoriy)</label>
+          <textarea id="note" placeholder="Masalan: ish joyidan..." maxlength="500"></textarea>
+        </div>
+        <div class="modal-foot">
+          <button class="btn ghost" id="againBtn">Boshqa video</button>
+          <button class="btn success" id="confirmSend">✓ Yuborish</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sozlamalar oynasi -->
+  <div class="modal-bg" id="menuModal" hidden>
+    <div class="modal">
+      <div class="modal-head">
+        <h3>Sozlamalar</h3>
+        <button class="icon-btn" data-close="menuModal" aria-label="Yopish">✕</button>
+      </div>
+
+      <div class="alert error" id="pwErr" hidden></div>
+      <div class="alert ok" id="pwOk" hidden></div>
+
+      <form id="pwForm">
+        <div class="card-title">Parolni o‘zgartirish</div>
+        <div class="field">
+          <label for="curPw">Joriy parol</label>
+          <input type="password" id="curPw" autocomplete="current-password" required />
+        </div>
+        <div class="field">
+          <label for="newPw">Yangi parol</label>
+          <input type="password" id="newPw" autocomplete="new-password" minlength="5" required />
+        </div>
+        <button class="btn" type="submit">Saqlash</button>
+      </form>
+
+      <div class="modal-foot" style="border-top:1px solid var(--border);padding-top:16px">
+        <button class="btn danger" id="logoutBtn">Chiqish</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Kun tafsiloti -->
+  <div class="modal-bg" id="dayModal" hidden>
+    <div class="modal">
+      <div class="modal-head">
+        <h3 id="dayTitle">Kun</h3>
+        <button class="icon-btn" data-close="dayModal" aria-label="Yopish">✕</button>
+      </div>
+      <div id="dayBody"></div>
+    </div>
+  </div>
+
+  <script src="/js/common.js"></script>
+  <script src="/js/app.js"></script>
+</body>
+</html>

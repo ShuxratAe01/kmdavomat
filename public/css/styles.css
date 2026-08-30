@@ -606,6 +606,15 @@ tbody tr:hover { background: var(--surface-2); }
   font-size: 26px;
   margin: 0 auto 14px;
 }
+
+/* Tashkilot logotipi (public/img/logo.png) */
+.login-logo-img {
+  display: block;
+  width: 230px;
+  max-width: 72%;
+  height: auto;
+  margin: 0 auto 14px;
+}
 .login-card h1 { text-align: center; font-size: 21px; margin-bottom: 4px; }
 .login-card .sub { text-align: center; color: var(--muted); font-size: 14px; margin-bottom: 22px; }
 

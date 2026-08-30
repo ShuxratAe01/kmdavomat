@@ -46,6 +46,7 @@ app.use(attachUser);
 // --- Statik fayllar (css/js/rasm) ---
 app.use('/css', express.static(path.join(config.publicDir, 'css')));
 app.use('/js', express.static(path.join(config.publicDir, 'js')));
+app.use('/img', express.static(path.join(config.publicDir, 'img'), { maxAge: '7d' }));
 
 // --- API ---
 app.get('/api/config', (_req, res) => {
@@ -89,6 +90,9 @@ app.get('/admin', requireAdminPage, (_req, res) => {
 
 app.use((req, res) => {
   if (req.path.startsWith('/api/')) return res.status(404).json({ error: 'Topilmadi' });
+  // Topilmagan fayl uchun 404 — sahifaga yo'naltirmaymiz,
+  // aks holda brauzer HTML'ni rasm/skript deb qabul qilishga urinadi
+  if (/^\/(img|css|js)\//.test(req.path)) return res.status(404).end();
   res.redirect('/');
 });
 

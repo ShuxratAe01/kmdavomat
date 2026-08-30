@@ -110,6 +110,15 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') $$('.modal-bg').forEach((m) => (m.hidden = true));
 });
 
+/* Logo fayli hali qo'yilmagan bo'lsa, buzilgan rasm ko'rinmasin */
+document.addEventListener(
+  'error',
+  (e) => {
+    if (e.target?.classList?.contains('login-logo-img')) e.target.hidden = true;
+  },
+  true
+);
+
 /** Status uchun badge HTML */
 function statusBadge(status) {
   const map = {

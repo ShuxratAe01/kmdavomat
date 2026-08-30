@@ -1,13 +1,14 @@
 /* ===== Foydalanuvchi sahifasi ===== */
 
 /**
- * Telefon/planshetmi? Shunga qarab kamera boshqacha ochiladi:
- *   telefon    -> qurilmaning o'z kamera ilovasi (HTTP da ham ishlaydi, sifati yaxshiroq)
- *   kompyuter  -> brauzer ichidagi yozuvchi (jonli ko'rinish + taymer)
+ * Brauzer ichida yumaloq (kvadrat) video yozib olish mumkinmi?
+ * getUserMedia xavfsizlik talabi bo'yicha faqat localhost yoki HTTPS da ishlaydi.
+ * Iloji bo'lmasa qurilmaning o'z kamera ilovasiga o'tamiz — u HTTP da ham ishlaydi.
  */
-const IS_MOBILE =
-  /Android|iPhone|iPod|iPad|Windows Phone|Mobile/i.test(navigator.userAgent) ||
-  (navigator.maxTouchPoints > 1 && /Macintosh/.test(navigator.userAgent)); // iPadOS
+const CAN_RECORD_ROUND =
+  Boolean(navigator.mediaDevices?.getUserMedia) &&
+  typeof MediaRecorder !== 'undefined' &&
+  window.isSecureContext;
 
 let state = {
   user: null,
@@ -37,7 +38,7 @@ async function init() {
   $('#recLimit').textContent = mmss(state.config.maxVideoSeconds);
   // Telefonda qaysi kamera ochilishini belgilaydi (user = selfi, environment = orqadagi)
   $('#cameraInput').setAttribute('capture', state.config.cameraFacing);
-  $('#cameraHint').textContent = IS_MOBILE ? 'Kamera ilovasi ochiladi' : 'Shu yerda yozib olasiz';
+  $('#cameraHint').textContent = CAN_RECORD_ROUND ? 'Yumaloq video yozasiz' : 'Kamera ilovasi ochiladi';
 
   await loadCalendar();
   bindEvents();
@@ -134,8 +135,11 @@ async function loadVideoList() {
 
 function openDayVideo(id, day) {
   $('#dayTitle').textContent = formatDay(day);
-  $('#dayBody').innerHTML = `<video controls playsinline preload="metadata" src="/api/videos/${id}/stream"></video>
-    <div class="modal-foot"><a class="btn ghost" href="/api/videos/${id}/download">⬇ Yuklab olish</a></div>`;
+  $('#dayBody').innerHTML =
+    roundVideoHtml(`/api/videos/${id}/stream`) +
+    `<div class="modal-foot" style="justify-content:center">
+       <a class="btn ghost" href="/api/videos/${id}/download">⬇ Yuklab olish</a>
+     </div>`;
   openModal('dayModal');
 }
 
@@ -203,19 +207,68 @@ function resetSendModal() {
   $('#note').value = '';
   $('#cameraInput').value = '';
   $('#galleryInput').value = '';
+  const prev = $('#preview');
+  prev.pause();
+  prev.closest('.round-video')?.classList.remove('playing');
   stopStream();
 }
 
-let mediaStream = null;
+let mediaStream = null;   // kameradan kelayotgan oqim
+let squareStream = null;  // kvadrat qilib qirqilgan oqim (shu yoziladi)
+let drawFrame = null;     // kadr chizish siklini to'xtatish uchun
 let recorder = null;
 let chunks = [];
 let timerId = null;
+
+const ROUND_SIZE = 480; // yoziladigan kvadrat videoning tomoni (piksel)
+
+/**
+ * Kameradan kelayotgan tasvirning o'rtasidan kvadrat qirqib,
+ * doimiy ravishda canvasga chizadi. Telegram'dagi yumaloq video
+ * aslida ana shunday kvadrat video — doira faqat ko'rinishda.
+ */
+function makeSquareStream(video, audioTrack) {
+  if (typeof document.createElement('canvas').captureStream !== 'function') return null;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = ROUND_SIZE;
+  canvas.height = ROUND_SIZE;
+  const ctx = canvas.getContext('2d');
+
+  const draw = () => {
+    const vw = video.videoWidth;
+    const vh = video.videoHeight;
+    if (vw && vh) {
+      const side = Math.min(vw, vh);
+      ctx.drawImage(
+        video,
+        (vw - side) / 2, (vh - side) / 2, side, side, // manbadan o'rtadagi kvadrat
+        0, 0, ROUND_SIZE, ROUND_SIZE
+      );
+    }
+    drawFrame = requestAnimationFrame(draw);
+  };
+  draw();
+
+  const stream = canvas.captureStream(30);
+  if (audioTrack) stream.addTrack(audioTrack);
+  return stream;
+}
 
 function stopStream() {
   if (recorder && recorder.state !== 'inactive') {
     try { recorder.stop(); } catch { /* allaqachon to'xtagan */ }
   }
   recorder = null;
+
+  if (drawFrame) {
+    cancelAnimationFrame(drawFrame);
+    drawFrame = null;
+  }
+  if (squareStream) {
+    squareStream.getVideoTracks().forEach((t) => t.stop());
+    squareStream = null;
+  }
   if (mediaStream) {
     mediaStream.getTracks().forEach((t) => t.stop());
     mediaStream = null;
@@ -254,17 +307,18 @@ function cameraErrorText(err) {
 async function startCamera() {
   hideAlert($('#sendErr'));
 
-  const canRecord =
-    Boolean(navigator.mediaDevices?.getUserMedia) &&
-    typeof MediaRecorder !== 'undefined' &&
-    window.isSecureContext;
-
-  // Telefonda har doim tizim kamerasi; kompyuterda imkon bo'lmasa ham shunga tushamiz
-  if (IS_MOBILE || !canRecord) return $('#cameraInput').click();
+  // Brauzer ichida yozib bo'lmasa (HTTPS yo'q, eski brauzer) — tizim kamerasiga o'tamiz
+  if (!CAN_RECORD_ROUND) return $('#cameraInput').click();
 
   try {
     mediaStream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: state.config.cameraFacing, width: { ideal: 720 } },
+      // Kvadrat so'raymiz — yumaloq video uchun eng mosi
+      video: {
+        facingMode: state.config.cameraFacing,
+        width: { ideal: 720 },
+        height: { ideal: 720 },
+        aspectRatio: { ideal: 1 },
+      },
       audio: true,
     });
   } catch (err) {
@@ -283,6 +337,8 @@ async function startCamera() {
   $('#pickStep').hidden = true;
   $('#recordStep').hidden = false;
   const v = $('#recPreview');
+  // Orqa kamerada ko'zgu aksi kerak emas
+  v.classList.toggle('back-camera', state.config.cameraFacing === 'environment');
   v.srcObject = mediaStream;
   v.play().catch(() => {});
 }
@@ -352,9 +408,16 @@ function bindUpload() {
 
   $('#recStart').addEventListener('click', () => {
     chunks = [];
+
+    // Kvadrat qilib qirqilgan oqimni yozamiz; imkoni bo'lmasa asl oqimni
+    if (!squareStream) {
+      squareStream = makeSquareStream($('#recPreview'), mediaStream.getAudioTracks()[0]);
+    }
+    const source = squareStream || mediaStream;
+
     const types = ['video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm'];
     const mimeType = types.find((t) => MediaRecorder.isTypeSupported(t)) || '';
-    recorder = new MediaRecorder(mediaStream, mimeType ? { mimeType } : undefined);
+    recorder = new MediaRecorder(source, mimeType ? { mimeType } : undefined);
     recorder.ondataavailable = (e) => e.data.size && chunks.push(e.data);
     recorder.onstop = () => {
       const type = recorder?.mimeType || mimeType || 'video/webm';

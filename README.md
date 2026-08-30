@@ -88,7 +88,8 @@ maktablar sonini `.env` dagi `SCHOOL_COUNT` belgilaydi.
 - Yuqorida bugungi sana + hafta kuni + bugungi holat
 - Oylik kalendar: **yashil** = yuborilgan, **qizil** = yuborilmagan, **kulrang** = kelgusi kun
 - Oylar orasida `‹ ›` bilan yurish, oylik statistika (bajarilish foizi)
-- Video yuborish: **fayl/kamera tanlash** yoki **brauzerda yozib olish** — maksimal **30 soniya**
+- Video yuborish: **kamerada yozish** yoki **galereyadan tanlash** — maksimal **30 soniya**
+- Videolar Telegram uslubida **yumaloq** ko’rinadi: bosilganda o’ynaydi, atrofida vaqt halqasi aylanadi
 - Yuborishdan oldin ko'rib chiqish, izoh qo'shish, yuklanish foizi
 - O'z videolarini qayta ko'rish va yuklab olish
 - Parolni o'zgartirish
@@ -164,23 +165,36 @@ turgani belgilab qo'yiladi).
 Server va telefon bitta Wi-Fi tarmoqda bo'lsa, ishga tushirishda chiqadigan
 `http://192.168.x.x:5175` manzilini telefonda oching.
 
-### “📹 Kamerada yozish” qurilmaga qarab ishlaydi
+### Yumaloq video (Telegram uslubida)
 
-| Qurilma | Nima bo'ladi |
-|---|---|
-| **Telefon / planshet** | Qurilmaning **o'z kamera ilovasi** ochiladi — darhol yozishga tayyor |
-| **Kompyuter** | **Brauzer ichida** yozuvchi oyna: jonli ko'rinish, ⏺ boshlash / ⏹ to'xtatish, qizil chiroqli taymer `00:12 / 00:30` |
+Brauzer ichida yozilgan video **kvadrat** (480×480) qilib saqlanadi — xuddi Telegram’dagi
+yumaloq videolar kabi. Kameradan kelayotgan tasvirning o’rtasidan kvadrat qirqib olinadi,
+ekranda esa doira qilib ko’rsatiladi.
 
-Ikkala holatda ham yozib bo'lgach video darhol ko'rib chiqish oynasiga tushadi —
+- Yozayotganda jonli ko’rinish ham doira, selfi kamerada ko’zguga qaragandek aks etadi
+- Tayyor video bosilganda o’ynaydi, atrofida ko’k halqa vaqtni ko’rsatib aylanadi
+- Admin panelda **⤢ To’liq kadr** tugmasi bor — chetlari qirqilmagan holda ko’rish uchun
+
+Galereyadan tanlangan yoki telefon kamerasida olingan video to’rtburchak bo’ladi —
+u ham doira ichida ko’rsatiladi, chetlari qirqiladi. To’liq kadrni admin ko’ra oladi.
+
+### “📹 Kamerada yozish” ikki xil ishlaydi
+
+| Qachon | Nima bo'ladi | Natija |
+|---|---|---|
+| **HTTPS yoki `localhost`** | Brauzer ichida doira yozuvchi ochiladi: jonli ko'rinish, ⏺/⏹, taymer `00:12 / 00:30` | **Kvadrat** 480×480 video |
+| **Oddiy HTTP** (telefondan IP orqali) | Qurilmaning o'z kamera ilovasi ochiladi | To'rtburchak video (doira ichida ko'rsatiladi) |
+
+Sabab: brauzer ichidagi yozuvchi (`getUserMedia`) xavfsizlik talabi bo'yicha faqat
+`localhost` yoki **HTTPS** da ishlaydi. Telefondan `http://192.168.x.x:5175` orqali
+kirilganda brauzer kameraga ruxsat bermaydi, shuning uchun tizim kamerasiga o'tiladi —
+u HTTP da ham muammosiz ishlaydi.
+
+**Ya'ni: HTTPS o'rnatsangiz, telefonda ham haqiqiy yumaloq video yoziladi.**
+Buning uchun kodni o'zgartirish shart emas — o'zi shunday ishlaydi.
+
+Ikkala holatda ham yozib bo'lgach video ko'rib chiqish oynasiga tushadi —
 ko'rasiz, izoh yozasiz, keyin **Yuborish**.
-
-**Nega ikki xil yo'l:** brauzer ichidagi yozuvchi (`getUserMedia`) faqat `localhost` yoki
-**HTTPS** da ishlaydi. Telefondan `http://192.168.x.x:5175` orqali kirilganda brauzer
-kameraga ruxsat bermaydi — shuning uchun telefonda ataylab tizim kamerasi ishlatiladi.
-U oddiy HTTP da ham muammosiz ishlaydi va sifati ham yaxshiroq.
-
-Keyinchalik loyihani HTTPS bilan internetga chiqarsangiz, [public/js/app.js](public/js/app.js)
-dagi `IS_MOBILE` tekshiruvini olib tashlash bilan telefonda ham brauzer ichida yozishni yoqasiz.
 
 Kamera bilan bog'liq xatolar o'zbekcha va nima qilish kerakligi aytiladi:
 ruxsat berilmadi / kamera topilmadi / kamera band.

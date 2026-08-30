@@ -753,14 +753,112 @@ tbody tr:hover { background: var(--surface-2); }
 
 video { width: 100%; border-radius: var(--radius-sm); background: #000; display: block; }
 
+/* ===== Doira (Telegram uslubidagi) video ===== */
+
+/* Kamerani yozayotgandagi jonli ko'rinish */
 .recorder-preview {
-  width: 100%;
-  aspect-ratio: 3 / 4;
-  max-height: 46vh;
+  display: block;
+  width: min(280px, 72vw);
+  aspect-ratio: 1;
+  margin: 0 auto;
   object-fit: cover;
   background: #0f172a;
+  border-radius: 50%;
+  /* Selfi kamerada ko'zguga qaragandek tabiiy bo'lsin */
+  transform: scaleX(-1);
+  box-shadow: 0 10px 34px rgba(15, 23, 42, 0.28);
+}
+.recorder-preview.back-camera { transform: none; }
+
+/* Tayyor videoni doira qilib ko'rsatish */
+.round-video {
+  position: relative;
+  width: min(300px, 78vw);
+  aspect-ratio: 1;
+  margin: 0 auto;
+}
+.round-video-frame {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #000;
+  box-shadow: 0 10px 34px rgba(15, 23, 42, 0.25);
+}
+.round-video-frame video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  border-radius: 0;
+  background: #000;
+}
+
+/* Aylana bo'ylab yuradigan progress */
+.round-video-ring {
+  position: absolute;
+  inset: -7px;
+  transform: rotate(-90deg);
+  pointer-events: none;
+  overflow: visible;
+}
+.round-video-ring circle {
+  fill: none;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+}
+.round-video-ring .track { stroke: rgba(148, 163, 184, 0.35); }
+.round-video-ring .bar {
+  stroke: var(--brand);
+  stroke-dasharray: 301.6;
+  stroke-dashoffset: 301.6;
+  transition: stroke-dashoffset 0.15s linear;
+}
+
+.round-video-play {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  border: none;
+  border-radius: 50%;
+  background: rgba(15, 23, 42, 0.32);
+  color: #fff;
+  font-size: 44px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+  transition: opacity 0.2s, background 0.2s;
+  font-family: inherit;
+}
+.round-video-play:hover { background: rgba(15, 23, 42, 0.45); }
+.round-video.playing .round-video-play { opacity: 0; }
+.round-video.playing:hover .round-video-play { opacity: 1; }
+
+.round-video-time {
+  position: absolute;
+  left: 50%;
+  bottom: -26px;
+  transform: translateX(-50%);
+  font-size: 12.5px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Doira ostidagi tugmalar uchun joy */
+.round-video-wrap { padding-bottom: 34px; }
+
+/* Admin "to'liq ko'rish" rejimida oddiy to'rtburchak pleyer */
+.round-video.full { width: 100%; aspect-ratio: auto; }
+.round-video.full .round-video-frame {
+  position: static;
   border-radius: var(--radius-sm);
 }
+.round-video.full .round-video-frame video { height: auto; object-fit: contain; }
+.round-video.full .round-video-ring,
+.round-video.full .round-video-play { display: none; }
+.round-video.full .round-video-time { display: none; }
 
 .rec-dot {
   width: 9px;

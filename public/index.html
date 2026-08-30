@@ -137,8 +137,20 @@
 
       <!-- Ko'rib chiqish -->
       <div id="previewStep" hidden>
-        <video id="preview" controls playsinline></video>
-        <div class="small muted" id="fileMeta" style="margin:8px 0 0"></div>
+        <div class="round-video-wrap">
+          <div class="round-video">
+            <div class="round-video-frame">
+              <video id="preview" playsinline></video>
+            </div>
+            <svg class="round-video-ring" viewBox="0 0 100 100" aria-hidden="true">
+              <circle class="track" cx="50" cy="50" r="48"></circle>
+              <circle class="bar" cx="50" cy="50" r="48"></circle>
+            </svg>
+            <button type="button" class="round-video-play" aria-label="O‘ynatish">▶</button>
+            <span class="round-video-time">00:00</span>
+          </div>
+        </div>
+        <div class="small muted" id="fileMeta" style="margin:8px 0 0;text-align:center"></div>
         <div class="field" style="margin-top:14px">
           <label for="note">Izoh (ixtiyoriy)</label>
           <textarea id="note" placeholder="Masalan: ish joyidan..." maxlength="500"></textarea>

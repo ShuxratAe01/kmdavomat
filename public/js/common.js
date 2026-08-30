@@ -103,17 +103,20 @@ function openModal(id) {
 }
 function closeModal(id) {
   const el = document.getElementById(id);
-  if (el) el.hidden = true;
+  if (!el) return;
+  // Oyna yopilganda video ovozi orqada qolib ketmasin
+  el.querySelectorAll('video').forEach((v) => v.pause());
+  el.hidden = true;
 }
 
 document.addEventListener('click', (e) => {
   const closer = e.target.closest('[data-close]');
   if (closer) closeModal(closer.dataset.close);
-  if (e.target.classList?.contains('modal-bg')) e.target.hidden = true;
+  if (e.target.classList?.contains('modal-bg')) closeModal(e.target.id);
 });
 
 document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') $$('.modal-bg').forEach((m) => (m.hidden = true));
+  if (e.key === 'Escape') $$('.modal-bg').forEach((m) => closeModal(m.id));
 });
 
 /* Logo fayli hali qo'yilmagan bo'lsa, buzilgan rasm ko'rinmasin */
@@ -121,6 +124,95 @@ document.addEventListener(
   'error',
   (e) => {
     if (e.target?.classList?.contains('login-logo-img')) e.target.hidden = true;
+  },
+  true
+);
+
+/* ===== Doira (Telegram uslubidagi) video ===== */
+
+const RING_LENGTH = 301.6; // 2·π·48 — SVG viewBox 0..100 dagi aylana uzunligi
+
+/**
+ * Doira ko'rinishidagi video HTML'ini qaytaradi.
+ * Bosilganda o'ynaydi/to'xtaydi, atrofida vaqt halqasi aylanadi.
+ */
+function roundVideoHtml(src, { autoplay = false } = {}) {
+  return `<div class="round-video-wrap">
+    <div class="round-video">
+      <div class="round-video-frame">
+        <video src="${esc(src)}" playsinline preload="metadata" ${autoplay ? 'autoplay' : ''}></video>
+      </div>
+      <svg class="round-video-ring" viewBox="0 0 100 100" aria-hidden="true">
+        <circle class="track" cx="50" cy="50" r="48"></circle>
+        <circle class="bar" cx="50" cy="50" r="48"></circle>
+      </svg>
+      <button type="button" class="round-video-play" aria-label="O‘ynatish">▶</button>
+      <span class="round-video-time">00:00</span>
+    </div>
+  </div>`;
+}
+
+function mmssShort(sec) {
+  if (!Number.isFinite(sec)) return '00:00';
+  const s = Math.max(0, Math.round(sec));
+  return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
+}
+
+// Doirani bosish — o'ynatish/to'xtatish
+document.addEventListener('click', (e) => {
+  const box = e.target.closest('.round-video');
+  if (!box || box.classList.contains('full')) return;
+  const video = box.querySelector('video');
+  if (!video) return;
+  if (video.paused) {
+    // Boshqa o'ynayotgan videolarni to'xtatamiz
+    $$('.round-video video').forEach((v) => v !== video && v.pause());
+    video.play().catch(() => {});
+  } else {
+    video.pause();
+  }
+});
+
+// Holat va halqani yangilash
+document.addEventListener(
+  'play',
+  (e) => e.target.closest?.('.round-video')?.classList.add('playing'),
+  true
+);
+document.addEventListener(
+  'pause',
+  (e) => e.target.closest?.('.round-video')?.classList.remove('playing'),
+  true
+);
+document.addEventListener(
+  'ended',
+  (e) => {
+    const box = e.target.closest?.('.round-video');
+    if (!box) return;
+    box.classList.remove('playing');
+    box.querySelector('.bar').style.strokeDashoffset = RING_LENGTH;
+    box.querySelector('.round-video-time').textContent = mmssShort(e.target.duration);
+  },
+  true
+);
+document.addEventListener(
+  'timeupdate',
+  (e) => {
+    const box = e.target.closest?.('.round-video');
+    if (!box) return;
+    const v = e.target;
+    const done = v.duration ? v.currentTime / v.duration : 0;
+    box.querySelector('.bar').style.strokeDashoffset = RING_LENGTH * (1 - done);
+    box.querySelector('.round-video-time').textContent =
+      `${mmssShort(v.currentTime)} / ${mmssShort(v.duration)}`;
+  },
+  true
+);
+document.addEventListener(
+  'loadedmetadata',
+  (e) => {
+    const box = e.target.closest?.('.round-video');
+    if (box) box.querySelector('.round-video-time').textContent = mmssShort(e.target.duration);
   },
   true
 );

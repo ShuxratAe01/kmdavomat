@@ -213,15 +213,27 @@ async function onListClick(e) {
 
 function openVideo(id, name, day) {
   $('#vmTitle').textContent = `${name} — ${formatDay(day)}`;
-  $('#vmBody').innerHTML = `
-    <video controls autoplay playsinline preload="metadata" src="/api/videos/${id}/stream"></video>
-    <div class="modal-foot">
-      <a class="btn ghost" href="/api/videos/${id}/download">⬇ Yuklab olish</a>
-      <button class="btn danger" data-status="rejected" data-id="${id}">✕ Rad etish</button>
-      <button class="btn success" data-status="accepted" data-id="${id}">✓ Qabul qilish</button>
-    </div>`;
+  $('#vmBody').innerHTML =
+    roundVideoHtml(`/api/videos/${id}/stream`, { autoplay: true }) +
+    `<div class="modal-foot">
+       <button class="btn ghost sm" id="vmToggleFull">⤢ To‘liq kadr</button>
+       <div class="spacer" style="flex:1"></div>
+       <a class="btn ghost" href="/api/videos/${id}/download">⬇ Yuklab olish</a>
+       <button class="btn danger" data-status="rejected" data-id="${id}">✕ Rad etish</button>
+       <button class="btn success" data-status="accepted" data-id="${id}">✓ Qabul qilish</button>
+     </div>`;
   openModal('videoModal');
 }
+
+/** Doira ko'rinishidan to'liq kadrga o'tish — chetlari qirqilmasin */
+$('#vmBody')?.addEventListener('click', (e) => {
+  if (!e.target.closest('#vmToggleFull')) return;
+  const box = $('#vmBody .round-video');
+  const video = box.querySelector('video');
+  const full = box.classList.toggle('full');
+  video.controls = full;
+  $('#vmToggleFull').textContent = full ? '⭕ Doira ko‘rinish' : '⤢ To‘liq kadr';
+});
 
 $('#vmBody')?.addEventListener('click', async (e) => {
   const b = e.target.closest('[data-status]');

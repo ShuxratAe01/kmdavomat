@@ -53,14 +53,20 @@ function esc(str) {
   );
 }
 
-/** JSON API so'rovi */
+/**
+ * JSON API so'rovi.
+ * 401 kelganda odatda /login ga o'tkazamiz (sessiya tugagan degani), lekin
+ * kirish talab qilmaydigan sahifalarda (masalan ro'yxatdan o'tish) 401 —
+ * shunchaki "kod noto'g'ri" degani, shuning uchun redirectOn401: false beriladi.
+ */
 async function api(url, options = {}) {
+  const { redirectOn401 = true, ...fetchOptions } = options;
   const res = await fetch(url, {
     credentials: 'same-origin',
-    headers: options.body ? { 'Content-Type': 'application/json' } : {},
-    ...options,
+    headers: fetchOptions.body ? { 'Content-Type': 'application/json' } : {},
+    ...fetchOptions,
   });
-  if (res.status === 401) {
+  if (res.status === 401 && redirectOn401) {
     location.href = '/login';
     throw new Error('Kirilmagan');
   }

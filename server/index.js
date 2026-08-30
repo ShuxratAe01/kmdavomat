@@ -70,6 +70,14 @@ app.get('/login', (req, res) => {
   res.sendFile(path.join(config.publicDir, 'login.html'));
 });
 
+// Maktabni ro'yxatdan o'tkazish sahifasi
+app.get('/royxat', (req, res) => {
+  if (req.user?.must_change_password) return res.redirect('/parol');
+  if (req.user) return res.redirect(req.user.role === 'admin' ? '/admin' : '/');
+  if (!config.allowRegistration) return res.redirect('/login');
+  res.sendFile(path.join(config.publicDir, 'royxat.html'));
+});
+
 // Majburiy parol almashtirish sahifasi
 app.get('/parol', (req, res) => {
   if (!req.user) return res.redirect('/login');

@@ -66,6 +66,11 @@ export const config = {
   adminUser: process.env.ADMIN_USERNAME || 'admin',
   adminPass: process.env.ADMIN_PASSWORD || null,
 
+  // Nechta maktab bo'lsin (faqat birinchi ishga tushganda ro'yxat yaratiladi)
+  schoolCount: Number(process.env.SCHOOL_COUNT || 71),
+  // Maktablar o'zlari ro'yxatdan o'tishi mumkinmi
+  allowRegistration: String(process.env.ALLOW_REGISTRATION || 'true') === 'true',
+
   // Kuniga bir nechta video yuborishga ruxsat berilsinmi
   allowMultiplePerDay: String(process.env.ALLOW_MULTIPLE_PER_DAY || 'false') === 'true',
   isProduction: process.env.NODE_ENV === 'production',

@@ -396,6 +396,42 @@ textarea { resize: vertical; min-height: 70px; }
 .badge.amber { background: var(--amber-soft); border-color: #fcd34d; color: #92400e; }
 .badge.gray { background: var(--surface-2); border-color: var(--border); color: var(--muted); }
 
+/* ===== Ro'yxat kodi / vaqtinchalik parol ===== */
+
+.code-chip {
+  display: inline-block;
+  font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+  font-size: 13px;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  padding: 4px 10px;
+  border-radius: 7px;
+  background: var(--brand-soft);
+  border: 1px solid #bfdbfe;
+  color: #1e40af;
+  cursor: pointer;
+  user-select: all;
+  transition: background 0.15s, border-color 0.15s;
+}
+.code-chip:hover { background: #dbeafe; border-color: var(--brand); }
+.code-chip.big { font-size: 17px; padding: 9px 16px; letter-spacing: 0.1em; }
+.code-chip.copied {
+  background: var(--green-soft);
+  border-color: var(--green-border);
+  color: #14532d;
+}
+
+.secret-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--border);
+}
+.secret-row:last-of-type { border-bottom: none; }
+
 /* ===== Modal ===== */
 
 .modal-bg {
@@ -531,6 +567,8 @@ tbody tr:hover { background: var(--surface-2); }
   }
   .table-wrap td.cell-actions::before { display: none; }
   .table-wrap td.cell-actions .btn { flex: 1; min-width: 44px; }
+  /* Tugmasi yo'q qator bo'sh chiziq bo'lib turmasin */
+  .table-wrap td.cell-actions.no-actions { display: none; }
 }
 
 /* ===== Progress ===== */

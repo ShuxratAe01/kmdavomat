@@ -2,9 +2,11 @@
 
 const S = {
   users: [],
+  schools: [],
   page: 1,
   calUserId: null,
   calMonth: null,
+  showCodes: false,
 };
 
 // ---------- Boshlash ----------
@@ -22,8 +24,10 @@ async function init() {
   bindTabs();
   bindOverview();
   bindVideos();
+  bindSchools();
   bindUsers();
 
+  await loadSchools();
   await loadUsers();
   await loadOverview();
 }
@@ -33,10 +37,11 @@ function bindTabs() {
     t.addEventListener('click', () => {
       $$('.tab').forEach((x) => x.classList.remove('active'));
       t.classList.add('active');
-      ['overview', 'videos', 'users'].forEach((name) => {
+      ['overview', 'videos', 'schools', 'users'].forEach((name) => {
         $(`#tab-${name}`).hidden = name !== t.dataset.tab;
       });
       if (t.dataset.tab === 'videos') loadVideos(1);
+      if (t.dataset.tab === 'schools') loadSchools();
       if (t.dataset.tab === 'users') renderUsers();
     })
   );
@@ -69,35 +74,43 @@ async function loadOverview(day) {
     const data = await api('/api/admin/overview' + (day ? `?day=${day}` : ''));
     $('#ovDay').value = data.day;
     $('#ovDayLabel').textContent = formatDay(data.day);
-    $('#ovTotal').textContent = data.stats.total;
+    $('#ovTotal').textContent = data.stats.registered;
     $('#ovSent').textContent = data.stats.sent;
     $('#ovMissed').textContent = data.stats.missed;
     $('#ovVideosTotal').textContent = data.stats.videosTotal;
     $('#ovStorage').textContent = formatSize(data.stats.storageBytes);
+    $('#ovWaiting').textContent = data.stats.notRegistered;
 
-    const rows = data.users.filter((u) => u.is_active);
-    if (!rows.length) {
+    if (!data.schools.length) {
       $('#ovList').innerHTML =
-        '<div class="empty-state"><span class="ico">👥</span>Hali xodim qo‘shilmagan.<br><span class="small">“Xodimlar” bo‘limidan qo‘shing.</span></div>';
+        '<div class="empty-state"><span class="ico">🏫</span>Maktablar ro‘yxati bo‘sh.<br><span class="small">“Maktablar” bo‘limidan qo‘shing.</span></div>';
       return;
     }
 
     $('#ovList').innerHTML = `<div class="table-wrap"><table>
-      <thead><tr><th>Xodim</th><th>Lavozim</th><th>Holat</th><th>Vaqt</th><th>Oyda</th><th></th></tr></thead>
-      <tbody>${rows
-        .map(
-          (u) => `<tr>
-            <td class="cell-main"><b>${esc(u.full_name || u.username)}</b><div class="small muted">@${esc(u.username)}</div></td>
-            <td data-label="Lavozim" class="small muted">${esc(u.position || '—')}</td>
-            <td data-label="Holat">${u.sent ? '<span class="badge green">✓ Yuborgan</span>' : '<span class="badge red">✕ Yubormagan</span>'}</td>
-            <td data-label="Vaqt" class="small nowrap">${u.sent_at ? formatTime(u.sent_at).slice(11) : '—'}</td>
-            <td data-label="Oyda" class="small nowrap">${u.month_days} kun</td>
-            <td class="cell-actions nowrap">
-              ${u.video_id ? `<button class="btn sm" data-video="${u.video_id}" data-name="${esc(u.full_name || u.username)}" data-day="${data.day}">▶ Ko‘rish</button>` : ''}
-              <button class="btn sm ghost" data-cal="${u.id}" data-name="${esc(u.full_name || u.username)}">📅 Kalendar</button>
+      <thead><tr><th>Maktab</th><th>Holat</th><th>Vaqt</th><th>Oyda</th><th></th></tr></thead>
+      <tbody>${data.schools
+        .map((s) => {
+          const holat = !s.registered
+            ? '<span class="badge gray">Ro‘yxatdan o‘tmagan</span>'
+            : !s.is_active
+              ? '<span class="badge red">Bloklangan</span>'
+              : s.sent
+                ? '<span class="badge green">✓ Yuborgan</span>'
+                : '<span class="badge red">✕ Yubormagan</span>';
+          return `<tr>
+            <td class="cell-main"><b>${esc(s.name)}</b>${
+              s.registered ? `<div class="small muted">@${esc(s.username)}</div>` : ''
+            }</td>
+            <td data-label="Holat">${holat}</td>
+            <td data-label="Vaqt" class="small nowrap">${s.sent_at ? formatTime(s.sent_at).slice(11) : '—'}</td>
+            <td data-label="Oyda" class="small nowrap">${s.registered ? s.month_days + ' kun' : '—'}</td>
+            <td class="cell-actions nowrap${s.video_id || s.registered ? '' : ' no-actions'}">
+              ${s.video_id ? `<button class="btn sm" data-video="${s.video_id}" data-name="${esc(s.name)}" data-day="${data.day}">▶ Ko‘rish</button>` : ''}
+              ${s.registered ? `<button class="btn sm ghost" data-cal="${s.id}" data-name="${esc(s.name)}">📅 Kalendar</button>` : ''}
             </td>
-          </tr>`
-        )
+          </tr>`;
+        })
         .join('')}</tbody></table></div>`;
   } catch (e) {
     flash(e.message, 'error');
@@ -142,7 +155,7 @@ async function loadVideos(page = 1) {
     }
 
     $('#vidList').innerHTML = `<div class="table-wrap"><table>
-      <thead><tr><th>Xodim</th><th>Sana</th><th>Vaqt</th><th>Hajm</th><th>Holat</th><th>Izoh</th><th></th></tr></thead>
+      <thead><tr><th>Maktab</th><th>Sana</th><th>Vaqt</th><th>Hajm</th><th>Holat</th><th>Izoh</th><th></th></tr></thead>
       <tbody>${data.videos
         .map(
           (v) => `<tr>
@@ -227,7 +240,265 @@ $('#vmBody')?.addEventListener('click', async (e) => {
   }
 });
 
-// ---------- Xodimlar ----------
+// ---------- Maktablar ----------
+
+function bindSchools() {
+  $('#scSearch').addEventListener('input', renderSchools);
+  $('#scFilter').addEventListener('change', renderSchools);
+  $('#schoolList').addEventListener('click', onSchoolListClick);
+  $('#schoolForm').addEventListener('submit', saveSchool);
+  $('#scAdd').addEventListener('click', () => openSchoolForm(null));
+
+  $('#scCodes').addEventListener('click', () => {
+    S.showCodes = !S.showCodes;
+    $('#scCodes').textContent = S.showCodes ? '🙈 Kodlarni yashirish' : '🔑 Kodlarni ko‘rsatish';
+    renderSchools();
+  });
+
+  $('#scExport').addEventListener('click', exportCodes);
+}
+
+async function loadSchools() {
+  try {
+    const data = await api('/api/admin/schools');
+    S.schools = data.schools;
+    $('#scTotal').textContent = data.stats.total;
+    $('#scRegistered').textContent = data.stats.registered;
+    $('#scWaiting').textContent = data.stats.waiting;
+    renderSchools();
+  } catch (e) {
+    flash(e.message, 'error');
+  }
+}
+
+function visibleSchools() {
+  const q = $('#scSearch').value.trim().toLowerCase();
+  const filter = $('#scFilter').value;
+  return S.schools.filter((s) => {
+    if (filter === 'waiting' && s.registered) return false;
+    if (filter === 'registered' && !s.registered) return false;
+    if (q && !s.name.toLowerCase().includes(q) && String(s.number) !== q) return false;
+    return true;
+  });
+}
+
+function renderSchools() {
+  const rows = visibleSchools();
+  if (!rows.length) {
+    $('#schoolList').innerHTML = '<div class="empty-state"><span class="ico">🏫</span>Maktab topilmadi</div>';
+    return;
+  }
+
+  $('#schoolList').innerHTML = `<div class="table-wrap"><table>
+    <thead><tr><th>Maktab</th><th>Ro‘yxat kodi</th><th>Holat</th><th>Videolar</th><th>Oxirgi</th><th></th></tr></thead>
+    <tbody>${rows
+      .map((s) => {
+        const holat = !s.registered
+          ? '<span class="badge amber">Kutilmoqda</span>'
+          : !s.is_active
+            ? '<span class="badge red">Bloklangan</span>'
+            : s.must_change_password
+              ? '<span class="badge amber">Parol kutilmoqda</span>'
+              : '<span class="badge green">Faol</span>';
+        // Kod faqat ro'yxatdan o'tmagan maktab uchun kerak
+        const kod = s.registered
+          ? '<span class="muted small">—</span>'
+          : S.showCodes
+            ? `<code class="code-chip" data-copy="${esc(s.invite_code)}" title="Nusxalash">${esc(s.invite_code)}</code>`
+            : '<span class="muted small">••••-••••</span>';
+        return `<tr>
+          <td class="cell-main"><b>${esc(s.name)}</b>${
+            s.registered ? `<div class="small muted">@${esc(s.username)}</div>` : ''
+          }</td>
+          <td data-label="Kod">${kod}</td>
+          <td data-label="Holat">${holat}</td>
+          <td data-label="Videolar" class="small nowrap">${s.registered ? s.video_count : '—'}</td>
+          <td data-label="Oxirgi" class="small nowrap muted">${s.last_day ? formatDay(s.last_day, false) : '—'}</td>
+          <td class="cell-actions nowrap">
+            <button class="btn sm ghost" data-sedit="${s.id}" title="Nomini o‘zgartirish">✎</button>
+            ${
+              s.registered
+                ? `<button class="btn sm ghost" data-scal="${s.id}" data-uid="${s.id}" data-name="${esc(s.name)}" title="Kalendar">📅</button>
+                   <button class="btn sm ghost" data-sreset="${s.id}" title="Parolni tiklash">🔑</button>
+                   <button class="btn sm danger" data-sdelacc="${s.id}" title="Hisobni o‘chirish">🗑</button>`
+                : `<button class="btn sm ghost" data-snewcode="${s.id}" title="Yangi kod">♻</button>
+                   <button class="btn sm danger" data-sdel="${s.id}" title="Maktabni o‘chirish">🗑</button>`
+            }
+          </td>
+        </tr>`;
+      })
+      .join('')}</tbody></table></div>`;
+}
+
+async function onSchoolListClick(e) {
+  const copy = e.target.closest('[data-copy]');
+  if (copy) {
+    try {
+      await navigator.clipboard.writeText(copy.dataset.copy);
+      flash('Kod nusxalandi: ' + copy.dataset.copy);
+    } catch {
+      flash('Nusxalab bo‘lmadi — kodni qo‘lda ko‘chiring', 'error');
+    }
+    return;
+  }
+
+  const edit = e.target.closest('[data-sedit]');
+  if (edit) return openSchoolForm(S.schools.find((s) => s.id === Number(edit.dataset.sedit)));
+
+  const cal = e.target.closest('[data-scal]');
+  if (cal) {
+    const s = S.schools.find((x) => x.id === Number(cal.dataset.scal));
+    return openUserCalendar(s.user_id, s.name);
+  }
+
+  const newCode = e.target.closest('[data-snewcode]');
+  if (newCode) {
+    const s = S.schools.find((x) => x.id === Number(newCode.dataset.snewcode));
+    if (!confirm(`"${s.name}" uchun yangi kod yaratilsinmi? Eski kod ishlamay qoladi.`)) return;
+    try {
+      const r = await api(`/api/admin/schools/${s.id}/new-code`, { method: 'POST' });
+      showSecret('Yangi ro‘yxat kodi', s.name, [['Ro‘yxat kodi', r.invite_code]],
+        'Bu kodni maktabga bering. Eski kod endi ishlamaydi.');
+      await loadSchools();
+    } catch (err) {
+      flash(err.message, 'error');
+    }
+    return;
+  }
+
+  const reset = e.target.closest('[data-sreset]');
+  if (reset) {
+    const s = S.schools.find((x) => x.id === Number(reset.dataset.sreset));
+    if (!confirm(`"${s.name}" uchun vaqtinchalik parol berilsinmi? Hozirgi paroli ishlamay qoladi.`)) return;
+    try {
+      const r = await api(`/api/admin/schools/${s.id}/reset-password`, { method: 'POST' });
+      showSecret('Vaqtinchalik parol', s.name,
+        [['Login', r.username], ['Vaqtinchalik parol', r.password]],
+        'Maktab shu parol bilan kirib, darhol o‘z parolini qo‘yadi. Videolari saqlanib qoladi.');
+      await loadSchools();
+    } catch (err) {
+      flash(err.message, 'error');
+    }
+    return;
+  }
+
+  const delAcc = e.target.closest('[data-sdelacc]');
+  if (delAcc) {
+    const s = S.schools.find((x) => x.id === Number(delAcc.dataset.sdelacc));
+    if (!confirm(`"${s.name}" hisobi va uning BARCHA videolari o‘chiriladi.\nMaktab qaytadan ro‘yxatdan o‘ta oladi.\n\nDavom etasizmi?`)) return;
+    try {
+      await api(`/api/admin/schools/${s.id}/account`, { method: 'DELETE' });
+      flash('Hisob o‘chirildi, maktab qaytadan ro‘yxatdan o‘ta oladi');
+      await loadSchools();
+      loadOverview($('#ovDay').value);
+    } catch (err) {
+      flash(err.message, 'error');
+    }
+    return;
+  }
+
+  const del = e.target.closest('[data-sdel]');
+  if (del) {
+    const s = S.schools.find((x) => x.id === Number(del.dataset.sdel));
+    if (!confirm(`"${s.name}" ro‘yxatdan olib tashlansinmi?`)) return;
+    try {
+      await api(`/api/admin/schools/${s.id}`, { method: 'DELETE' });
+      flash('Maktab o‘chirildi');
+      await loadSchools();
+      loadOverview($('#ovDay').value);
+    } catch (err) {
+      flash(err.message, 'error');
+    }
+  }
+}
+
+/** Kod yoki vaqtinchalik parolni bir marta ko'rsatuvchi oyna */
+function showSecret(title, subtitle, pairs, note) {
+  $('#secTitle').textContent = title;
+  $('#secBody').innerHTML = `
+    <p class="muted" style="margin:0 0 14px">${esc(subtitle)}</p>
+    ${pairs
+      .map(
+        ([label, value]) => `<div class="secret-row">
+          <span class="small muted">${esc(label)}</span>
+          <code class="code-chip big" data-copy="${esc(value)}" title="Nusxalash">${esc(value)}</code>
+        </div>`
+      )
+      .join('')}
+    <div class="alert info" style="margin:14px 0 0">${esc(note)}</div>`;
+  openModal('secretModal');
+}
+
+$('#secBody')?.addEventListener('click', async (e) => {
+  const c = e.target.closest('[data-copy]');
+  if (!c) return;
+  try {
+    await navigator.clipboard.writeText(c.dataset.copy);
+    c.classList.add('copied');
+    setTimeout(() => c.classList.remove('copied'), 1200);
+  } catch {
+    /* nusxalash ishlamadi — qo'lda ko'chiriladi */
+  }
+});
+
+function openSchoolForm(school) {
+  hideAlert($('#smErr'));
+  $('#schoolForm').reset();
+  $('#smId').value = school ? school.id : '';
+  $('#smTitle').textContent = school ? 'Maktab nomini o‘zgartirish' : 'Yangi maktab';
+  $('#smNumberField').hidden = Boolean(school);
+  if (school) $('#smName').value = school.name;
+  openModal('schoolModal');
+}
+
+async function saveSchool(e) {
+  e.preventDefault();
+  hideAlert($('#smErr'));
+  const id = $('#smId').value;
+  try {
+    if (id) {
+      await api(`/api/admin/schools/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ name: $('#smName').value.trim() }),
+      });
+    } else {
+      await api('/api/admin/schools', {
+        method: 'POST',
+        body: JSON.stringify({
+          number: Number($('#smNumber').value),
+          name: $('#smName').value.trim(),
+        }),
+      });
+    }
+    closeModal('schoolModal');
+    flash(id ? 'Saqlandi' : 'Maktab qo‘shildi');
+    await loadSchools();
+    loadOverview($('#ovDay').value);
+  } catch (err) {
+    showAlert($('#smErr'), err.message);
+  }
+}
+
+/** Ro'yxatdan o'tmagan maktablarning kodlarini CSV qilib yuklab olish */
+function exportCodes() {
+  const rows = S.schools.filter((s) => !s.registered);
+  if (!rows.length) return flash('Barcha maktablar ro‘yxatdan o‘tgan', 'error');
+
+  const csv = ['Maktab,Login,Royxat kodi']
+    .concat(rows.map((s) => `"${s.name}",${s.number}-maktab,${s.invite_code}`))
+    .join('\r\n');
+  // Excel UTF-8 ni to'g'ri o'qishi uchun BOM
+  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `maktab-kodlari-${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  flash(`${rows.length} ta maktab kodi yuklab olindi`);
+}
+
+// ---------- Adminlar ----------
 
 function bindUsers() {
   $('#addUserBtn').addEventListener('click', () => openUserForm(null));
@@ -240,23 +511,26 @@ function bindUsers() {
 async function loadUsers() {
   const { users } = await api('/api/admin/users');
   S.users = users;
+  // Videolar filtri ro'yxatdan o'tgan maktablar bo'yicha
   $('#fUser').innerHTML =
     '<option value="">Barchasi</option>' +
-    users
-      .filter((u) => u.role === 'user')
-      .map((u) => `<option value="${u.id}">${esc(u.full_name || u.username)}</option>`)
+    S.schools
+      .filter((s) => s.registered)
+      .map((s) => `<option value="${s.user_id}">${esc(s.name)}</option>`)
       .join('');
   renderUsers();
 }
 
 function renderUsers() {
-  if (!S.users.length) {
-    $('#userList').innerHTML = '<div class="empty-state"><span class="ico">👥</span>Xodim yo‘q</div>';
+  // Maktab hisoblari "Maktablar" bo'limida boshqariladi — bu yerda faqat adminlar
+  const admins = S.users.filter((u) => u.role === 'admin');
+  if (!admins.length) {
+    $('#userList').innerHTML = '<div class="empty-state"><span class="ico">👥</span>Admin yo‘q</div>';
     return;
   }
   $('#userList').innerHTML = `<div class="table-wrap"><table>
     <thead><tr><th>F.I.Sh.</th><th>Login</th><th>Lavozim</th><th>Rol</th><th>Videolar</th><th>Oxirgi</th><th>Holat</th><th></th></tr></thead>
-    <tbody>${S.users
+    <tbody>${admins
       .map(
         (u) => `<tr>
           <td class="cell-main">

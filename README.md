@@ -1,6 +1,7 @@
 # kmdavomat — video orqali kunlik davomat tizimi
 
-Xodimlar bir marta login qilib kiradi, o'z sahifasida bugungi sanani va oylik kalendarni ko'radi.
+Har bir maktab o'zining ro'yxat kodi bilan ro'yxatdan o'tib, o'ziga parol qo'yadi.
+Kirgach o'z sahifasida bugungi sanani va oylik kalendarni ko'radi.
 Kalendarda **video yuborilgan kunlar yashil**, **yuborilmagan kunlar qizil** bo'lib turadi.
 Pastdagi tugma orqali video yuboriladi — video to'g'ridan-to'g'ri **admin panelga** tushadi.
 
@@ -35,21 +36,38 @@ ishga tushiring (barcha ma'lumotlar ham o'chadi), yoki `.env` da `ADMIN_PASSWORD
 
 ## Ishlash tartibi
 
-1. **Admin** admin panelga kiradi → “Xodimlar” → **+ Yangi xodim** → F.I.Sh., login va parol beradi.
-2. **Xodim** o'sha login/parol bilan kiradi va darhol **o'z parolini qo'yadi** (vaqtinchalik parol bir martalik). Keyin sessiya 90 kun saqlanadi — har safar qayta kirish shart emas.
-3. Xodim sahifasida: bugungi sana → oylik kalendar (yashil/qizil) → **🎬 Video yuborish** tugmasi.
-4. Video yuborilgach o'sha kun kalendarda darhol yashil bo'ladi va admin panelda ko'rinadi.
-5. Admin videoni ko'radi, yuklab oladi, **Qabul qilish / Rad etish** qiladi.
+1. **Admin** admin panelning "🏫 Maktablar" bo‘limidan har bir maktabning **ro‘yxat kodini**
+   oladi (yoki hammasini CSV qilib yuklab oladi) va maktablarga tarqatadi.
+2. **Maktab xodimi** saytga kiradi → "Ro‘yxatdan o‘tish" → maktabini ro‘yxatdan tanlaydi,
+   kodini kiritadi va **o‘ziga parol qo‘yadi**. Shu zahoti ichkariga kiradi.
+3. Login avtomatik yaratiladi: 5-maktab uchun `5-maktab`. Sessiya 90 kun saqlanadi.
+4. Maktab sahifasida: bugungi sana → oylik kalendar (yashil/qizil) → **🎬 Video yuborish**.
+5. Video yuborilgach o‘sha kun kalendarda darhol yashil bo‘ladi va admin panelda ko‘rinadi.
+6. Admin videoni ko‘radi, yuklab oladi, **Qabul qilish / Rad etish** qiladi.
+
+### Ro‘yxat kodi haqida
+
+Har bir maktabga **o‘zining alohida kodi** beriladi (`K7F2-M9QX` ko‘rinishida).
+Bitta umumiy kod emas — shuning uchun:
+
+- kod tarqalib ketsa faqat **o‘sha maktabniki** almashtiriladi, qolganlari tegilmaydi;
+- kim ro‘yxatdan o‘tgani, kim hali o‘tmagani aniq ko‘rinadi;
+- boshqa maktabning kodi bilan ro‘yxatdan o‘tib bo‘lmaydi.
+
+Kodda chalkashadigan belgilar (0, 1, O, I, L) ishlatilmaydi — qog‘ozdan ko‘chirish
+va telefonda aytish oson bo‘lsin uchun. Kodni 5 marta xato kiritganda blok tushadi.
 
 ## Sahifalar
 
 | Manzil | Kim uchun | Nima bor |
 |---|---|---|
 | `/login` | hamma | Login va parol |
-| `/` | xodim | Bugungi sana, oylik kalendar, video yuborish, o'z videolari |
-| `/admin` | admin | Bugungi davomat, videolar, xodimlarni boshqarish |
+| `/royxat` | maktablar | Maktabni tanlab, kod bilan ro‘yxatdan o‘tish |
+| `/parol` | hamma | Vaqtinchalik parolni almashtirish |
+| `/` | maktab | Bugungi sana, oylik kalendar, video yuborish, o'z videolari |
+| `/admin` | admin | Bugungi davomat, videolar, maktablarni boshqarish |
 
-### Xodim sahifasi
+### Maktab sahifasi
 - Yuqorida bugungi sana + hafta kuni + bugungi holat
 - Oylik kalendar: **yashil** = yuborilgan, **qizil** = yuborilmagan, **kulrang** = kelgusi kun
 - Oylar orasida `‹ ›` bilan yurish, oylik statistika (bajarilish foizi)
@@ -59,9 +77,12 @@ ishga tushiring (barcha ma'lumotlar ham o'chadi), yoki `.env` da `ADMIN_PASSWORD
 - Parolni o'zgartirish
 
 ### Admin panel
-- **📊 Bugungi davomat** — kim yuborgan / kim yubormagan, sana bo'yicha, oylik hisob
-- **🎬 Videolar** — xodim / sana oralig'i / holat bo'yicha filtr, ko'rish, yuklab olish, o'chirish, qabul/rad
-- **👥 Xodimlar** — qo'shish, tahrirlash, parolni tiklash, bloklash, o'chirish, har birining kalendari
+- **📊 Bugungi davomat** — barcha maktablar bir ro'yxatda: kim yuborgan, kim yubormagan,
+  kim hali ro'yxatdan o'tmagan; istalgan sana bo'yicha, oylik hisob bilan
+- **🎬 Videolar** — maktab / sana oralig'i / holat bo'yicha filtr, ko'rish, yuklab olish, o'chirish, qabul/rad
+- **🏫 Maktablar** — 71 ta maktab, ro'yxat kodlari (ko'rish, yangilash, CSV qilib yuklab olish),
+  qidiruv va filtr, parolni tiklash, hisobni o'chirish, har birining kalendari, yangi maktab qo'shish
+- **👥 Adminlar** — tizim administratorlarini boshqarish
 
 ## Sozlash (`.env`)
 
@@ -82,6 +103,8 @@ cp .env.example .env
 | `CAMERA_FACING` | `user` | `user` = oldingi (selfi) kamera, `environment` = orqadagi |
 | `MAX_VIDEO_MB` | `60` | Bitta video uchun maksimal hajm |
 | `ALLOW_MULTIPLE_PER_DAY` | `false` | Kuniga bir nechta video yuborishga ruxsat |
+| `SCHOOL_COUNT` | `71` | Nechta maktab yaratilsin (faqat birinchi ishga tushganda) |
+| `ALLOW_REGISTRATION` | `true` | Maktablar o'zlari ro'yxatdan o'ta olsinmi |
 | `MIN_PASSWORD_LENGTH` | `8` | Parolning eng qisqa uzunligi |
 | `BCRYPT_ROUNDS` | `12` | Parol hashlash murakkabligi |
 | `MAX_LOGIN_ATTEMPTS` | `5` | Nechta xato urinishdan keyin bloklansin |
@@ -97,18 +120,19 @@ cp .env.example .env
 | **Parollar** | bcrypt (12 rounds) bilan hashlanadi — bazadan parolni o'qib bo'lmaydi |
 | **Standart parol** | Yo'q. Birinchi admin uchun tasodifiy parol yaratiladi, kirgach almashtiriladi |
 | **Zaif parollar** | Kamida 8 belgi, harf + raqam. Mashhur parollar, ketma-ketliklar, login ichida bo'lishi rad etiladi |
-| **Vaqtinchalik parol** | Admin yaratgan yoki tiklagan parol bilan kirgan xodim o'z parolini qo'ymaguncha hech nima ishlamaydi |
+| **Ro'yxat kodi** | Har maktabga alohida kod. Boshqa maktabniki ishlamaydi; 5 xato urinishdan keyin blok |
+| **Vaqtinchalik parol** | Admin tiklagan parol bilan kirgan maktab o'z parolini qo'ymaguncha hech nima ishlamaydi |
 | **Parol terish (brute force)** | 5 xato urinishdan keyin 15 daqiqa blok; keyingi bloklar uzayadi (2 soatgacha). Login bo'yicha ham, IP bo'yicha ham hisoblanadi |
 | **Login oshkor bo'lishi** | "Login yoki parol noto'g'ri" — qaysi biri xato ekani aytilmaydi; javob vaqti ham bir xil |
 | **Sessiyalar** | Bazada token emas, uning SHA-256 hashi saqlanadi — baza sizib chiqsa ham kirib bo'lmaydi |
 | **Cookie** | `HttpOnly` (JS o'qiy olmaydi), `SameSite=Lax` (CSRF), production'da `Secure` (faqat HTTPS) |
 | **Parol o'zgarganda** | Barcha qurilmalardagi eski sessiyalar uziladi |
-| **Xodim bloklanganda** | Sessiyalari darhol uziladi |
+| **Hisob bloklanganda** | Sessiyalari darhol uziladi |
 | **XSS / clickjacking** | CSP (tashqi skript ishlamaydi), `X-Frame-Options: DENY`, `nosniff` |
 | **Sessiya kaliti** | Kodda yo'q — birinchi ishga tushganda `data/secret.key` ga tasodifiy yaratiladi |
 
-Parolni **admin ham ko'ra olmaydi**: u faqat vaqtinchalik parol beradi, xodim kirgach
-o'zinikini qo'yadi. Xodim parolini unutsa — admin yangi vaqtinchalik parol beradi.
+Parolni **admin ham ko'ra olmaydi**: maktab o'zi qo'yadi. Maktab parolini unutsa —
+admin vaqtinchalik parol beradi, maktab kirib darhol yangisini qo'yadi (videolari saqlanadi).
 
 ### Videolarni qayerda saqlash
 
@@ -168,9 +192,10 @@ server/
     videos.js       — kalendar, video yuborish, oqim
     admin.js        — davomat, xodimlar, videolar boshqaruvi
 public/
-  login.html · index.html · admin.html · parol.html
+  login.html · index.html · admin.html · parol.html · royxat.html
   css/styles.css
-  js/common.js · login.js · app.js · admin.js · parol.js
+  js/common.js · login.js · app.js · admin.js · parol.js · royxat.js
+  img/logo.png
 ```
 
 ## Ishlab chiqarishga chiqarish (production)

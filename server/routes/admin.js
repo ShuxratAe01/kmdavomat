@@ -1,5 +1,6 @@
 import express from 'express';
-import { db } from '../db.js';
+import crypto from 'node:crypto';
+import { db, generateInviteCode, schoolUsername } from '../db.js';
 import { requireAdmin, hashPassword, destroyAllSessions, checkPasswordStrength } from '../auth.js';
 import { deleteVideoFile } from '../storage.js';
 import { dayStr, isDay, normalizeMonth, nowIso } from '../util/date.js';
@@ -10,20 +11,38 @@ router.use(requireAdmin);
 
 const USER_COLS = 'id, username, full_name, position, role, is_active, created_at';
 
+/** Vaqtinchalik parol — o'qish oson, lekin taxmin qilib bo'lmaydi */
+function generateTempPassword() {
+  const abc = 'abcdefghijkmnpqrstuvwxyz';
+  const ABC = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+  const num = '23456789';
+  const all = abc + ABC + num;
+  const pick = (s) => s[crypto.randomInt(s.length)];
+  const chars = [pick(ABC), pick(abc), pick(num), pick(num)];
+  while (chars.length < 12) chars.push(pick(all));
+  for (let i = chars.length - 1; i > 0; i--) {
+    const j = crypto.randomInt(i + 1);
+    [chars[i], chars[j]] = [chars[j], chars[i]];
+  }
+  return chars.join('');
+}
+
 /** GET /api/admin/overview?day=YYYY-MM-DD — kunlik davomat holati */
 router.get('/overview', (req, res) => {
   const day = isDay(req.query.day) ? String(req.query.day) : dayStr();
   const month = day.slice(0, 7);
 
+  // Barcha maktablar ko'rinadi — ro'yxatdan o'tmaganlari ham
   const rows = db
     .prepare(
-      `SELECT u.id, u.username, u.full_name, u.position, u.is_active,
+      `SELECT s.id AS school_id, s.number, s.name, s.user_id,
+              u.username, u.is_active,
               v.id AS video_id, v.created_at AS sent_at, v.status, v.size
-       FROM users u
-       LEFT JOIN videos v ON v.user_id = u.id AND v.day = ?
-                          AND v.id = (SELECT MAX(id) FROM videos WHERE user_id = u.id AND day = ?)
-       WHERE u.role = 'user'
-       ORDER BY u.full_name COLLATE NOCASE, u.username`
+       FROM schools s
+       LEFT JOIN users u ON u.id = s.user_id
+       LEFT JOIN videos v ON v.user_id = s.user_id AND v.day = ?
+                          AND v.id = (SELECT MAX(id) FROM videos WHERE user_id = s.user_id AND day = ?)
+       ORDER BY s.number`
     )
     .all(day, day);
 
@@ -35,33 +54,163 @@ router.get('/overview', (req, res) => {
     .all(`${month}-%`);
   const monthMap = new Map(monthTotals.map((r) => [r.user_id, r.days]));
 
-  const users = rows.map((r) => ({
-    id: r.id,
+  const schools = rows.map((r) => ({
+    school_id: r.school_id,
+    number: r.number,
+    name: r.name,
+    id: r.user_id,
     username: r.username,
-    full_name: r.full_name,
-    position: r.position,
+    registered: Boolean(r.user_id),
     is_active: r.is_active === 1,
     sent: Boolean(r.video_id),
     video_id: r.video_id,
     sent_at: r.sent_at,
     status: r.status,
     size: r.size,
-    month_days: monthMap.get(r.id) || 0,
+    month_days: monthMap.get(r.user_id) || 0,
   }));
 
-  const active = users.filter((u) => u.is_active);
+  const active = schools.filter((s) => s.registered && s.is_active);
   res.json({
     day,
-    users,
+    schools,
     stats: {
-      total: active.length,
-      sent: active.filter((u) => u.sent).length,
-      missed: active.filter((u) => !u.sent).length,
+      total: schools.length,
+      registered: active.length,
+      notRegistered: schools.filter((s) => !s.registered).length,
+      sent: active.filter((s) => s.sent).length,
+      missed: active.filter((s) => !s.sent).length,
       videosToday: db.prepare('SELECT COUNT(*) n FROM videos WHERE day = ?').get(day).n,
       videosTotal: db.prepare('SELECT COUNT(*) n FROM videos').get().n,
       storageBytes: db.prepare('SELECT COALESCE(SUM(size),0) s FROM videos').get().s,
     },
   });
+});
+
+// ---------------- Maktablar ----------------
+
+/** Barcha maktablar: ro'yxat kodi, ro'yxatdan o'tgan-o'tmagani, video statistikasi */
+router.get('/schools', (req, res) => {
+  const month = /^\d{4}-\d{2}$/.test(String(req.query.month || ''))
+    ? String(req.query.month)
+    : dayStr().slice(0, 7);
+
+  const schools = db
+    .prepare(
+      `SELECT s.id, s.number, s.name, s.invite_code, s.registered_at, s.user_id,
+              u.username, u.is_active, u.last_login_at, u.must_change_password,
+              (SELECT COUNT(DISTINCT day) FROM videos v WHERE v.user_id = s.user_id AND v.day LIKE ?) AS month_days,
+              (SELECT COUNT(*) FROM videos v WHERE v.user_id = s.user_id) AS video_count,
+              (SELECT MAX(day) FROM videos v WHERE v.user_id = s.user_id) AS last_day
+       FROM schools s LEFT JOIN users u ON u.id = s.user_id
+       ORDER BY s.number`
+    )
+    .all(`${month}-%`);
+
+  res.json({
+    month,
+    schools: schools.map((s) => ({
+      ...s,
+      registered: Boolean(s.user_id),
+      is_active: s.is_active === null ? null : s.is_active === 1,
+      must_change_password: s.must_change_password === 1,
+    })),
+    stats: {
+      total: schools.length,
+      registered: schools.filter((s) => s.user_id).length,
+      waiting: schools.filter((s) => !s.user_id).length,
+    },
+  });
+});
+
+/** Maktab nomini o'zgartirish */
+router.patch('/schools/:id', (req, res) => {
+  const school = db.prepare('SELECT * FROM schools WHERE id = ?').get(Number(req.params.id));
+  if (!school) return res.status(404).json({ error: 'Maktab topilmadi' });
+
+  const name = String(req.body?.name || '').trim();
+  if (!name) return res.status(400).json({ error: 'Maktab nomini kiriting' });
+
+  db.prepare('UPDATE schools SET name = ? WHERE id = ?').run(name.slice(0, 120), school.id);
+  // Hisob ochilgan bo'lsa uning ko'rinadigan nomini ham yangilaymiz
+  if (school.user_id) {
+    db.prepare('UPDATE users SET full_name = ? WHERE id = ?').run(name.slice(0, 120), school.user_id);
+  }
+  res.json({ ok: true });
+});
+
+/** Yangi maktab qo'shish */
+router.post('/schools', (req, res) => {
+  const number = Number(req.body?.number);
+  if (!Number.isInteger(number) || number < 1 || number > 9999) {
+    return res.status(400).json({ error: 'Maktab raqami 1–9999 oralig‘ida bo‘lsin' });
+  }
+  if (db.prepare('SELECT id FROM schools WHERE number = ?').get(number)) {
+    return res.status(409).json({ error: `${number}-maktab allaqachon ro‘yxatda bor` });
+  }
+  const name = String(req.body?.name || '').trim() || `${number}-maktab`;
+  db.prepare('INSERT INTO schools (number, name, invite_code, created_at) VALUES (?, ?, ?, ?)')
+    .run(number, name.slice(0, 120), generateInviteCode(), nowIso());
+  res.status(201).json({ ok: true });
+});
+
+/** Ro'yxat kodini yangilash (eskisi tarqalib ketgan bo'lsa) */
+router.post('/schools/:id/new-code', (req, res) => {
+  const school = db.prepare('SELECT * FROM schools WHERE id = ?').get(Number(req.params.id));
+  if (!school) return res.status(404).json({ error: 'Maktab topilmadi' });
+
+  const code = generateInviteCode();
+  db.prepare('UPDATE schools SET invite_code = ? WHERE id = ?').run(code, school.id);
+  res.json({ ok: true, invite_code: code });
+});
+
+/**
+ * Maktab parolini unutgan bo'lsa — vaqtinchalik parol beriladi.
+ * Maktab shu parol bilan kirib, darhol o'z parolini qo'yadi. Videolari saqlanib qoladi.
+ */
+router.post('/schools/:id/reset-password', (req, res) => {
+  const school = db.prepare('SELECT * FROM schools WHERE id = ?').get(Number(req.params.id));
+  if (!school) return res.status(404).json({ error: 'Maktab topilmadi' });
+  if (!school.user_id) return res.status(400).json({ error: 'Bu maktab hali ro‘yxatdan o‘tmagan' });
+
+  const temp = generateTempPassword();
+  db.prepare(
+    `UPDATE users SET password_hash = ?, must_change_password = 1, password_changed_at = ?
+     WHERE id = ?`
+  ).run(hashPassword(temp), nowIso(), school.user_id);
+  destroyAllSessions(school.user_id);
+
+  res.json({ ok: true, username: schoolUsername(school.number), password: temp });
+});
+
+/**
+ * Hisobni butunlay o'chirish — maktab qaytadan ro'yxatdan o'ta oladi.
+ * DIQQAT: barcha videolari ham o'chadi.
+ */
+router.delete('/schools/:id/account', (req, res) => {
+  const school = db.prepare('SELECT * FROM schools WHERE id = ?').get(Number(req.params.id));
+  if (!school) return res.status(404).json({ error: 'Maktab topilmadi' });
+  if (!school.user_id) return res.status(400).json({ error: 'Bu maktab hali ro‘yxatdan o‘tmagan' });
+
+  for (const v of db.prepare('SELECT id, storage, path FROM videos WHERE user_id = ?').all(school.user_id)) {
+    deleteVideoFile(v);
+  }
+  db.prepare('DELETE FROM users WHERE id = ?').run(school.user_id);
+  db.prepare("UPDATE schools SET user_id = NULL, registered_at = '', invite_code = ? WHERE id = ?")
+    .run(generateInviteCode(), school.id);
+
+  res.json({ ok: true });
+});
+
+/** Maktabni ro'yxatdan butunlay olib tashlash */
+router.delete('/schools/:id', (req, res) => {
+  const school = db.prepare('SELECT * FROM schools WHERE id = ?').get(Number(req.params.id));
+  if (!school) return res.status(404).json({ error: 'Maktab topilmadi' });
+  if (school.user_id) {
+    return res.status(400).json({ error: 'Avval maktab hisobini o‘chiring' });
+  }
+  db.prepare('DELETE FROM schools WHERE id = ?').run(school.id);
+  res.json({ ok: true });
 });
 
 // ---------------- Foydalanuvchilar ----------------

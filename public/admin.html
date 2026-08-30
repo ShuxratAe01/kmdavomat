@@ -22,7 +22,8 @@
     <div class="tabs">
       <button class="tab active" data-tab="overview">📊 Bugungi davomat</button>
       <button class="tab" data-tab="videos">🎬 Videolar</button>
-      <button class="tab" data-tab="users">👥 Xodimlar</button>
+      <button class="tab" data-tab="schools">🏫 Maktablar</button>
+      <button class="tab" data-tab="users">👥 Adminlar</button>
     </div>
 
     <div class="alert error" id="err" hidden></div>
@@ -42,16 +43,17 @@
         </div>
 
         <div class="stats">
-          <div class="stat blue"><b id="ovTotal">0</b><span>Faol xodim</span></div>
+          <div class="stat blue"><b id="ovTotal">0</b><span>Faol maktab</span></div>
           <div class="stat green"><b id="ovSent">0</b><span>Yuborgan</span></div>
           <div class="stat red"><b id="ovMissed">0</b><span>Yubormagan</span></div>
+          <div class="stat"><b id="ovWaiting">0</b><span>Ro‘yxatda emas</span></div>
           <div class="stat"><b id="ovVideosTotal">0</b><span>Jami video</span></div>
           <div class="stat"><b id="ovStorage">0</b><span>Hajm</span></div>
         </div>
       </div>
 
       <div class="card">
-        <div class="card-title">Xodimlar holati — <span id="ovDayLabel"></span></div>
+        <div class="card-title">Maktablar holati — <span id="ovDayLabel"></span></div>
         <div id="ovList"></div>
       </div>
     </section>
@@ -61,7 +63,7 @@
       <div class="card">
         <div class="row">
           <div>
-            <label class="small muted" for="fUser">Xodim</label>
+            <label class="small muted" for="fUser">Maktab</label>
             <select id="fUser"><option value="">Barchasi</option></select>
           </div>
           <div>
@@ -97,13 +99,47 @@
       </div>
     </section>
 
-    <!-- ===== Xodimlar ===== -->
+    <!-- ===== Maktablar ===== -->
+    <section id="tab-schools" hidden>
+      <div class="card">
+        <div class="stats" style="margin-bottom:16px">
+          <div class="stat blue"><b id="scTotal">0</b><span>Jami maktab</span></div>
+          <div class="stat green"><b id="scRegistered">0</b><span>Ro‘yxatdan o‘tgan</span></div>
+          <div class="stat red"><b id="scWaiting">0</b><span>Kutilmoqda</span></div>
+        </div>
+        <div class="row">
+          <div>
+            <label class="small muted" for="scSearch">Qidirish</label>
+            <input type="search" id="scSearch" placeholder="Maktab raqami yoki nomi" />
+          </div>
+          <div>
+            <label class="small muted" for="scFilter">Holat</label>
+            <select id="scFilter">
+              <option value="">Barchasi</option>
+              <option value="waiting">Ro‘yxatdan o‘tmagan</option>
+              <option value="registered">Ro‘yxatdan o‘tgan</option>
+            </select>
+          </div>
+          <div class="fixed"><button class="btn ghost" id="scCodes">🔑 Kodlarni ko‘rsatish</button></div>
+          <div class="fixed"><button class="btn ghost" id="scExport">⬇ Kodlarni yuklab olish</button></div>
+          <div class="fixed"><button class="btn" id="scAdd">+ Maktab</button></div>
+        </div>
+      </div>
+      <div class="card">
+        <div id="schoolList"></div>
+      </div>
+    </section>
+
+    <!-- ===== Adminlar ===== -->
     <section id="tab-users" hidden>
       <div class="card">
         <div class="row" style="justify-content:space-between">
-          <div class="card-title" style="margin:0">Xodimlar ro‘yxati</div>
-          <div class="fixed"><button class="btn" id="addUserBtn">+ Yangi xodim</button></div>
+          <div class="card-title" style="margin:0">Tizim foydalanuvchilari</div>
+          <div class="fixed"><button class="btn" id="addUserBtn">+ Yangi admin</button></div>
         </div>
+        <p class="small muted" style="margin:10px 0 0">
+          Maktab hisoblari bu yerda emas — ular “🏫 Maktablar” bo‘limida boshqariladi.
+        </p>
       </div>
       <div class="card">
         <div id="userList"></div>
@@ -126,7 +162,7 @@
   <div class="modal-bg" id="userModal" hidden>
     <div class="modal">
       <div class="modal-head">
-        <h3 id="umTitle">Yangi xodim</h3>
+        <h3 id="umTitle">Yangi admin</h3>
         <button class="icon-btn" data-close="userModal" aria-label="Yopish">✕</button>
       </div>
       <div class="alert error" id="umErr" hidden></div>
@@ -151,8 +187,8 @@
         <div class="field">
           <label for="umRole">Rol</label>
           <select id="umRole">
-            <option value="user">Xodim</option>
             <option value="admin">Administrator</option>
+            <option value="user">Oddiy foydalanuvchi</option>
           </select>
         </div>
         <div class="modal-foot">
@@ -163,7 +199,50 @@
     </div>
   </div>
 
-  <!-- Xodim kalendari -->
+  <!-- Maktab qo'shish -->
+  <div class="modal-bg" id="schoolModal" hidden>
+    <div class="modal">
+      <div class="modal-head">
+        <h3 id="smTitle">Yangi maktab</h3>
+        <button class="icon-btn" data-close="schoolModal" aria-label="Yopish">✕</button>
+      </div>
+      <div class="alert error" id="smErr" hidden></div>
+      <form id="schoolForm">
+        <input type="hidden" id="smId" />
+        <div class="field" id="smNumberField">
+          <label for="smNumber">Maktab raqami</label>
+          <input type="text" id="smNumber" inputmode="numeric" placeholder="72" />
+        </div>
+        <div class="field">
+          <label for="smName">Maktab nomi</label>
+          <input type="text" id="smName" placeholder="72-maktab" />
+          <div class="small muted" style="margin-top:6px">
+            Bo‘sh qoldirsangiz “raqam-maktab” deb yoziladi
+          </div>
+        </div>
+        <div class="modal-foot">
+          <button type="button" class="btn ghost" data-close="schoolModal">Bekor qilish</button>
+          <button type="submit" class="btn">Saqlash</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Vaqtinchalik parol / yangi kod -->
+  <div class="modal-bg" id="secretModal" hidden>
+    <div class="modal">
+      <div class="modal-head">
+        <h3 id="secTitle">Ma‘lumot</h3>
+        <button class="icon-btn" data-close="secretModal" aria-label="Yopish">✕</button>
+      </div>
+      <div id="secBody"></div>
+      <div class="modal-foot">
+        <button class="btn" data-close="secretModal">Tushunarli</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Maktab kalendari -->
   <div class="modal-bg" id="calModal" hidden>
     <div class="modal">
       <div class="modal-head">

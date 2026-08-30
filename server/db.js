@@ -27,6 +27,19 @@ CREATE TABLE IF NOT EXISTS users (
   created_at    TEXT NOT NULL
 );
 
+-- Maktablar. Har biriga o'zining bir martalik ro'yxat kodi beriladi.
+-- Maktab shu kod bilan ro'yxatdan o'tib, o'ziga parol qo'yadi.
+CREATE TABLE IF NOT EXISTS schools (
+  id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  number        INTEGER NOT NULL UNIQUE,
+  name          TEXT NOT NULL,
+  invite_code   TEXT NOT NULL,
+  user_id       INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  registered_at TEXT NOT NULL DEFAULT '',
+  created_at    TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_schools_user ON schools(user_id);
+
 CREATE TABLE IF NOT EXISTS videos (
   id         INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -82,6 +95,10 @@ if (!userCols.includes('password_changed_at')) {
 if (!userCols.includes('last_login_at')) {
   db.exec("ALTER TABLE users ADD COLUMN last_login_at TEXT NOT NULL DEFAULT ''");
 }
+// Hisob qaysi maktabniki
+if (!userCols.includes('school_id')) {
+  db.exec('ALTER TABLE users ADD COLUMN school_id INTEGER REFERENCES schools(id) ON DELETE SET NULL');
+}
 
 // Eski sessions jadvalida token ochiq saqlangan edi — uni tashlab yuboramiz
 // (hamma qaytadan kiradi, bu ataylab shunday).
@@ -101,6 +118,38 @@ if (sessionCols.length && !sessionCols.includes('token_hash')) {
     CREATE INDEX idx_sessions_user ON sessions(user_id);
   `);
   console.log('  ℹ  Sessiyalar jadvali yangilandi — hamma qaytadan kirishi kerak.');
+}
+
+// --- Maktablar ro'yxati ---
+
+/**
+ * Ro'yxat kodi: "K7F2-M9QX" ko'rinishida.
+ * Chalkashadigan belgilar (0/O, 1/I/L) ishlatilmaydi —
+ * qog'ozdan ko'chirish va telefonda aytish oson bo'lsin.
+ */
+export function generateInviteCode() {
+  const abc = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+  const part = () => Array.from({ length: 4 }, () => abc[crypto.randomInt(abc.length)]).join('');
+  return `${part()}-${part()}`;
+}
+
+/** Maktab raqamidan login yasaydi: 7 -> "7-maktab" */
+export function schoolUsername(number) {
+  return `${number}-maktab`;
+}
+
+const schoolCount = db.prepare('SELECT COUNT(*) AS n FROM schools').get().n;
+if (schoolCount === 0) {
+  const total = Number(config.schoolCount || 71);
+  const insert = db.prepare(
+    'INSERT INTO schools (number, name, invite_code, created_at) VALUES (?, ?, ?, ?)'
+  );
+  const now = nowIso();
+  for (let n = 1; n <= total; n++) {
+    insert.run(n, `${n}-maktab`, generateInviteCode(), now);
+  }
+  console.log(`  ℹ  ${total} ta maktab yaratildi. Ro‘yxat kodlarini admin panelning`);
+  console.log('     "Maktablar" bo‘limidan ko‘rasiz va maktablarga tarqatasiz.');
 }
 
 // --- Birinchi ishga tushirishda admin yaratish ---

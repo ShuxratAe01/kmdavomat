@@ -1,5 +1,6 @@
 import express from 'express';
-import { db } from '../db.js';
+import crypto from 'node:crypto';
+import { db, schoolUsername } from '../db.js';
 import { config } from '../config.js';
 import {
   COOKIE_NAME,
@@ -103,6 +104,97 @@ router.post('/login', (req, res) => {
     },
     redirect: mustChange ? '/parol' : user.role === 'admin' ? '/admin' : '/',
   });
+});
+
+/**
+ * Ro'yxatdan o'tish uchun maktablar ro'yxati.
+ * Kodlar bu yerda YUBORILMAYDI — faqat nomlar.
+ */
+router.get('/schools', (_req, res) => {
+  if (!config.allowRegistration) return res.json({ enabled: false, schools: [] });
+  const schools = db
+    .prepare('SELECT id, number, name FROM schools WHERE user_id IS NULL ORDER BY number')
+    .all();
+  const registered = db.prepare('SELECT COUNT(*) n FROM schools WHERE user_id IS NOT NULL').get().n;
+  res.json({
+    enabled: true,
+    schools,
+    registered,
+    total: registered + schools.length,
+    minPasswordLength: config.minPasswordLength,
+  });
+});
+
+/** Maktab o'zi ro'yxatdan o'tadi: kodni kiritadi va parolini qo'yadi */
+router.post('/register', (req, res) => {
+  if (!config.allowRegistration) {
+    return res.status(403).json({ error: 'Ro‘yxatdan o‘tish yopilgan. Admin bilan bog‘laning.' });
+  }
+
+  const schoolId = Number(req.body?.school_id);
+  const code = String(req.body?.code || '').trim().toUpperCase().replace(/\s/g, '');
+  const password = String(req.body?.password || '');
+  const ip = clientIp(req);
+  const key = `reg:${ip}`;
+
+  // Kodni terib topishga urinishdan himoya
+  const locked = lockedSeconds(key);
+  if (locked > 0) {
+    return res.status(429).json({
+      error: `Juda ko‘p xato urinish. ${humanTime(locked)} dan keyin qayta urinib ko‘ring.`,
+    });
+  }
+
+  const school = db.prepare('SELECT * FROM schools WHERE id = ?').get(schoolId);
+  if (!school) return res.status(400).json({ error: 'Maktab tanlanmadi' });
+
+  if (school.user_id) {
+    return res.status(409).json({
+      error: 'Bu maktab allaqachon ro‘yxatdan o‘tgan. Parolni unutgan bo‘lsangiz admin bilan bog‘laning.',
+    });
+  }
+
+  // Kodni bir xil vaqtda solishtiramiz (timing attack'ga qarshi)
+  const given = Buffer.from(code.padEnd(64).slice(0, 64));
+  const real = Buffer.from(school.invite_code.padEnd(64).slice(0, 64));
+  if (!crypto.timingSafeEqual(given, real)) {
+    const wait = registerFailedAttempt(key);
+    return res.status(401).json({
+      error: wait > 0
+        ? `Juda ko‘p xato urinish. ${humanTime(wait)} dan keyin qayta urinib ko‘ring.`
+        : 'Ro‘yxat kodi noto‘g‘ri. Kodni admindan oling.',
+    });
+  }
+
+  const username = schoolUsername(school.number);
+  const weak = checkPasswordStrength(password, username);
+  if (weak) return res.status(400).json({ error: weak });
+
+  if (db.prepare('SELECT id FROM users WHERE username = ?').get(username)) {
+    return res.status(409).json({ error: 'Bu maktab uchun hisob allaqachon mavjud' });
+  }
+
+  clearFailedAttempts(key);
+
+  // Hisob yaratamiz va darhol kirgizamiz — parolni o'zi qo'ygani uchun
+  // majburiy almashtirish kerak emas.
+  const info = db
+    .prepare(
+      `INSERT INTO users (username, password_hash, full_name, position, role, is_active,
+                          must_change_password, password_changed_at, school_id, created_at)
+       VALUES (?, ?, ?, '', 'user', 1, 0, ?, ?, ?)`
+    )
+    .run(username, hashPassword(password), school.name, nowIso(), school.id, nowIso());
+
+  const userId = Number(info.lastInsertRowid);
+  db.prepare('UPDATE schools SET user_id = ?, registered_at = ? WHERE id = ?')
+    .run(userId, nowIso(), school.id);
+
+  const { token, expires } = createSession(userId, { ip, userAgent: req.get('user-agent') || '' });
+  setSessionCookie(res, token, expires);
+  db.prepare('UPDATE users SET last_login_at = ? WHERE id = ?').run(nowIso(), userId);
+
+  res.status(201).json({ ok: true, username, redirect: '/' });
 });
 
 router.post('/logout', (req, res) => {

@@ -1,6 +1,6 @@
 import express from 'express';
 import { db } from '../db.js';
-import { requireAdmin, hashPassword, destroyAllSessions } from '../auth.js';
+import { requireAdmin, hashPassword, destroyAllSessions, checkPasswordStrength } from '../auth.js';
 import { deleteVideoFile } from '../storage.js';
 import { dayStr, isDay, normalizeMonth, nowIso } from '../util/date.js';
 import { buildCalendar } from './videos.js';
@@ -90,19 +90,22 @@ router.post('/users', (req, res) => {
       .status(400)
       .json({ error: 'Login 3–32 ta lotin harf/raqamdan iborat bo‘lsin (. _ - belgilariga ruxsat)' });
   }
-  if (password.length < 5) {
-    return res.status(400).json({ error: 'Parol kamida 5 ta belgidan iborat bo‘lsin' });
-  }
+  const weak = checkPasswordStrength(password, username);
+  if (weak) return res.status(400).json({ error: weak });
+
   if (db.prepare('SELECT id FROM users WHERE username = ?').get(username)) {
     return res.status(409).json({ error: 'Bunday login allaqachon mavjud' });
   }
 
+  // must_change_password = 1: xodim birinchi kirganda o'z parolini qo'yadi,
+  // shunda admin ham uning parolini bilmay qoladi.
   const info = db
     .prepare(
-      `INSERT INTO users (username, password_hash, full_name, position, role, is_active, created_at)
-       VALUES (?, ?, ?, ?, ?, 1, ?)`
+      `INSERT INTO users (username, password_hash, full_name, position, role, is_active,
+                          must_change_password, password_changed_at, created_at)
+       VALUES (?, ?, ?, ?, ?, 1, 1, ?, ?)`
     )
-    .run(username, hashPassword(password), fullName || username, position, role, nowIso());
+    .run(username, hashPassword(password), fullName || username, position, role, nowIso(), nowIso());
 
   res.status(201).json({
     ok: true,
@@ -141,11 +144,15 @@ router.patch('/users/:id', (req, res) => {
     values.push(req.body.role);
   }
   if (typeof req.body?.password === 'string' && req.body.password) {
-    if (req.body.password.length < 5) {
-      return res.status(400).json({ error: 'Parol kamida 5 ta belgidan iborat bo‘lsin' });
-    }
+    const weak = checkPasswordStrength(req.body.password, user.username);
+    if (weak) return res.status(400).json({ error: weak });
     fields.push('password_hash = ?');
     values.push(hashPassword(req.body.password));
+    fields.push('password_changed_at = ?');
+    values.push(nowIso());
+    // Admin tiklagan parol vaqtinchalik — egasi kirganda o'zini qo'yadi
+    fields.push('must_change_password = ?');
+    values.push(1);
   }
 
   if (!fields.length) return res.status(400).json({ error: 'O‘zgartirish uchun maydon yo‘q' });

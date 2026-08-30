@@ -15,8 +15,31 @@ const app = express();
 app.set('trust proxy', 1);
 app.disable('x-powered-by');
 
-app.use(express.json({ limit: '1mb' }));
-app.use(express.urlencoded({ extended: false }));
+// --- Xavfsizlik sarlavhalari ---
+app.use((_req, res, next) => {
+  // Brauzer fayl turini o'zi taxmin qilmasin
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  // Sahifani boshqa saytga iframe qilib joylab bo'lmasin (clickjacking)
+  res.setHeader('X-Frame-Options', 'DENY');
+  // Boshqa saytga o'tganda to'liq manzil uzatilmasin
+  res.setHeader('Referrer-Policy', 'same-origin');
+  // Kamera/mikrofon faqat shu saytning o'ziga
+  res.setHeader('Permissions-Policy', 'camera=(self), microphone=(self), geolocation=()');
+  // Faqat o'z fayllarimiz ishlaydi — tashqi skript ulab bo'lmaydi (XSS)
+  res.setHeader(
+    'Content-Security-Policy',
+    "default-src 'self'; img-src 'self' data:; media-src 'self' blob:; " +
+      "script-src 'self'; style-src 'self' 'unsafe-inline'; " +
+      "frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+  );
+  if (config.isProduction) {
+    res.setHeader('Strict-Transport-Security', 'max-age=15552000; includeSubDomains');
+  }
+  next();
+});
+
+app.use(express.json({ limit: '100kb' }));
+app.use(express.urlencoded({ extended: false, limit: '100kb' }));
 app.use(cookieParser(config.secret));
 app.use(attachUser);
 
@@ -41,8 +64,18 @@ app.use('/api/admin', adminRoutes);
 
 // --- Sahifalar ---
 app.get('/login', (req, res) => {
+  if (req.user?.must_change_password) return res.redirect('/parol');
   if (req.user) return res.redirect(req.user.role === 'admin' ? '/admin' : '/');
   res.sendFile(path.join(config.publicDir, 'login.html'));
+});
+
+// Majburiy parol almashtirish sahifasi
+app.get('/parol', (req, res) => {
+  if (!req.user) return res.redirect('/login');
+  if (!req.user.must_change_password) {
+    return res.redirect(req.user.role === 'admin' ? '/admin' : '/');
+  }
+  res.sendFile(path.join(config.publicDir, 'parol.html'));
 });
 
 app.get('/', requirePage, (req, res) => {

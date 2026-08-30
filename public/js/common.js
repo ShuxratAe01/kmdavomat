@@ -70,6 +70,11 @@ async function api(url, options = {}) {
   } catch {
     data = {};
   }
+  // Parolni almashtirmaguncha boshqa hech narsa ishlamaydi
+  if (res.status === 403 && data.code === 'MUST_CHANGE_PASSWORD') {
+    location.href = '/parol';
+    throw new Error(data.error);
+  }
   if (!res.ok) throw new Error(data.error || `Xatolik (${res.status})`);
   return data;
 }

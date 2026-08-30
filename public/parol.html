@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="uz">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Yangi parol — Davomat</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔑</text></svg>" />
+</head>
+<body>
+  <div class="login-wrap">
+    <form class="login-card" id="pwForm" autocomplete="on">
+      <div class="login-logo">🔑</div>
+      <h1>Yangi parol qo‘ying</h1>
+      <p class="sub">Xavfsizlik uchun vaqtinchalik parolni o‘zingiznikiga almashtiring</p>
+
+      <div class="alert error" id="err" hidden></div>
+
+      <div class="field">
+        <label for="current">Vaqtinchalik parol</label>
+        <input type="password" id="current" autocomplete="current-password"
+               placeholder="Sizga berilgan parol" required />
+      </div>
+
+      <div class="field">
+        <label for="next">Yangi parol</label>
+        <input type="password" id="next" autocomplete="new-password" required />
+        <div class="pw-meter"><i id="pwBar"></i></div>
+        <div class="small muted" id="pwHint" style="margin-top:6px">
+          Kamida <span id="minLen">8</span> ta belgi, harf va raqam bo‘lsin
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="repeat">Yangi parolni takrorlang</label>
+        <input type="password" id="repeat" autocomplete="new-password" required />
+      </div>
+
+      <label class="checkline">
+        <input type="checkbox" id="showPw" /> Parollarni ko‘rsatish
+      </label>
+
+      <button class="btn big" type="submit" id="submitBtn" style="margin-top:14px">Saqlash va davom etish</button>
+
+      <button type="button" class="btn ghost" id="logoutBtn" style="width:100%;margin-top:10px">Chiqish</button>
+    </form>
+  </div>
+
+  <script src="/js/common.js"></script>
+  <script src="/js/parol.js"></script>
+</body>
+</html>

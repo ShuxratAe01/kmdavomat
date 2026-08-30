@@ -13,19 +13,30 @@ npm start
 
 Brauzerda oching: **http://localhost:5175**
 
-Birinchi ishga tushganda admin akkaunt avtomatik yaratiladi va terminalga chiqadi:
+Birinchi ishga tushganda admin akkaunt **tasodifiy kuchli parol** bilan yaratiladi
+va parol terminalga **bir marta** chiqadi:
 
-| Login | Parol |
-|---|---|
-| `admin` | `admin123` |
+```
+  ┌────────────────────────────────────────────────────┐
+  │  ADMIN AKKAUNT YARATILDI                           │
+  │                                                    │
+  │  Login:  admin                                     │
+  │  Parol:  fWM5xmkc5m7XDL                            │
+  │                                                    │
+  │  Bu parol faqat SHU YERDA ko'rsatiladi —           │
+  │  hozir nusxalab oling.                             │
+  │  Birinchi kirishda yangi parol so'raladi.          │
+  └────────────────────────────────────────────────────┘
+```
 
-> ⚠️ Kirgach parolni albatta o'zgartiring (Sozlamalar → Parolni o'zgartirish),
-> yoki `.env` faylida `ADMIN_PASSWORD` ni belgilab, `data/app.db` ni o'chirib qayta ishga tushiring.
+Shu parol bilan kirasiz, tizim darhol **o'z parolingizni qo'yishni** so'raydi.
+Parolni yo'qotib qo'ysangiz: serverni to'xtatib `data/app.db` ni o'chiring va qayta
+ishga tushiring (barcha ma'lumotlar ham o'chadi), yoki `.env` da `ADMIN_PASSWORD` bering.
 
 ## Ishlash tartibi
 
 1. **Admin** admin panelga kiradi → “Xodimlar” → **+ Yangi xodim** → F.I.Sh., login va parol beradi.
-2. **Xodim** o'sha login/parol bilan kiradi. Sessiya 90 kun saqlanadi — har safar qayta kirish shart emas.
+2. **Xodim** o'sha login/parol bilan kiradi va darhol **o'z parolini qo'yadi** (vaqtinchalik parol bir martalik). Keyin sessiya 90 kun saqlanadi — har safar qayta kirish shart emas.
 3. Xodim sahifasida: bugungi sana → oylik kalendar (yashil/qizil) → **🎬 Video yuborish** tugmasi.
 4. Video yuborilgach o'sha kun kalendarda darhol yashil bo'ladi va admin panelda ko'rinadi.
 5. Admin videoni ko'radi, yuklab oladi, **Qabul qilish / Rad etish** qiladi.
@@ -62,8 +73,8 @@ cp .env.example .env
 
 | O'zgaruvchi | Standart | Izoh |
 |---|---|---|
-| `PORT` | `3000` | Server porti |
-| `SESSION_SECRET` | — | **Ishlab chiqarishda albatta o'zgartiring** |
+| `PORT` | `5175` | Server porti |
+| `SESSION_SECRET` | — | Bo'sh qoldiring — avtomatik yaratiladi (`data/secret.key`) |
 | `SESSION_DAYS` | `90` | Sessiya necha kun saqlanadi |
 | `TZ_NAME` | `Asia/Tashkent` | Sanalar shu mintaqa bo'yicha hisoblanadi |
 | `STORAGE` | `db` | `db` = SQLite ichida, `disk` = `uploads/` papkada |
@@ -71,8 +82,33 @@ cp .env.example .env
 | `CAMERA_FACING` | `user` | `user` = oldingi (selfi) kamera, `environment` = orqadagi |
 | `MAX_VIDEO_MB` | `60` | Bitta video uchun maksimal hajm |
 | `ALLOW_MULTIPLE_PER_DAY` | `false` | Kuniga bir nechta video yuborishga ruxsat |
-| `ADMIN_USERNAME` / `ADMIN_PASSWORD` | `admin` / `admin123` | Birinchi admin |
-| `NODE_ENV` | — | `production` bo'lsa cookie faqat HTTPS orqali yuriladi |
+| `MIN_PASSWORD_LENGTH` | `8` | Parolning eng qisqa uzunligi |
+| `BCRYPT_ROUNDS` | `12` | Parol hashlash murakkabligi |
+| `MAX_LOGIN_ATTEMPTS` | `5` | Nechta xato urinishdan keyin bloklansin |
+| `LOCK_MINUTES` | `15` | Blok necha daqiqa davom etsin |
+| `ADMIN_USERNAME` | `admin` | Birinchi adminning logini |
+| `ADMIN_PASSWORD` | — | Bo'sh qoldiring — tasodifiy parol yaratiladi |
+| `NODE_ENV` | — | `production` bo'lsa cookie faqat HTTPS orqali yuriladi + HSTS |
+
+## Xavfsizlik
+
+| Nima | Qanday himoyalangan |
+|---|---|
+| **Parollar** | bcrypt (12 rounds) bilan hashlanadi — bazadan parolni o'qib bo'lmaydi |
+| **Standart parol** | Yo'q. Birinchi admin uchun tasodifiy parol yaratiladi, kirgach almashtiriladi |
+| **Zaif parollar** | Kamida 8 belgi, harf + raqam. Mashhur parollar, ketma-ketliklar, login ichida bo'lishi rad etiladi |
+| **Vaqtinchalik parol** | Admin yaratgan yoki tiklagan parol bilan kirgan xodim o'z parolini qo'ymaguncha hech nima ishlamaydi |
+| **Parol terish (brute force)** | 5 xato urinishdan keyin 15 daqiqa blok; keyingi bloklar uzayadi (2 soatgacha). Login bo'yicha ham, IP bo'yicha ham hisoblanadi |
+| **Login oshkor bo'lishi** | "Login yoki parol noto'g'ri" — qaysi biri xato ekani aytilmaydi; javob vaqti ham bir xil |
+| **Sessiyalar** | Bazada token emas, uning SHA-256 hashi saqlanadi — baza sizib chiqsa ham kirib bo'lmaydi |
+| **Cookie** | `HttpOnly` (JS o'qiy olmaydi), `SameSite=Lax` (CSRF), production'da `Secure` (faqat HTTPS) |
+| **Parol o'zgarganda** | Barcha qurilmalardagi eski sessiyalar uziladi |
+| **Xodim bloklanganda** | Sessiyalari darhol uziladi |
+| **XSS / clickjacking** | CSP (tashqi skript ishlamaydi), `X-Frame-Options: DENY`, `nosniff` |
+| **Sessiya kaliti** | Kodda yo'q — birinchi ishga tushganda `data/secret.key` ga tasodifiy yaratiladi |
+
+Parolni **admin ham ko'ra olmaydi**: u faqat vaqtinchalik parol beradi, xodim kirgach
+o'zinikini qo'yadi. Xodim parolini unutsa — admin yangi vaqtinchalik parol beradi.
 
 ### Videolarni qayerda saqlash
 
@@ -123,8 +159,8 @@ Node.js ning ichki `node:sqlite` moduli ishlatilgan — hech qanday native kompi
 server/
   index.js          — Express server, sahifalar marshruti
   config.js         — .env sozlamalari
-  db.js             — SQLite sxemasi, admin seed
-  auth.js           — parol hash, sessiya, ruxsat tekshiruvlari
+  db.js             — SQLite sxemasi, migratsiyalar, tasodifiy admin paroli
+  auth.js           — parol hash, parol qoidalari, sessiya, brute force himoyasi
   storage.js        — video saqlash (db / disk)
   util/date.js      — Toshkent vaqti bo'yicha sana hisoblari
   routes/
@@ -132,14 +168,14 @@ server/
     videos.js       — kalendar, video yuborish, oqim
     admin.js        — davomat, xodimlar, videolar boshqaruvi
 public/
-  login.html · index.html · admin.html
+  login.html · index.html · admin.html · parol.html
   css/styles.css
-  js/common.js · login.js · app.js · admin.js
+  js/common.js · login.js · app.js · admin.js · parol.js
 ```
 
 ## Ishlab chiqarishga chiqarish (production)
 
-1. `.env` da `SESSION_SECRET` ni uzun tasodifiy satrga almashtiring, `NODE_ENV=production` qo'ying.
+1. `.env` da `NODE_ENV=production` qo'ying (sessiya kaliti avtomatik yaratiladi).
 2. Oldiga **HTTPS** bilan nginx/Caddy qo'ying (kamerada yozish uchun ham shart).
 3. Serverni `pm2` yoki `systemd` bilan doimiy ishlatib turing:
    ```bash

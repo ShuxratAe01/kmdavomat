@@ -1,6 +1,6 @@
 import express from 'express';
 import crypto from 'node:crypto';
-import { db, generateInviteCode, schoolUsername } from '../db.js';
+import { db, generateInviteCode, schoolUsername, schoolName } from '../db.js';
 import { requireAdmin, hashPassword, destroyAllSessions, checkPasswordStrength } from '../auth.js';
 import { deleteVideoFile } from '../storage.js';
 import { dayStr, isDay, normalizeMonth, nowIso } from '../util/date.js';
@@ -148,7 +148,7 @@ router.post('/schools', (req, res) => {
   if (db.prepare('SELECT id FROM schools WHERE number = ?').get(number)) {
     return res.status(409).json({ error: `${number}-maktab allaqachon ro‘yxatda bor` });
   }
-  const name = String(req.body?.name || '').trim() || `${number}-maktab`;
+  const name = String(req.body?.name || '').trim() || schoolName(number);
   db.prepare('INSERT INTO schools (number, name, invite_code, created_at) VALUES (?, ?, ?, ?)')
     .run(number, name.slice(0, 120), generateInviteCode(), nowIso());
   res.status(201).json({ ok: true });

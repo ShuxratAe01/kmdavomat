@@ -13,13 +13,16 @@ let minLen = 8;
     minLen = d.minPasswordLength || 8;
     $('#minLen').textContent = minLen;
 
-    if (!d.enabled) {
+    if (!d.registrationOpen) {
       $('#school').innerHTML = '<option value="">—</option>';
       showAlert(err, 'Ro‘yxatdan o‘tish yopilgan. Administrator bilan bog‘laning.');
       btn.disabled = true;
       return;
     }
-    if (!d.schools.length) {
+
+    // Faqat hali ro'yxatdan o'tmagan maktablar
+    const free = d.schools.filter((s) => !s.registered);
+    if (!free.length) {
       $('#school').innerHTML = '<option value="">—</option>';
       showAlert(err, 'Barcha maktablar allaqachon ro‘yxatdan o‘tgan.');
       btn.disabled = true;
@@ -28,7 +31,7 @@ let minLen = 8;
 
     $('#school').innerHTML =
       '<option value="">— Maktabni tanlang —</option>' +
-      d.schools.map((s) => `<option value="${s.id}">${esc(s.name)}</option>`).join('');
+      free.map((s) => `<option value="${s.id}">${esc(s.name)}</option>`).join('');
 
     if (d.registered) {
       showAlert(info, `${d.total} ta maktabdan ${d.registered} tasi ro‘yxatdan o‘tgan.`, 'info');

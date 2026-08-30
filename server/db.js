@@ -138,6 +138,11 @@ export function schoolUsername(number) {
   return `${number}-maktab`;
 }
 
+/** Maktabning to'liq nomi: 7 -> "7-sonli umumiy oʻrta taʼlim maktabi" */
+export function schoolName(number) {
+  return `${number}-sonli umumiy oʻrta taʼlim maktabi`;
+}
+
 const schoolCount = db.prepare('SELECT COUNT(*) AS n FROM schools').get().n;
 if (schoolCount === 0) {
   const total = Number(config.schoolCount || 71);
@@ -146,10 +151,23 @@ if (schoolCount === 0) {
   );
   const now = nowIso();
   for (let n = 1; n <= total; n++) {
-    insert.run(n, `${n}-maktab`, generateInviteCode(), now);
+    insert.run(n, schoolName(n), generateInviteCode(), now);
   }
   console.log(`  ℹ  ${total} ta maktab yaratildi. Ro‘yxat kodlarini admin panelning`);
   console.log('     "Maktablar" bo‘limidan ko‘rasiz va maktablarga tarqatasiz.');
+} else {
+  // Eski qisqa nomlarni ("7-maktab") to'liq nomga o'tkazamiz.
+  // Admin qo'lda o'zgartirgan nomlarga tegilmaydi.
+  const renamed = db
+    .prepare("UPDATE schools SET name = number || '-sonli umumiy oʻrta taʼlim maktabi' WHERE name = number || '-maktab'")
+    .run().changes;
+  if (renamed) {
+    db.exec(
+      `UPDATE users SET full_name = (SELECT name FROM schools WHERE schools.user_id = users.id)
+       WHERE id IN (SELECT user_id FROM schools WHERE user_id IS NOT NULL)`
+    );
+    console.log(`  ℹ  ${renamed} ta maktab nomi to‘liq ko‘rinishga o‘tkazildi.`);
+  }
 }
 
 // --- Birinchi ishga tushirishda admin yaratish ---

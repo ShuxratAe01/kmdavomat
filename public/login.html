@@ -16,10 +16,19 @@
 
       <div class="alert error" id="err" hidden></div>
 
-      <div class="field">
+      <!-- Maktab tanlash (asosiy usul) -->
+      <div class="field" id="schoolField">
+        <label for="school">Maktabingiz</label>
+        <select id="school">
+          <option value="">Yuklanmoqda…</option>
+        </select>
+      </div>
+
+      <!-- Admin uchun: login qo'lda yoziladi -->
+      <div class="field" id="usernameField" hidden>
         <label for="username">Login</label>
         <input type="text" id="username" name="username" autocomplete="username"
-               autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="masalan: 1-maktab" required />
+               autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="admin" />
       </div>
 
       <div class="field">
@@ -30,12 +39,15 @@
 
       <button class="btn big" type="submit" id="submitBtn">Kirish</button>
 
-      <p class="small muted" style="text-align:center;margin:16px 0 0">
+      <p class="small muted" style="text-align:center;margin:16px 0 0" id="regHint">
         Maktabingiz hali ro‘yxatdan o‘tmaganmi?
         <a href="/royxat">Ro‘yxatdan o‘tish</a>
       </p>
       <p class="small muted" style="text-align:center;margin:6px 0 0">
         Parolni unutsangiz administratorga murojaat qiling.
+      </p>
+      <p class="small muted" style="text-align:center;margin:12px 0 0">
+        <a href="#" id="toggleMode">Administrator sifatida kirish</a>
       </p>
     </form>
   </div>

@@ -40,7 +40,9 @@ ishga tushiring (barcha ma'lumotlar ham o'chadi), yoki `.env` da `ADMIN_PASSWORD
    oladi (yoki hammasini CSV qilib yuklab oladi) va maktablarga tarqatadi.
 2. **Maktab xodimi** saytga kiradi → "Ro‘yxatdan o‘tish" → maktabini ro‘yxatdan tanlaydi,
    kodini kiritadi va **o‘ziga parol qo‘yadi**. Shu zahoti ichkariga kiradi.
-3. Login avtomatik yaratiladi: 5-maktab uchun `5-maktab`. Sessiya 90 kun saqlanadi.
+3. Keyingi safar **kirish sahifasida ham maktabini ro‘yxatdan tanlaydi** va parolini kiritadi —
+   login yozib o‘tirmaydi. Brauzer oxirgi tanlangan maktabni eslab qoladi.
+   Sessiya 90 kun saqlanadi, ya'ni har kuni qayta kirish shart emas.
 4. Maktab sahifasida: bugungi sana → oylik kalendar (yashil/qizil) → **🎬 Video yuborish**.
 5. Video yuborilgach o‘sha kun kalendarda darhol yashil bo‘ladi va admin panelda ko‘rinadi.
 6. Admin videoni ko‘radi, yuklab oladi, **Qabul qilish / Rad etish** qiladi.
@@ -57,11 +59,26 @@ Bitta umumiy kod emas — shuning uchun:
 Kodda chalkashadigan belgilar (0, 1, O, I, L) ishlatilmaydi — qog‘ozdan ko‘chirish
 va telefonda aytish oson bo‘lsin uchun. Kodni 5 marta xato kiritganda blok tushadi.
 
+### Maktablar ro‘yxati
+
+Birinchi ishga tushganda **71 ta maktab** shu ko‘rinishda yaratiladi:
+
+```
+1-sonli umumiy oʻrta taʼlim maktabi
+2-sonli umumiy oʻrta taʼlim maktabi
+...
+71-sonli umumiy oʻrta taʼlim maktabi
+```
+
+Har birining logini raqamidan yasaladi (`1-maktab`, `2-maktab` …), lekin foydalanuvchi
+uni yozmaydi — ro‘yxatdan tanlaydi. Nomni admin panelda o‘zgartirish mumkin,
+maktablar sonini `.env` dagi `SCHOOL_COUNT` belgilaydi.
+
 ## Sahifalar
 
 | Manzil | Kim uchun | Nima bor |
 |---|---|---|
-| `/login` | hamma | Login va parol |
+| `/login` | hamma | Maktabni ro‘yxatdan tanlab kirish (admin uchun login/parol) |
 | `/royxat` | maktablar | Maktabni tanlab, kod bilan ro‘yxatdan o‘tish |
 | `/parol` | hamma | Vaqtinchalik parolni almashtirish |
 | `/` | maktab | Bugungi sana, oylik kalendar, video yuborish, o'z videolari |

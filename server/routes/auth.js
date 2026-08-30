@@ -107,20 +107,27 @@ router.post('/login', (req, res) => {
 });
 
 /**
- * Ro'yxatdan o'tish uchun maktablar ro'yxati.
- * Kodlar bu yerda YUBORILMAYDI — faqat nomlar.
+ * Maktablar ro'yxati — kirish va ro'yxatdan o'tish sahifalari uchun.
+ * Ro'yxat kodlari bu yerda YUBORILMAYDI, faqat nomlar.
  */
 router.get('/schools', (_req, res) => {
-  if (!config.allowRegistration) return res.json({ enabled: false, schools: [] });
-  const schools = db
-    .prepare('SELECT id, number, name FROM schools WHERE user_id IS NULL ORDER BY number')
+  const rows = db
+    .prepare('SELECT id, number, name, user_id FROM schools ORDER BY number')
     .all();
-  const registered = db.prepare('SELECT COUNT(*) n FROM schools WHERE user_id IS NOT NULL').get().n;
+
+  const schools = rows.map((s) => ({
+    id: s.id,
+    number: s.number,
+    name: s.name,
+    login: schoolUsername(s.number),
+    registered: Boolean(s.user_id),
+  }));
+
   res.json({
-    enabled: true,
+    registrationOpen: config.allowRegistration,
     schools,
-    registered,
-    total: registered + schools.length,
+    total: schools.length,
+    registered: schools.filter((s) => s.registered).length,
     minPasswordLength: config.minPasswordLength,
   });
 });

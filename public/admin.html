@@ -24,6 +24,7 @@
       <button class="tab active" data-tab="overview">📊 Bugungi davomat</button>
       <button class="tab" data-tab="videos">🎬 Videolar</button>
       <button class="tab" data-tab="schools">🏫 Maktablar</button>
+      <button class="tab" data-tab="clubs">🎓 To‘garaklar</button>
       <button class="tab" data-tab="users">👥 Adminlar</button>
     </div>
 
@@ -128,6 +129,32 @@
       </div>
       <div class="card">
         <div id="schoolList"></div>
+      </div>
+    </section>
+
+    <!-- ===== To'garaklar ===== -->
+    <section id="tab-clubs" hidden>
+      <div class="card">
+        <div class="stats" style="margin-bottom:16px">
+          <div class="stat blue"><b id="acTotal">0</b><span>Jami to‘garak</span></div>
+          <div class="stat green"><b id="acStudents">0</b><span>O‘quvchilar</span></div>
+          <div class="stat"><b id="acSchools">0</b><span>To‘garagi bor maktab</span></div>
+        </div>
+        <div class="row">
+          <div>
+            <label class="small muted" for="acSearch">Qidirish</label>
+            <input type="search" id="acSearch" placeholder="To‘garak, rahbar yoki maktab nomi" />
+          </div>
+          <div>
+            <label class="small muted" for="acSchool">Maktab</label>
+            <select id="acSchool"><option value="">Barchasi</option></select>
+          </div>
+          <div class="fixed"><button class="btn" id="acApply">Filtrlash</button></div>
+          <div class="fixed"><button class="btn ghost" id="acReset">Tozalash</button></div>
+        </div>
+      </div>
+      <div class="card">
+        <div id="clubList"></div>
       </div>
     </section>
 

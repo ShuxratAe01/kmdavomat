@@ -71,6 +71,19 @@ CREATE TABLE IF NOT EXISTS sessions (
 );
 CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(user_id);
 
+-- Maktabdagi to'garaklar
+CREATE TABLE IF NOT EXISTS clubs (
+  id         INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  name       TEXT NOT NULL,
+  teacher    TEXT NOT NULL DEFAULT '',
+  students   INTEGER NOT NULL DEFAULT 0,
+  schedule   TEXT NOT NULL DEFAULT '',
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL DEFAULT ''
+);
+CREATE INDEX IF NOT EXISTS idx_clubs_user ON clubs(user_id);
+
 -- Profil rasmi. Alohida jadvalda — users bo'yicha oddiy so'rovlar
 -- har safar rasm baytlarini ko'tarib yurmasin.
 CREATE TABLE IF NOT EXISTS user_photos (

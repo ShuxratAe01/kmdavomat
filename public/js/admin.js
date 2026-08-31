@@ -25,6 +25,7 @@ async function init() {
   bindOverview();
   bindVideos();
   bindSchools();
+  bindClubs();
   bindUsers();
 
   await loadSchools();
@@ -37,11 +38,12 @@ function bindTabs() {
     t.addEventListener('click', () => {
       $$('.tab').forEach((x) => x.classList.remove('active'));
       t.classList.add('active');
-      ['overview', 'videos', 'schools', 'users'].forEach((name) => {
+      ['overview', 'videos', 'schools', 'clubs', 'users'].forEach((name) => {
         $(`#tab-${name}`).hidden = name !== t.dataset.tab;
       });
       if (t.dataset.tab === 'videos') loadVideos(1);
       if (t.dataset.tab === 'schools') loadSchools();
+      if (t.dataset.tab === 'clubs') loadClubs();
       if (t.dataset.tab === 'users') renderUsers();
     })
   );
@@ -520,6 +522,62 @@ function exportCodes() {
   flash(`${rows.length} ta maktab kodi yuklab olindi`);
 }
 
+// ---------- To'garaklar ----------
+
+function bindClubs() {
+  $('#acApply').addEventListener('click', loadClubs);
+  $('#acSearch').addEventListener('input', () => {
+    clearTimeout(S.clubTimer);
+    S.clubTimer = setTimeout(loadClubs, 300);
+  });
+  $('#acSchool').addEventListener('change', loadClubs);
+  $('#acReset').addEventListener('click', () => {
+    $('#acSearch').value = '';
+    $('#acSchool').value = '';
+    loadClubs();
+  });
+}
+
+async function loadClubs() {
+  const q = new URLSearchParams();
+  if ($('#acSearch').value.trim()) q.set('q', $('#acSearch').value.trim());
+  if ($('#acSchool').value) q.set('school_id', $('#acSchool').value);
+
+  $('#clubList').innerHTML = '<p class="muted small">Yuklanmoqda…</p>';
+  try {
+    const d = await api(`/api/admin/clubs?${q}`);
+    $('#acTotal').textContent = d.stats.total;
+    $('#acStudents').textContent = d.stats.students;
+    $('#acSchools').textContent = `${d.stats.schools} / ${d.stats.schoolsTotal}`;
+
+    if (!d.clubs.length) {
+      $('#clubList').innerHTML =
+        '<div class="empty-state"><span class="ico">🎓</span>To‘garak topilmadi</div>';
+      return;
+    }
+
+    $('#clubList').innerHTML = `<div class="table-wrap"><table>
+      <thead><tr><th>To‘garak</th><th>Maktab</th><th>Rahbari</th><th>O‘quvchilar</th><th>Vaqti</th></tr></thead>
+      <tbody>${d.clubs
+        .map(
+          (c) => `<tr>
+            <td class="cell-main">
+              <b>${esc(c.name)}</b>
+              <div class="small muted only-sm">${esc(c.school_name)}</div>
+              <div class="small muted hide-sm">${c.school_number}-maktab</div>
+            </td>
+            <td data-label="Maktab" class="small hide-sm">${esc(c.school_name)}</td>
+            <td data-label="Rahbari" class="small">${esc(c.teacher || '—')}</td>
+            <td data-label="O‘quvchilar" class="small nowrap">${c.students || '—'}</td>
+            <td data-label="Vaqti" class="small muted">${esc(c.schedule || '—')}</td>
+          </tr>`
+        )
+        .join('')}</tbody></table></div>`;
+  } catch (e) {
+    $('#clubList').innerHTML = `<p class="alert error">${esc(e.message)}</p>`;
+  }
+}
+
 // ---------- Adminlar ----------
 
 function bindUsers() {
@@ -534,6 +592,11 @@ async function loadUsers() {
   const { users } = await api('/api/admin/users');
   S.users = users;
   // Videolar filtri ro'yxatdan o'tgan maktablar bo'yicha
+  const schoolOptions = S.schools
+    .map((sc) => `<option value="${sc.id}">${esc(sc.name)}</option>`)
+    .join('');
+  $('#acSchool').innerHTML = '<option value="">Barchasi</option>' + schoolOptions;
+
   $('#fUser').innerHTML =
     '<option value="">Barchasi</option>' +
     S.schools

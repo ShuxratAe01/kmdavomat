@@ -13,6 +13,7 @@ const CAN_RECORD_ROUND =
 let state = {
   user: null,
   profile: null,
+  clubs: [],
   month: null,
   today: null,
   calendar: null,
@@ -55,7 +56,129 @@ async function init() {
   await loadCalendar();
   bindEvents();
   bindProfile();
+  bindClubs();
+  loadClubs();
   startWeather();
+}
+
+// ---------- To'garaklar ----------
+
+async function loadClubs() {
+  try {
+    const d = await api('/api/clubs');
+    state.clubs = d.clubs;
+
+    // Profil kartochkasidagi tugmada nechta ekani ko'rinib tursin
+    const badge = $('#clubsCount');
+    badge.textContent = d.stats.count;
+    badge.hidden = d.stats.count === 0;
+
+    $('#clubsTotal').textContent = d.stats.count;
+    $('#clubsStudents').textContent = d.stats.students;
+    renderClubs();
+  } catch (e) {
+    showAlert($('#clubsErr'), e.message);
+  }
+}
+
+function renderClubs() {
+  const list = state.clubs || [];
+  if (!list.length) {
+    $('#clubsList').innerHTML =
+      '<div class="empty-state"><span class="ico">🎓</span>Hali to‘garak qo‘shilmagan.<br>' +
+      '<span class="small">Pastdagi tugma orqali qo‘shing.</span></div>';
+    return;
+  }
+
+  $('#clubsList').innerHTML = `<div class="table-wrap"><table>
+    <thead><tr><th>To‘garak</th><th>Rahbari</th><th>O‘quvchilar</th><th>Vaqti</th><th></th></tr></thead>
+    <tbody>${list
+      .map(
+        (c) => `<tr>
+          <td class="cell-main"><b>${esc(c.name)}</b></td>
+          <td data-label="Rahbari" class="small">${esc(c.teacher || '—')}</td>
+          <td data-label="O‘quvchilar" class="small nowrap">${c.students || '—'}</td>
+          <td data-label="Vaqti" class="small muted">${esc(c.schedule || '—')}</td>
+          <td class="cell-actions nowrap">
+            <button class="btn sm ghost" data-club-edit="${c.id}">✎</button>
+            <button class="btn sm danger" data-club-del="${c.id}">🗑</button>
+          </td>
+        </tr>`
+      )
+      .join('')}</tbody></table></div>`;
+}
+
+function openClubForm(club) {
+  hideAlert($('#cfErr'));
+  $('#clubForm').reset();
+  $('#cfId').value = club ? club.id : '';
+  $('#cfTitle').textContent = club ? 'To‘garakni tahrirlash' : 'Yangi to‘garak';
+  if (club) {
+    $('#cfName').value = club.name;
+    $('#cfTeacher').value = club.teacher || '';
+    $('#cfStudents').value = club.students || '';
+    $('#cfSchedule').value = club.schedule || '';
+  }
+  openModal('clubFormModal');
+}
+
+function bindClubs() {
+  $('#clubsBtn').addEventListener('click', () => {
+    hideAlert($('#clubsErr'));
+    hideAlert($('#clubsOk'));
+    openModal('clubsModal');
+  });
+
+  $('#clubAddBtn').addEventListener('click', () => openClubForm(null));
+
+  // Faqat raqam kiritilsin
+  $('#cfStudents').addEventListener('input', (e) => {
+    e.target.value = e.target.value.replace(/\D/g, '');
+  });
+
+  $('#clubsList').addEventListener('click', async (e) => {
+    const edit = e.target.closest('[data-club-edit]');
+    if (edit) {
+      return openClubForm(state.clubs.find((c) => c.id === Number(edit.dataset.clubEdit)));
+    }
+
+    const del = e.target.closest('[data-club-del]');
+    if (del) {
+      const club = state.clubs.find((c) => c.id === Number(del.dataset.clubDel));
+      if (!confirm(`"${club.name}" to‘garagi o‘chirilsinmi?`)) return;
+      try {
+        await api(`/api/clubs/${club.id}`, { method: 'DELETE' });
+        await loadClubs();
+        showAlert($('#clubsOk'), 'To‘garak o‘chirildi', 'ok');
+        setTimeout(() => hideAlert($('#clubsOk')), 4000);
+      } catch (err) {
+        showAlert($('#clubsErr'), err.message);
+      }
+    }
+  });
+
+  $('#clubForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    hideAlert($('#cfErr'));
+    const id = $('#cfId').value;
+    const body = JSON.stringify({
+      name: $('#cfName').value,
+      teacher: $('#cfTeacher').value,
+      students: Number($('#cfStudents').value || 0),
+      schedule: $('#cfSchedule').value,
+    });
+    try {
+      if (id) await api(`/api/clubs/${id}`, { method: 'PATCH', body });
+      else await api('/api/clubs', { method: 'POST', body });
+
+      closeModal('clubFormModal');
+      await loadClubs();
+      showAlert($('#clubsOk'), id ? 'Saqlandi' : 'To‘garak qo‘shildi', 'ok');
+      setTimeout(() => hideAlert($('#clubsOk')), 4000);
+    } catch (err) {
+      showAlert($('#cfErr'), err.message);
+    }
+  });
 }
 
 // ---------- Ob-havo ----------

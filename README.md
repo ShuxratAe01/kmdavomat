@@ -87,7 +87,9 @@ maktablar sonini `.env` dagi `SCHOOL_COUNT` belgilaydi.
 
 ### Maktab sahifasi
 - **Profil kartochkasi**: rasm, F.I.SH., maktab raqami, telefon
-- Rasmni almashtirish va ma'lumotlarni tahrirlash — yuqoridagi ⋮ (Sozlamalar) tugmasi ostida
+- Rasmni almashtirish va ma'lumotlarni tahrirlash — yuqoridagi Sozlamalar tugmasi ostida
+- **To'garaklar bo'limi**: nomi, rahbari, o'quvchilar soni, mashg'ulot vaqti.
+  Qo'shish, tahrirlash, o'chirish. Har maktab faqat o'zinikini ko'radi
 - Yuqorida bugungi sana + hafta kuni + bugungi holat + **real vaqtdagi ob-havo**
 - Logotip har 8 soniyada jonlanadi: 2 soniya harakat (pastdan ko’tarilib ikki marta aylanadi),
   so’ng 6 soniya tinch turadi. 21-maktab loyihasidagi bilan bir xil
@@ -108,6 +110,7 @@ maktablar sonini `.env` dagi `SCHOOL_COUNT` belgilaydi.
 - **🏫 Maktablar** — 71 ta maktab, mas'ul shaxs (F.I.SH. + telefon),
   ro'yxat kodlari (ko'rish, yangilash, CSV qilib yuklab olish),
   qidiruv va filtr, parolni tiklash, hisobni o'chirish, har birining kalendari, yangi maktab qo'shish
+- **🎓 To'garaklar** — barcha maktablarning to'garaklari bir ro'yxatda, qidiruv va maktab bo'yicha filtr
 - **👥 Adminlar** — tizim administratorlarini boshqarish
 
 ## Sozlash (`.env`)
@@ -246,7 +249,7 @@ Node.js ning ichki `node:sqlite` moduli ishlatilgan — hech qanday native kompi
 (Node.js **22.5+** talab qilinadi, tavsiya: 24+).
 
 **Jadvallar:** `schools` (maktablar) · `users` (hisoblar) · `user_photos` (profil rasmlari) ·
-`sessions` (kirish sessiyalari) · `videos` (yuborilgan videolar) · `login_attempts`
+`sessions` (kirish sessiyalari) · `videos` (yuborilgan videolar) · `clubs` (to'garaklar) · `login_attempts`
 
 **Zaxira nusxa:** `data/` papkasini nusxalash kifoya (server to'xtagan holatda).
 
@@ -265,6 +268,7 @@ server/
     videos.js       — kalendar, video yuborish, oqim
     admin.js        — davomat, maktablar, videolar boshqaruvi
     weather.js      — ob-havo (open-meteo, saqlab turiladi)
+    clubs.js        — to'garaklar
     profile.js      — profil ma'lumotlari va rasmi
 public/
   login.html · index.html · admin.html · parol.html · royxat.html

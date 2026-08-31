@@ -451,6 +451,53 @@ a { color: var(--brand); }
 }
 .profile-ico svg { width: 15px; height: 15px; color: #fff; }
 
+/* "To'garaklar" bo'limiga o'tish tugmasi */
+.clubs-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-left: 12px;
+  padding: 5px 12px 5px 7px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 650;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, transform 0.06s;
+}
+.clubs-chip:hover { background: rgba(255, 255, 255, 0.3); }
+.clubs-chip:active { transform: translateY(1px); }
+
+.cap-ico {
+  width: 24px;
+  height: 24px;
+  flex: none;
+  display: block;
+  filter: drop-shadow(0 1px 2px rgba(20, 0, 60, 0.35));
+}
+
+.clubs-count {
+  min-width: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: #fff;
+  color: #6a3fe0;
+  font-size: 11.5px;
+  font-weight: 750;
+  line-height: 18px;
+  text-align: center;
+}
+.clubs-count[hidden] { display: none !important; }
+
+@media (max-width: 620px) {
+  .clubs-chip { margin-left: 0; }
+  .profile-rows li { flex-wrap: wrap; }
+}
+
 
 
 @media (max-width: 620px) {

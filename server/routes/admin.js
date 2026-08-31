@@ -90,6 +90,55 @@ router.get('/overview', (req, res) => {
   });
 });
 
+// ---------------- To'garaklar ----------------
+
+/** Barcha maktablarning to'garaklari */
+router.get('/clubs', (req, res) => {
+  const where = [];
+  const params = [];
+
+  if (req.query.school_id) {
+    where.push('s.id = ?');
+    params.push(Number(req.query.school_id));
+  }
+  if (req.query.q) {
+    where.push('(c.name LIKE ? OR c.teacher LIKE ? OR s.name LIKE ?)');
+    const like = `%${String(req.query.q).trim()}%`;
+    params.push(like, like, like);
+  }
+  const clause = where.length ? `WHERE ${where.join(' AND ')}` : '';
+
+  const clubs = db
+    .prepare(
+      `SELECT c.id, c.name, c.teacher, c.students, c.schedule, c.created_at,
+              s.number AS school_number, s.name AS school_name
+       FROM clubs c
+       JOIN users u ON u.id = c.user_id
+       JOIN schools s ON s.id = u.school_id
+       ${clause}
+       ORDER BY s.number, c.name COLLATE NOCASE`
+    )
+    .all(...params);
+
+  const all = db
+    .prepare(
+      `SELECT COUNT(*) AS n, COALESCE(SUM(c.students), 0) AS students,
+              COUNT(DISTINCT u.school_id) AS schools
+       FROM clubs c JOIN users u ON u.id = c.user_id`
+    )
+    .get();
+
+  res.json({
+    clubs,
+    stats: {
+      total: all.n,
+      students: all.students,
+      schools: all.schools,
+      schoolsTotal: db.prepare('SELECT COUNT(*) n FROM schools').get().n,
+    },
+  });
+});
+
 // ---------------- Maktablar ----------------
 
 /** Barcha maktablar: ro'yxat kodi, ro'yxatdan o'tgan-o'tmagani, video statistikasi */

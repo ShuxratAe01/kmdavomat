@@ -82,7 +82,7 @@ maktablar sonini `.env` dagi `SCHOOL_COUNT` belgilaydi.
 | `/login` | hamma | Maktabni ro‘yxatdan tanlab kirish (admin uchun login/parol) |
 | `/royxat` | maktablar | Maktabni tanlab, kod bilan ro‘yxatdan o‘tish |
 | `/parol` | hamma | Vaqtinchalik parolni almashtirish |
-| `/` | maktab | Bugungi sana, oylik kalendar, video yuborish, o'z videolari |
+| `/` | maktab | Profil, bugungi sana, oylik kalendar, video yuborish, o'z videolari |
 | `/admin` | admin | Bugungi davomat, videolar, maktablarni boshqarish |
 
 ### Maktab sahifasi

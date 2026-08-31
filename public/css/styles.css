@@ -1496,3 +1496,8 @@ video { width: 100%; border-radius: var(--radius-sm); background: #000; display:
 
 #clubsList td::before,
 #clubList td::before { color: #6d28d9; }
+
+/* To'garaklar bo'limining ramkasi */
+#clubsModal .modal {
+  border: 3px solid #a4e5d7;
+}

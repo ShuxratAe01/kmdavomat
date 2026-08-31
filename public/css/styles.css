@@ -103,8 +103,9 @@ a { color: var(--brand); }
 
 /* Yuqori paneldagi yuguruvchi eslatma — o'ngdan chapga, 10 soniyada bir marta.
    O'z ustunida yuradi, yonidagi yozuvlarga tegmaydi. */
+/* Pastki paneldagi yuguruvchi yozuv */
 .ticker {
-  flex: 1 1 0;
+  flex: 1 1 auto;
   min-width: 0;
   overflow: hidden;
   height: 20px;
@@ -1633,16 +1634,6 @@ video { width: 100%; border-radius: var(--radius-sm); background: #000; display:
   .calendar, .weekdays { gap: 5px; }
   .who strong { font-size: 13px; }
   .brand-logo { height: 44px; }
-  .topbar { flex-wrap: wrap; }
-  .topbar .ticker {
-    order: 9;
-    flex: 1 0 100%;
-    margin-top: 4px;
-    padding-top: 4px;
-    height: 22px;
-    line-height: 22px;
-    border-top: 1px solid var(--border);
-  }
 }
 
 /* ===== To'garaklar jadvali — to'q binafsha yozuv ===== */

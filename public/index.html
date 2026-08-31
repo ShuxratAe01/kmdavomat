@@ -31,6 +31,71 @@
       <img class="today-logo" src="/img/logo.png" alt="Kelajak Markazlari" />
     </section>
 
+    <!-- Profil kartochkasi -->
+    <section class="profile-card">
+      <div class="profile-photo-col">
+        <div class="profile-photo" id="profilePhoto">
+          <img id="photoImg" alt="" hidden />
+          <span class="profile-photo-empty" id="photoEmpty">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="8.5" r="3.8" />
+              <path d="M4.5 20.5c0-3.7 3.4-6.2 7.5-6.2s7.5 2.5 7.5 6.2" />
+            </svg>
+          </span>
+        </div>
+        <button type="button" class="profile-photo-btn" id="photoBtn" title="Rasmni o‘zgartirish">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M3 8.5h3.2l1.4-2.2h8.8l1.4 2.2H21v11H3z" />
+            <circle cx="12" cy="14" r="3.4" />
+          </svg>
+          Rasmni o‘zgartirish
+        </button>
+        <input type="file" id="photoInput" accept="image/*" hidden />
+      </div>
+
+      <div class="profile-info">
+        <h2 class="profile-name" id="profileName">—</h2>
+        <p class="profile-position" id="profileSchool">—</p>
+
+        <ul class="profile-rows">
+          <li>
+            <span class="profile-ico">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                   stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M3 21h18M5 21V10l7-5 7 5v11" /><path d="M10 21v-5h4v5" />
+              </svg>
+            </span>
+            <span id="profileNumber">—</span>
+          </li>
+          <li>
+            <span class="profile-ico">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                   stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="8" r="3.6" />
+                <path d="M4.5 20c0-3.6 3.4-6 7.5-6s7.5 2.4 7.5 6" />
+              </svg>
+            </span>
+            <span id="profileFio">—</span>
+          </li>
+          <li>
+            <span class="profile-ico">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                   stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M6.5 3.5h3l1.5 4-2 1.4a12 12 0 0 0 6.1 6.1l1.4-2 4 1.5v3a2 2 0 0 1-2.2 2C11.4 19 5 12.6 4.5 5.7a2 2 0 0 1 2-2.2z" />
+              </svg>
+            </span>
+            <a id="profilePhone" href="#">—</a>
+          </li>
+        </ul>
+
+        <button type="button" class="profile-edit" id="profileEditBtn">✎ Ma‘lumotlarni tahrirlash</button>
+      </div>
+
+      <img class="profile-logo" src="/img/mark.png" alt="Kelajak Markazlari" />
+    </section>
+
     <div class="alert ok" id="flash" hidden></div>
 
     <!-- Kalendar -->
@@ -192,6 +257,35 @@
       <div class="modal-foot" style="border-top:1px solid var(--border);padding-top:16px">
         <button class="btn danger" id="logoutBtn">Chiqish</button>
       </div>
+    </div>
+  </div>
+
+  <!-- Profil ma'lumotlarini tahrirlash -->
+  <div class="modal-bg" id="profileModal" hidden>
+    <div class="modal">
+      <div class="modal-head">
+        <h3>Ma‘lumotlarni tahrirlash</h3>
+        <button class="icon-btn" data-close="profileModal" aria-label="Yopish">✕</button>
+      </div>
+
+      <div class="alert error" id="pfErr" hidden></div>
+
+      <form id="profileForm">
+        <div class="field">
+          <label for="pfName">F.I.SH.</label>
+          <input type="text" id="pfName" autocomplete="name"
+                 placeholder="Aliyev Vali Karimovich" maxlength="100" required />
+        </div>
+        <div class="field">
+          <label for="pfPhone">Telefon raqamingiz</label>
+          <input type="tel" id="pfPhone" autocomplete="tel" inputmode="tel"
+                 placeholder="+998 90 123 45 67" maxlength="20" required />
+        </div>
+        <div class="modal-foot">
+          <button type="button" class="btn ghost" data-close="profileModal">Bekor qilish</button>
+          <button type="submit" class="btn">Saqlash</button>
+        </div>
+      </form>
     </div>
   </div>
 

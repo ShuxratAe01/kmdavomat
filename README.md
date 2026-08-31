@@ -86,6 +86,8 @@ maktablar sonini `.env` dagi `SCHOOL_COUNT` belgilaydi.
 | `/admin` | admin | Bugungi davomat, videolar, maktablarni boshqarish |
 
 ### Maktab sahifasi
+- **Profil kartochkasi**: rasm (o'zi yuklaydi), F.I.SH., maktab raqami, telefon.
+  Rasm ostidagi tugma bilan almashtiriladi, ma'lumotlarni keyin tahrirlash mumkin
 - Yuqorida bugungi sana + hafta kuni + bugungi holat
 - Oylik kalendar: **yashil** = yuborilgan, **qizil** = yuborilmagan, **kulrang** = kelgusi kun
 - Oylar orasida `‹ ›` bilan yurish, oylik statistika (bajarilish foizi)
@@ -217,7 +219,8 @@ ruxsat berilmadi / kamera topilmadi / kamera band.
 Node.js ning ichki `node:sqlite` moduli ishlatilgan — hech qanday native kompilyatsiya kerak emas
 (Node.js **22.5+** talab qilinadi, tavsiya: 24+).
 
-**Jadvallar:** `users` (xodimlar) · `sessions` (kirish sessiyalari) · `videos` (yuborilgan videolar)
+**Jadvallar:** `schools` (maktablar) · `users` (hisoblar) · `user_photos` (profil rasmlari) ·
+`sessions` (kirish sessiyalari) · `videos` (yuborilgan videolar) · `login_attempts`
 
 **Zaxira nusxa:** `data/` papkasini nusxalash kifoya (server to'xtagan holatda).
 
@@ -234,7 +237,8 @@ server/
   routes/
     auth.js         — kirish, chiqish, parol
     videos.js       — kalendar, video yuborish, oqim
-    admin.js        — davomat, xodimlar, videolar boshqaruvi
+    admin.js        — davomat, maktablar, videolar boshqaruvi
+    profile.js      — profil ma'lumotlari va rasmi
 public/
   login.html · index.html · admin.html · parol.html · royxat.html
   css/styles.css

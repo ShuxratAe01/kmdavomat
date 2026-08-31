@@ -71,6 +71,16 @@ CREATE TABLE IF NOT EXISTS sessions (
 );
 CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(user_id);
 
+-- Profil rasmi. Alohida jadvalda — users bo'yicha oddiy so'rovlar
+-- har safar rasm baytlarini ko'tarib yurmasin.
+CREATE TABLE IF NOT EXISTS user_photos (
+  user_id    INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  mime       TEXT NOT NULL,
+  size       INTEGER NOT NULL,
+  data       BLOB NOT NULL,
+  updated_at TEXT NOT NULL
+);
+
 -- Parolni ketma-ket terib topishga (brute force) qarshi hisoblagich
 CREATE TABLE IF NOT EXISTS login_attempts (
   key          TEXT PRIMARY KEY,

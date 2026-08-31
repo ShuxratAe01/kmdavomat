@@ -12,6 +12,7 @@ const CAN_RECORD_ROUND =
 
 let state = {
   user: null,
+  profile: null,
   month: null,
   today: null,
   calendar: null,
@@ -51,8 +52,158 @@ async function init() {
   $('#cameraInput').setAttribute('capture', state.config.cameraFacing);
   $('#cameraHint').textContent = CAN_RECORD_ROUND ? 'Yumaloq video yozasiz' : 'Kamera ilovasi ochiladi';
 
+  await loadProfile();
   await loadCalendar();
   bindEvents();
+  bindProfile();
+}
+
+// ---------- Profil ----------
+
+const PHOTO_SIZE = 512; // saqlanadigan rasm tomoni (piksel)
+
+/** Telefon raqamini o'qishga qulay ko'rinishga keltiradi */
+function prettyPhone(phone) {
+  const d = String(phone || '').replace(/\D/g, '');
+  if (d.length === 12 && d.startsWith('998')) {
+    return `+998 ${d.slice(3, 5)} ${d.slice(5, 8)} ${d.slice(8, 10)} ${d.slice(10)}`;
+  }
+  return phone || '—';
+}
+
+async function loadProfile() {
+  try {
+    const p = await api('/api/profile');
+    state.profile = p;
+
+    $('#profileName').textContent = p.contact_name || p.school_name || p.username;
+    $('#profileSchool').textContent = p.school_name || '';
+    $('#profileNumber').textContent = p.school_number ? `${p.school_number}-maktab` : p.username;
+    $('#profileFio').textContent = p.contact_name || '—';
+
+    const phoneLink = $('#profilePhone');
+    phoneLink.textContent = prettyPhone(p.phone);
+    phoneLink.href = p.phone ? `tel:${p.phone}` : '#';
+
+    showPhoto(p.photo_updated_at);
+  } catch (e) {
+    showAlert($('#flash'), e.message, 'error');
+  }
+}
+
+/** Rasmni ko'rsatadi; yangilanish vaqti keshni yangilash uchun ishlatiladi */
+function showPhoto(updatedAt) {
+  const img = $('#photoImg');
+  const empty = $('#photoEmpty');
+  if (!updatedAt) {
+    img.hidden = true;
+    empty.hidden = false;
+    return;
+  }
+  img.src = `/api/users/${state.user.id}/photo?v=${encodeURIComponent(updatedAt)}`;
+  img.hidden = false;
+  empty.hidden = true;
+}
+
+/**
+ * Tanlangan rasmni brauzerning o'zida kvadrat qilib qirqadi va kichraytiradi.
+ * Shunda 5 MB lik surat ham ~60 KB bo'lib yuboriladi.
+ */
+function squarePhoto(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('Faylni o‘qib bo‘lmadi'));
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = () => reject(new Error('Bu fayl rasm emas'));
+      img.onload = () => {
+        const side = Math.min(img.width, img.height);
+        const canvas = document.createElement('canvas');
+        canvas.width = canvas.height = PHOTO_SIZE;
+        const ctx = canvas.getContext('2d');
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(
+          img,
+          (img.width - side) / 2, (img.height - side) / 2, side, side,
+          0, 0, PHOTO_SIZE, PHOTO_SIZE
+        );
+        canvas.toBlob(
+          (blob) => (blob ? resolve(blob) : reject(new Error('Rasmni tayyorlab bo‘lmadi'))),
+          'image/jpeg',
+          0.85
+        );
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function bindProfile() {
+  $('#photoBtn').addEventListener('click', () => $('#photoInput').click());
+
+  $('#photoInput').addEventListener('change', async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+
+    const btn = $('#photoBtn');
+    btn.disabled = true;
+    try {
+      const blob = await squarePhoto(file);
+      const fd = new FormData();
+      fd.append('photo', blob, 'photo.jpg');
+      const res = await fetch('/api/profile/photo', {
+        method: 'POST',
+        credentials: 'same-origin',
+        body: fd,
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'Rasmni yuklab bo‘lmadi');
+
+      showPhoto(data.photo_updated_at);
+      showAlert($('#flash'), '✓ Rasm yangilandi', 'ok');
+      setTimeout(() => hideAlert($('#flash')), 4000);
+    } catch (err) {
+      showAlert($('#flash'), err.message, 'error');
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  $('#profileEditBtn').addEventListener('click', () => {
+    hideAlert($('#pfErr'));
+    $('#pfName').value = state.profile?.contact_name || '';
+    $('#pfPhone').value = prettyPhone(state.profile?.phone) === '—' ? '' : prettyPhone(state.profile?.phone);
+    openModal('profileModal');
+  });
+
+  $('#pfPhone').addEventListener('focus', (e) => {
+    if (!e.target.value) e.target.value = '+998 ';
+  });
+  $('#pfPhone').addEventListener('input', (e) => {
+    e.target.value = e.target.value.replace(/[^\d+ ]/g, '');
+  });
+
+  $('#profileForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    hideAlert($('#pfErr'));
+    try {
+      await api('/api/profile', {
+        method: 'PATCH',
+        body: JSON.stringify({
+          contact_name: $('#pfName').value,
+          phone: $('#pfPhone').value,
+        }),
+      });
+      closeModal('profileModal');
+      await loadProfile();
+      showAlert($('#flash'), '✓ Ma‘lumotlar saqlandi', 'ok');
+      setTimeout(() => hideAlert($('#flash')), 4000);
+    } catch (err) {
+      showAlert($('#pfErr'), err.message);
+    }
+  });
 }
 
 async function loadCalendar(month) {

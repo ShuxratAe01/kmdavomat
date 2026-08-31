@@ -167,6 +167,191 @@ a { color: var(--brand); }
 }
 .today-status.done { background: rgba(34, 197, 94, 0.28); }
 
+/* ===== Profil kartochkasi ===== */
+
+.profile-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 20px 22px;
+  margin-bottom: 16px;
+  border-radius: 22px;
+  background: linear-gradient(135deg, #7c4dff 0%, #6a3fe0 55%, #8a5cf6 100%);
+  box-shadow: 0 14px 34px rgba(84, 40, 190, 0.28);
+  color: #fff;
+  overflow: hidden;
+}
+
+/* Chap tomondagi yorug' yarim doira — namunadagidek */
+.profile-card::before {
+  content: '';
+  position: absolute;
+  left: -60px;
+  top: -30%;
+  width: 300px;
+  height: 160%;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  pointer-events: none;
+}
+
+.profile-photo-col {
+  position: relative;
+  z-index: 1;
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Rasm — atrofida yorug' halqa */
+.profile-photo {
+  width: 108px;
+  height: 108px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.18);
+  border: 3px solid rgba(255, 255, 255, 0.92);
+  box-shadow:
+    0 0 0 6px rgba(255, 255, 255, 0.16),
+    0 8px 20px rgba(40, 15, 100, 0.3);
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+}
+.profile-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.profile-photo-empty svg {
+  width: 52px;
+  height: 52px;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* Rasm ostidagi o'zgartirish tugmasi */
+.profile-photo-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+.profile-photo-btn:hover { background: rgba(255, 255, 255, 0.3); }
+.profile-photo-btn svg { width: 15px; height: 15px; flex: none; }
+.profile-photo-btn:disabled { opacity: 0.6; cursor: default; }
+
+.profile-info {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  min-width: 0;
+}
+
+.profile-name {
+  font-size: 21px;
+  font-weight: 750;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  margin: 0 0 2px;
+  overflow-wrap: anywhere;
+}
+.profile-position {
+  margin: 0 0 14px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.82);
+  overflow-wrap: anywhere;
+}
+
+.profile-rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 9px;
+}
+.profile-rows li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  min-width: 0;
+}
+.profile-rows a { color: #fff; text-decoration: none; }
+.profile-rows a:hover { text-decoration: underline; }
+
+.profile-ico {
+  flex: none;
+  width: 27px;
+  height: 27px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.22);
+  display: grid;
+  place-items: center;
+}
+.profile-ico svg { width: 15px; height: 15px; color: #fff; }
+
+.profile-edit {
+  margin-top: 14px;
+  padding: 7px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.profile-edit:hover { background: rgba(255, 255, 255, 0.26); }
+
+/* O'ng tomondagi belgi */
+.profile-logo {
+  position: relative;
+  z-index: 1;
+  flex: none;
+  width: 62px;
+  height: 62px;
+  object-fit: contain;
+  align-self: flex-start;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.28));
+}
+
+@media (max-width: 620px) {
+  .profile-card {
+    flex-direction: column;
+    text-align: center;
+    gap: 16px;
+    padding: 22px 18px;
+  }
+  .profile-card::before { left: 50%; top: -120px; transform: translateX(-50%); width: 340px; height: 300px; }
+  .profile-info { width: 100%; }
+  .profile-rows li { justify-content: flex-start; }
+  .profile-name { font-size: 19px; }
+  .profile-logo {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 42px;
+    height: 42px;
+    align-self: auto;
+  }
+}
+
 /* ===== Kalendar ===== */
 
 .cal-head {

@@ -148,18 +148,59 @@ a { color: var(--brand); }
   align-items: center;
   justify-content: space-between;
   gap: 18px;
+  /* Logo aylanganda hajmli ko'rinsin */
+  perspective: 900px;
 }
 
 .today-info { min-width: 0; }
 
-/* O'ng tomondagi tashkilot logotipi */
+/* O'ng tomondagi tashkilot logotipi.
+   21-maktab loyihasidagidek: 2 soniya harakat, so'ng 6 soniya to'xtash. */
 .today-logo {
   flex: none;
   width: 135px;
   max-width: 34%;
   height: auto;
+  transform-origin: center center;
+  transform-style: preserve-3d;
+  backface-visibility: visible;
+  will-change: transform, opacity, filter;
   /* Qorong'i fonda ajralib tursin */
   filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.35));
+  animation: logo-cycle 8s cubic-bezier(0.33, 0.1, 0.2, 1) infinite;
+}
+
+/* Pastdan ko'tarilib chiqadi → yon o'q bo'ylab ikki marta aylanadi → 6s kutadi */
+@keyframes logo-cycle {
+  0% {
+    opacity: 0;
+    transform: translateY(30px) rotateY(0deg) scale(0.88);
+    filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.2));
+  }
+  6% {
+    opacity: 1;
+    transform: translateY(0) rotateY(0deg) scale(1);
+    filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.35));
+  }
+  25% {
+    opacity: 1;
+    transform: translateY(0) rotateY(720deg) scale(1);
+    filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.35));
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) rotateY(720deg) scale(1);
+    filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.35));
+  }
+}
+
+/* Harakatni kamaytirish yoqilgan bo'lsa — tinch tursin */
+@media (prefers-reduced-motion: reduce) {
+  .today-logo {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
 }
 .today-label {
   font-size: 12px;

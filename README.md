@@ -89,6 +89,8 @@ maktablar sonini `.env` dagi `SCHOOL_COUNT` belgilaydi.
 - **Profil kartochkasi**: rasm, F.I.SH., maktab raqami, telefon
 - Rasmni almashtirish va ma'lumotlarni tahrirlash — yuqoridagi ⋮ (Sozlamalar) tugmasi ostida
 - Yuqorida bugungi sana + hafta kuni + bugungi holat + **real vaqtdagi ob-havo**
+- Logotip har 8 soniyada jonlanadi: 2 soniya harakat (pastdan ko’tarilib ikki marta aylanadi),
+  so’ng 6 soniya tinch turadi. 21-maktab loyihasidagi bilan bir xil
 - Oylik kalendar: **yashil** = yuborilgan, **qizil** = yuborilmagan,
   **ochroq qizil (uzuq ramka)** = yakshanba, dam olish kuni, **kulrang** = kelgusi kun
 - **Yakshanba — dam olish kuni**: video yuborish shart emas, hisobotda "yuborilmagan" deb sanalmaydi

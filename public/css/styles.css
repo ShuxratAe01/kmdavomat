@@ -630,33 +630,167 @@ tbody tr:hover { background: var(--surface-2); }
 }
 .tab.active { background: var(--brand); color: #fff; }
 
-/* ===== Login sahifasi ===== */
+/* ===== Kirish sahifalari (yumshoq dizayn) ===== */
 
 .login-wrap {
+  --lc-ink: #241c4d;         /* asosiy matn */
+  --lc-muted: #7d78a0;       /* ikkinchi darajali matn */
+  --lc-field: #ffffff;       /* maydon foni */
+  --lc-accent: #6d47e0;      /* siyoh-binafsha */
+  --lc-accent-2: #3f63f0;    /* ko'k */
+
   min-height: 100dvh;
   display: grid;
   place-items: center;
-  padding: 20px;
-  background: linear-gradient(160deg, #1e3a8a, #2563eb 45%, #6d28d9);
+  padding: 22px 18px;
+  background: linear-gradient(135deg, #3f7bf0 0%, #5f5cf0 42%, #8a44e0 100%);
 }
+
 .login-card {
-  background: var(--surface);
-  border-radius: 18px;
-  padding: 30px 26px;
+  background: linear-gradient(180deg, #faf9fe 0%, #f1eff9 100%);
+  border-radius: 30px;
+  padding: 34px 28px 30px;
   width: 100%;
   max-width: 400px;
-  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.28);
+  color: var(--lc-ink);
+  box-shadow:
+    0 30px 64px rgba(30, 12, 70, 0.34),
+    0 2px 0 rgba(255, 255, 255, 0.7) inset;
 }
+
 /* Tashkilot logotipi (public/img/logo.png) */
 .login-logo-img {
   display: block;
   width: 230px;
   max-width: 72%;
   height: auto;
-  margin: 0 auto 14px;
+  margin: 0 auto 16px;
 }
-.login-card h1 { text-align: center; font-size: 21px; margin-bottom: 4px; }
-.login-card .sub { text-align: center; color: var(--muted); font-size: 14px; margin-bottom: 22px; }
+
+.login-card h1 {
+  text-align: center;
+  font-size: 23px;
+  font-weight: 750;
+  letter-spacing: -0.02em;
+  color: var(--lc-ink);
+  margin-bottom: 6px;
+}
+.login-card .sub {
+  text-align: center;
+  color: var(--lc-muted);
+  font-size: 14px;
+  margin-bottom: 24px;
+}
+
+.login-card .field { margin-bottom: 16px; }
+.login-card .field label {
+  display: block;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--lc-ink);
+  margin-bottom: 8px;
+}
+
+/* Maydon: chetsiz, yumshoq soyali, chapida belgi */
+.input-wrap { position: relative; }
+
+.input-ico {
+  position: absolute;
+  left: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  color: #9a95bd;
+  pointer-events: none;
+}
+
+.login-card input[type='text'],
+.login-card input[type='password'],
+.login-card select {
+  width: 100%;
+  padding: 15px 16px;
+  border: none;
+  border-radius: 15px;
+  background: var(--lc-field);
+  color: var(--lc-ink);
+  font-size: 15px;
+  font-family: inherit;
+  box-shadow:
+    0 3px 8px rgba(45, 25, 100, 0.08),
+    0 1px 2px rgba(45, 25, 100, 0.06);
+  transition: box-shadow 0.18s;
+}
+.login-card .input-wrap input,
+.login-card .input-wrap select { padding-left: 46px; }
+
+.login-card select {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 40px;
+  /* o'ng tomondagi ochilish uchburchagi */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='9' viewBox='0 0 14 9'%3E%3Cpath d='M1 1l6 6 6-6' fill='none' stroke='%239a95bd' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+}
+
+.login-card input::placeholder { color: #b0abc9; }
+
+.login-card input:focus,
+.login-card select:focus {
+  outline: none;
+  box-shadow:
+    0 0 0 3px rgba(109, 71, 224, 0.18),
+    0 3px 10px rgba(45, 25, 100, 0.12);
+}
+.login-card .input-wrap:focus-within .input-ico { color: var(--lc-accent); }
+
+/* Asosiy tugma — gradiyentli */
+.login-card .btn.big {
+  width: 100%;
+  margin-top: 6px;
+  padding: 16px;
+  border: none;
+  border-radius: 15px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+  background: linear-gradient(135deg, var(--lc-accent) 0%, var(--lc-accent-2) 100%);
+  box-shadow: 0 12px 26px rgba(84, 60, 210, 0.34);
+  transition: filter 0.18s, transform 0.06s, box-shadow 0.18s;
+}
+.login-card .btn.big:hover { filter: brightness(1.07); }
+.login-card .btn.big:active { transform: translateY(1px); }
+.login-card .btn.big:disabled { filter: none; opacity: 0.55; box-shadow: none; }
+
+/* Ikkinchi darajali tugma (parol sahifasidagi "Chiqish") */
+.login-card .btn.ghost {
+  background: #fff;
+  color: var(--lc-ink);
+  border: none;
+  border-radius: 15px;
+  box-shadow: 0 3px 8px rgba(45, 25, 100, 0.08);
+}
+.login-card .btn.ghost:hover { background: #f7f5fd; }
+
+.login-card .muted { color: var(--lc-muted); }
+.login-card a { color: var(--lc-accent); font-weight: 600; text-decoration: none; }
+.login-card a:hover { text-decoration: underline; }
+
+.login-card .checkline { color: var(--lc-muted); }
+.login-card .checkline input { accent-color: var(--lc-accent); }
+
+.login-card .pw-meter { background: #e4e0f0; }
+
+/* Xabarlar — kartochka uslubiga mos */
+.login-card .alert { border-radius: 14px; border: none; }
+.login-card .alert.error { background: #fde8e8; color: #a02020; }
+.login-card .alert.ok { background: #e2f7e9; color: #14663a; }
+.login-card .alert.info { background: #e9e7fb; color: #4433a8; }
+
+@media (max-width: 400px) {
+  .login-card { padding: 28px 20px 24px; border-radius: 24px; }
+}
 
 /* ===== Video qo'shish tanlovi ===== */
 

@@ -69,16 +69,13 @@ a { color: var(--brand); }
   font-size: 16px;
 }
 
+/* Tashkilot nishoni (logotipning yuqori qismi) */
 .brand-mark {
-  width: 32px;
-  height: 32px;
-  border-radius: 9px;
-  background: linear-gradient(135deg, var(--brand), #7c3aed);
-  color: #fff;
-  display: grid;
-  place-items: center;
-  font-size: 16px;
+  width: 34px;
+  height: 34px;
   flex: none;
+  display: block;
+  object-fit: contain;
 }
 
 .topbar .spacer { flex: 1; }
@@ -650,17 +647,6 @@ tbody tr:hover { background: var(--surface-2); }
   max-width: 400px;
   box-shadow: 0 24px 70px rgba(0, 0, 0, 0.28);
 }
-.login-logo {
-  width: 54px;
-  height: 54px;
-  border-radius: 15px;
-  background: linear-gradient(135deg, var(--brand), #7c3aed);
-  display: grid;
-  place-items: center;
-  font-size: 26px;
-  margin: 0 auto 14px;
-}
-
 /* Tashkilot logotipi (public/img/logo.png) */
 .login-logo-img {
   display: block;

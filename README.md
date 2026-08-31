@@ -237,7 +237,7 @@ public/
   login.html · index.html · admin.html · parol.html · royxat.html
   css/styles.css
   js/common.js · login.js · app.js · admin.js · parol.js · royxat.js
-  img/logo.png
+  img/logo.png · img/mark.png · img/apple-touch-icon.png
 ```
 
 ## Ishlab chiqarishga chiqarish (production)

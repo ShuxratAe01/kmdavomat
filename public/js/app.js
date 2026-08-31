@@ -77,8 +77,6 @@ async function loadProfile() {
 
     $('#profileName').textContent = p.contact_name || p.school_name || p.username;
     $('#profileSchool').textContent = p.school_name || '';
-    $('#profileNumber').textContent = p.school_number ? `${p.school_number}-maktab` : p.username;
-    $('#profileFio').textContent = p.contact_name || '—';
 
     const phoneLink = $('#profilePhone');
     phoneLink.textContent = prettyPhone(p.phone);

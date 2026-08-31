@@ -65,13 +65,16 @@ a { color: var(--brand); }
   position: sticky;
   top: 0;
   z-index: 20;
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
+  background: #cff1a2;
+  border-bottom: 1px solid #b3e07c;
   padding: 12px 16px;
   display: flex;
   align-items: center;
   gap: 12px;
 }
+/* Yashil fonda kichik yozuvlar ham yaxshi o'qilsin */
+.topbar .who span { color: #4a5a3b; }
+.topbar .settings-btn:hover { background: rgba(20, 40, 0, 0.09); }
 
 .topbar .brand {
   display: flex;

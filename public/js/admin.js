@@ -557,7 +557,7 @@ async function loadClubs() {
     }
 
     $('#clubList').innerHTML = `<div class="table-wrap"><table>
-      <thead><tr><th>To‘garak</th><th>Maktab</th><th>Rahbari</th><th>O‘quvchilar</th><th>Vaqti</th></tr></thead>
+      <thead><tr><th>To‘garak</th><th>Maktab</th><th>Rahbari</th><th>O‘quvchilar soni</th><th>O‘tish vaqti</th></tr></thead>
       <tbody>${d.clubs
         .map(
           (c) => `<tr>
@@ -568,8 +568,8 @@ async function loadClubs() {
             </td>
             <td data-label="Maktab" class="small hide-sm">${esc(c.school_name)}</td>
             <td data-label="Rahbari" class="small">${esc(c.teacher || '—')}</td>
-            <td data-label="O‘quvchilar" class="small nowrap">${c.students || '—'}</td>
-            <td data-label="Vaqti" class="small muted">${esc(c.schedule || '—')}</td>
+            <td data-label="O‘quvchilar soni" class="small nowrap">${c.students || '—'}</td>
+            <td data-label="O‘tish vaqti" class="small muted">${esc(c.schedule || '—')}</td>
           </tr>`
         )
         .join('')}</tbody></table></div>`;

@@ -1451,3 +1451,20 @@ video { width: 100%; border-radius: var(--radius-sm); background: #000; display:
   .calendar, .weekdays { gap: 5px; }
   .who strong { font-size: 13px; }
 }
+
+/* ===== To'garaklar jadvali — to'q binafsha yozuv ===== */
+
+#clubsList th,
+#clubList th { color: #6d28d9; }
+
+#clubsList td,
+#clubList td { color: #4c1d95; }
+
+#clubsList td b,
+#clubList td b { color: #3b0764; }
+
+#clubsList td.muted,
+#clubList td.muted { color: #5b21b6; }
+
+#clubsList td::before,
+#clubList td::before { color: #6d28d9; }

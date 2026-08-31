@@ -91,14 +91,14 @@ function renderClubs() {
   }
 
   $('#clubsList').innerHTML = `<div class="table-wrap"><table>
-    <thead><tr><th>To‘garak</th><th>Rahbari</th><th>O‘quvchilar</th><th>Vaqti</th><th></th></tr></thead>
+    <thead><tr><th>To‘garak</th><th>Rahbari</th><th>O‘quvchilar soni</th><th>O‘tish vaqti</th><th></th></tr></thead>
     <tbody>${list
       .map(
         (c) => `<tr>
           <td class="cell-main"><b>${esc(c.name)}</b></td>
           <td data-label="Rahbari" class="small">${esc(c.teacher || '—')}</td>
-          <td data-label="O‘quvchilar" class="small nowrap">${c.students || '—'}</td>
-          <td data-label="Vaqti" class="small muted">${esc(c.schedule || '—')}</td>
+          <td data-label="O‘quvchilar soni" class="small nowrap">${c.students || '—'}</td>
+          <td data-label="O‘tish vaqti" class="small muted">${esc(c.schedule || '—')}</td>
           <td class="cell-actions nowrap">
             <button class="btn sm ghost" data-club-edit="${c.id}">✎</button>
             <button class="btn sm danger" data-club-del="${c.id}">🗑</button>

@@ -807,23 +807,39 @@ tbody tr:hover { background: var(--surface-2); }
 }
 .login-card .input-wrap:focus-within .input-ico { color: #2f635f; }
 
-/* Asosiy tugma — gradiyentli */
+/* Asosiy tugma — o'sha gradiyent rangda, lekin shisha yuzali */
 .login-card .btn.big {
   width: 100%;
   margin-top: 6px;
   padding: 16px;
-  border: none;
+  border: 1px solid rgba(255, 255, 255, 0.45);
   border-radius: 15px;
   font-size: 16px;
   font-weight: 700;
   color: #fff;
-  background: linear-gradient(135deg, var(--lc-accent) 0%, var(--lc-accent-2) 100%);
-  box-shadow: 0 12px 26px rgba(84, 60, 210, 0.34);
+  /* 1-qatlam: yuzadagi yorug'lik aksi, 2-qatlam: asl rang */
+  background-image:
+    linear-gradient(
+      115deg,
+      rgba(255, 255, 255, 0.4) 0%,
+      rgba(255, 255, 255, 0.12) 33%,
+      rgba(255, 255, 255, 0) 52%
+    ),
+    linear-gradient(135deg, var(--lc-accent) 0%, var(--lc-accent-2) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.55),
+    inset 0 -12px 20px rgba(38, 20, 110, 0.3),
+    0 12px 26px rgba(84, 60, 210, 0.34);
+  text-shadow: 0 1px 2px rgba(30, 15, 90, 0.28);
   transition: filter 0.18s, transform 0.06s, box-shadow 0.18s;
 }
 .login-card .btn.big:hover { filter: brightness(1.07); }
 .login-card .btn.big:active { transform: translateY(1px); }
-.login-card .btn.big:disabled { filter: none; opacity: 0.55; box-shadow: none; }
+.login-card .btn.big:disabled {
+  filter: none;
+  opacity: 0.55;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
 
 /* Ikkinchi darajali tugma (parol sahifasidagi "Chiqish") */
 .login-card .btn.ghost {

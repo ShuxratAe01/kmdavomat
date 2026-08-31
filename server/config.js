@@ -79,9 +79,9 @@ export const config = {
   // --- Ob-havo ---
   // Ma'lumot open-meteo.com dan olinadi: bepul, ro'yxatdan o'tish va kalit kerak emas
   weatherEnabled: String(process.env.WEATHER_ENABLED || 'true') === 'true',
-  weatherCity: process.env.WEATHER_CITY || 'Toshkent',
-  weatherLat: Number(process.env.WEATHER_LAT || 41.2995),
-  weatherLon: Number(process.env.WEATHER_LON || 69.2401),
+  weatherCity: process.env.WEATHER_CITY || 'Qarshi',
+  weatherLat: Number(process.env.WEATHER_LAT || 38.8606),
+  weatherLon: Number(process.env.WEATHER_LON || 65.7891),
   // Necha daqiqada bir yangilansin (serverda saqlab turiladi)
   weatherCacheMinutes: Number(process.env.WEATHER_CACHE_MINUTES || 10),
 

@@ -124,8 +124,8 @@ cp .env.example .env
 | `TZ_NAME` | `Asia/Tashkent` | Sanalar shu mintaqa bo'yicha hisoblanadi |
 | `STORAGE` | `db` | `db` = SQLite ichida, `disk` = `uploads/` papkada |
 | `WEATHER_ENABLED` | `true` | Sana kartochkasida ob-havo ko'rsatilsinmi |
-| `WEATHER_CITY` | `Toshkent` | Ko'rsatiladigan shahar nomi |
-| `WEATHER_LAT` / `WEATHER_LON` | Toshkent | Shahar koordinatalari |
+| `WEATHER_CITY` | `Qarshi` | Ko'rsatiladigan shahar nomi |
+| `WEATHER_LAT` / `WEATHER_LON` | Qarshi | Shahar koordinatalari |
 | `WEATHER_CACHE_MINUTES` | `10` | Ob-havo necha daqiqada bir yangilansin |
 | `MAX_VIDEO_SECONDS` | `30` | Bitta video uchun maksimal davomiylik |
 | `VIDEO_SIZE` | `640` | Yumaloq videoning kvadrat tomoni (piksel) |
@@ -190,7 +190,7 @@ ro'yxatdan o'tish va API kalit kerak emas.
   (kechasi ochiq bo'lsa oy, kunduzi quyosh)
 
 Shahar `.env` dagi `WEATHER_CITY`, `WEATHER_LAT`, `WEATHER_LON` bilan belgilanadi
-(standart — Toshkent). Kerak bo'lmasa `WEATHER_ENABLED=false`.
+(standart — **Qarshi shahri**: 38.8606, 65.7891). Kerak bo'lmasa `WEATHER_ENABLED=false`.
 
 ## Telefonda ishlatish
 

@@ -302,7 +302,7 @@ function renderSchools() {
   }
 
   $('#schoolList').innerHTML = `<div class="table-wrap"><table>
-    <thead><tr><th>Maktab</th><th>Ro‘yxat kodi</th><th>Holat</th><th>Videolar</th><th>Oxirgi</th><th></th></tr></thead>
+    <thead><tr><th>Maktab</th><th>Mas‘ul shaxs</th><th>Ro‘yxat kodi</th><th>Holat</th><th>Videolar</th><th>Oxirgi</th><th></th></tr></thead>
     <tbody>${rows
       .map((s) => {
         const holat = !s.registered
@@ -321,6 +321,13 @@ function renderSchools() {
         return `<tr>
           <td class="cell-main"><b>${esc(s.name)}</b>${
             s.registered ? `<div class="small muted">@${esc(s.username)}</div>` : ''
+          }</td>
+          <td data-label="Mas‘ul shaxs" class="small">${
+            s.contact_name
+              ? `${esc(s.contact_name)}${
+                  s.phone ? `<div class="muted"><a href="tel:${esc(s.phone)}">${esc(s.phone)}</a></div>` : ''
+                }`
+              : '<span class="muted">—</span>'
           }</td>
           <td data-label="Kod">${kod}</td>
           <td data-label="Holat">${holat}</td>

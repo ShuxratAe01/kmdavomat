@@ -99,6 +99,7 @@ router.get('/schools', (req, res) => {
     .prepare(
       `SELECT s.id, s.number, s.name, s.invite_code, s.registered_at, s.user_id,
               u.username, u.is_active, u.last_login_at, u.must_change_password,
+              u.contact_name, u.phone,
               (SELECT COUNT(DISTINCT day) FROM videos v WHERE v.user_id = s.user_id AND v.day LIKE ?) AS month_days,
               (SELECT COUNT(*) FROM videos v WHERE v.user_id = s.user_id) AS video_count,
               (SELECT MAX(day) FROM videos v WHERE v.user_id = s.user_id) AS last_day

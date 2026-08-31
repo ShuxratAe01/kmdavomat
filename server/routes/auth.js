@@ -141,8 +141,26 @@ router.post('/register', (req, res) => {
   const schoolId = Number(req.body?.school_id);
   const code = String(req.body?.code || '').trim().toUpperCase().replace(/\s/g, '');
   const password = String(req.body?.password || '');
+  const contactName = String(req.body?.contact_name || '').trim().replace(/\s+/g, ' ');
+  const phoneRaw = String(req.body?.phone || '').trim();
   const ip = clientIp(req);
   const key = `reg:${ip}`;
+
+  // F.I.SH.
+  if (contactName.length < 5 || contactName.length > 100) {
+    return res.status(400).json({ error: 'F.I.SH. ni to‘liq kiriting (kamida 5 ta belgi)' });
+  }
+  if (!/[a-zA-Zа-яА-ЯёЁʻʼ’'-]{2,}/.test(contactName)) {
+    return res.status(400).json({ error: 'F.I.SH. da harflar bo‘lsin' });
+  }
+
+  // Telefon raqami — faqat raqamlarini olamiz
+  const digits = phoneRaw.replace(/\D/g, '');
+  if (digits.length < 9 || digits.length > 15) {
+    return res.status(400).json({ error: 'Telefon raqamini to‘liq kiriting, masalan +998 90 123 45 67' });
+  }
+  // O'zbekiston raqamlarini bir xil ko'rinishga keltiramiz: +998XXXXXXXXX
+  const phone = digits.length === 9 ? `+998${digits}` : `+${digits}`;
 
   // Kodni terib topishga urinishdan himoya
   const locked = lockedSeconds(key);
@@ -188,10 +206,14 @@ router.post('/register', (req, res) => {
   const info = db
     .prepare(
       `INSERT INTO users (username, password_hash, full_name, position, role, is_active,
-                          must_change_password, password_changed_at, school_id, created_at)
-       VALUES (?, ?, ?, '', 'user', 1, 0, ?, ?, ?)`
+                          must_change_password, password_changed_at, school_id,
+                          contact_name, phone, created_at)
+       VALUES (?, ?, ?, '', 'user', 1, 0, ?, ?, ?, ?, ?)`
     )
-    .run(username, hashPassword(password), school.name, nowIso(), school.id, nowIso());
+    .run(
+      username, hashPassword(password), school.name, nowIso(), school.id,
+      contactName, phone, nowIso()
+    );
 
   const userId = Number(info.lastInsertRowid);
   db.prepare('UPDATE schools SET user_id = ?, registered_at = ? WHERE id = ?')

@@ -39,7 +39,8 @@ ishga tushiring (barcha ma'lumotlar ham o'chadi), yoki `.env` da `ADMIN_PASSWORD
 1. **Admin** admin panelning "🏫 Maktablar" bo‘limidan har bir maktabning **ro‘yxat kodini**
    oladi (yoki hammasini CSV qilib yuklab oladi) va maktablarga tarqatadi.
 2. **Maktab xodimi** saytga kiradi → "Ro‘yxatdan o‘tish" → maktabini ro‘yxatdan tanlaydi,
-   kodini kiritadi va **o‘ziga parol qo‘yadi**. Shu zahoti ichkariga kiradi.
+   **F.I.SH. va telefon raqamini** yozadi, kodini kiritadi va **o‘ziga parol qo‘yadi**.
+   Shu zahoti ichkariga kiradi. Mas‘ul shaxs ma‘lumoti admin panelda ko‘rinadi.
 3. Keyingi safar **kirish sahifasida ham maktabini ro‘yxatdan tanlaydi** va parolini kiritadi —
    login yozib o‘tirmaydi. Brauzer oxirgi tanlangan maktabni eslab qoladi.
    Sessiya 90 kun saqlanadi, ya'ni har kuni qayta kirish shart emas.
@@ -98,7 +99,8 @@ maktablar sonini `.env` dagi `SCHOOL_COUNT` belgilaydi.
 - **📊 Bugungi davomat** — barcha maktablar bir ro'yxatda: kim yuborgan, kim yubormagan,
   kim hali ro'yxatdan o'tmagan; istalgan sana bo'yicha, oylik hisob bilan
 - **🎬 Videolar** — maktab / sana oralig'i / holat bo'yicha filtr, ko'rish, yuklab olish, o'chirish, qabul/rad
-- **🏫 Maktablar** — 71 ta maktab, ro'yxat kodlari (ko'rish, yangilash, CSV qilib yuklab olish),
+- **🏫 Maktablar** — 71 ta maktab, mas'ul shaxs (F.I.SH. + telefon),
+  ro'yxat kodlari (ko'rish, yangilash, CSV qilib yuklab olish),
   qidiruv va filtr, parolni tiklash, hisobni o'chirish, har birining kalendari, yangi maktab qo'shish
 - **👥 Adminlar** — tizim administratorlarini boshqarish
 

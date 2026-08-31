@@ -358,6 +358,9 @@ a { color: var(--brand); }
 }
 input[type='text'],
 input[type='password'],
+input[type='tel'],
+input[type='email'],
+input[type='number'],
 input[type='date'],
 input[type='month'],
 input[type='search'],
@@ -742,6 +745,8 @@ tbody tr:hover { background: var(--surface-2); }
 
 .login-card input[type='text'],
 .login-card input[type='password'],
+.login-card input[type='tel'],
+.login-card input[type='email'],
 .login-card select {
   width: 100%;
   padding: 15px 16px;

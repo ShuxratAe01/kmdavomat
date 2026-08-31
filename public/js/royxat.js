@@ -41,6 +41,17 @@ let minLen = 8;
   }
 })();
 
+// --- Telefon raqami: faqat raqam va + belgisi, bo'sh bo'lsa +998 dan boshlanadi ---
+$('#phone').addEventListener('focus', (e) => {
+  if (!e.target.value) e.target.value = '+998 ';
+});
+$('#phone').addEventListener('input', (e) => {
+  e.target.value = e.target.value.replace(/[^\d+ ]/g, '');
+});
+$('#phone').addEventListener('blur', (e) => {
+  if (e.target.value.trim() === '+998') e.target.value = '';
+});
+
 // --- Kodni chiroyli formatlash: xxxxxxxx -> XXXX-XXXX ---
 $('#code').addEventListener('input', (e) => {
   const raw = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8);
@@ -95,6 +106,8 @@ form.addEventListener('submit', async (e) => {
       redirectOn401: false,
       body: JSON.stringify({
         school_id: Number($('#school').value),
+        contact_name: $('#fullName').value,
+        phone: $('#phone').value,
         code: $('#code').value,
         password,
       }),

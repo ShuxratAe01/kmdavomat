@@ -99,6 +99,13 @@ if (!userCols.includes('last_login_at')) {
 if (!userCols.includes('school_id')) {
   db.exec('ALTER TABLE users ADD COLUMN school_id INTEGER REFERENCES schools(id) ON DELETE SET NULL');
 }
+// Ro'yxatdan o'tkazgan mas'ul shaxs
+if (!userCols.includes('contact_name')) {
+  db.exec("ALTER TABLE users ADD COLUMN contact_name TEXT NOT NULL DEFAULT ''");
+}
+if (!userCols.includes('phone')) {
+  db.exec("ALTER TABLE users ADD COLUMN phone TEXT NOT NULL DEFAULT ''");
+}
 
 // Eski sessions jadvalida token ochiq saqlangan edi — uni tashlab yuboramiz
 // (hamma qaytadan kiradi, bu ataylab shunday).

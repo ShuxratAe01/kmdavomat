@@ -50,6 +50,7 @@ app.use(attachUser);
 app.use('/css', express.static(path.join(config.publicDir, 'css')));
 app.use('/js', express.static(path.join(config.publicDir, 'js')));
 app.use('/img', express.static(path.join(config.publicDir, 'img'), { maxAge: '7d' }));
+app.use('/fonts', express.static(path.join(config.publicDir, 'fonts'), { maxAge: '30d', immutable: true }));
 
 // --- API ---
 app.get('/api/config', (_req, res) => {
@@ -110,7 +111,7 @@ app.use((req, res) => {
   if (req.path.startsWith('/api/')) return res.status(404).json({ error: 'Topilmadi' });
   // Topilmagan fayl uchun 404 — sahifaga yo'naltirmaymiz,
   // aks holda brauzer HTML'ni rasm/skript deb qabul qilishga urinadi
-  if (/^\/(img|css|js)\//.test(req.path)) return res.status(404).end();
+  if (/^\/(img|css|js|fonts)\//.test(req.path)) return res.status(404).end();
   res.redirect('/');
 });
 

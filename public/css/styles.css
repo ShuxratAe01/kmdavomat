@@ -1,5 +1,17 @@
 /* ===== kmdavomat — umumiy uslublar ===== */
 
+/* Zamonaviy sayt shrifti — o'z serverimizdan, internetsiz ham ishlaydi */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('/fonts/inter-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC,
+    U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215,
+    U+FEFF, U+FFFD;
+}
+
 :root {
   --bg: #f4f6fb;
   --surface: #ffffff;
@@ -1594,4 +1606,89 @@ video { width: 100%; border-radius: var(--radius-sm); background: #000; display:
 /* To'garaklar bo'limining ramkasi */
 #clubsModal .modal {
   border: 3px solid #a4e5d7;
+}
+
+/* ===== Bugungi davomat — maktablar ro'yxati shisha ramkada ===== */
+
+.glass-frame {
+  position: relative;
+  overflow: hidden;
+  border: none;
+  border-radius: 30px;
+  padding: 26px 24px 22px;
+  background: linear-gradient(150deg,
+    rgba(255, 255, 255, 0.97) 0%,
+    rgba(244, 250, 255, 0.92) 44%,
+    rgba(227, 240, 255, 0.9) 100%);
+  box-shadow:
+    0 22px 60px rgba(37, 99, 235, 0.16),
+    0 2px 10px rgba(37, 99, 235, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+}
+
+/* Fondagi yumshoq ko'k to'lqinlar */
+.glass-frame::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background:
+    radial-gradient(125% 75% at -12% 115%, rgba(96, 165, 250, 0.32), rgba(96, 165, 250, 0) 62%),
+    radial-gradient(95% 65% at 112% 12%, rgba(56, 189, 248, 0.26), rgba(56, 189, 248, 0) 64%),
+    radial-gradient(75% 55% at 55% 125%, rgba(129, 140, 248, 0.18), rgba(129, 140, 248, 0) 68%);
+}
+
+/* Yonib turgan ko'k chekka — o'ng yuqori burchakdan pastga tushadi */
+@supports ((-webkit-mask-composite: xor) or (mask-composite: exclude)) {
+  .glass-frame::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 2px;
+    pointer-events: none;
+    background: linear-gradient(128deg,
+      rgba(191, 219, 254, 0.75) 0%,
+      rgba(147, 197, 253, 0.45) 28%,
+      #38bdf8 43%,
+      #2f7ef0 58%,
+      rgba(59, 130, 246, 0) 72%,
+      rgba(191, 219, 254, 0.55) 100%);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+  }
+}
+
+.glass-frame > * { position: relative; z-index: 1; }
+
+/* Ramka ichidagi chiziqlar yumshoqroq bo‘lsin */
+.glass-frame th,
+.glass-frame td { border-bottom-color: rgba(148, 163, 184, 0.26); }
+.glass-frame tbody tr:hover { background: rgba(255, 255, 255, 0.55); }
+
+/* HOLAT / VAQT / OYDA — zamonaviy sayt shrifti */
+.glass-frame th,
+.glass-frame td::before {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.085em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+/* Telefonda har bir maktab alohida shaffof kartochkada */
+@media (max-width: 720px) {
+  .glass-frame { padding: 20px 14px 16px; border-radius: 26px; }
+  .glass-frame .table-wrap tr {
+    background: rgba(255, 255, 255, 0.74);
+    border-color: rgba(255, 255, 255, 0.9);
+    border-radius: 16px;
+    box-shadow: 0 6px 18px rgba(37, 99, 235, 0.1);
+    backdrop-filter: blur(6px);
+  }
+  .glass-frame .table-wrap tbody tr:hover { background: rgba(255, 255, 255, 0.74); }
 }

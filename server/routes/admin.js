@@ -3,7 +3,7 @@ import crypto from 'node:crypto';
 import { db, generateInviteCode, schoolUsername, schoolName } from '../db.js';
 import { requireAdmin, hashPassword, destroyAllSessions, checkPasswordStrength } from '../auth.js';
 import { deleteVideoFile } from '../storage.js';
-import { dayStr, isDay, normalizeMonth, nowIso } from '../util/date.js';
+import { dayStr, isDay, isRestDay, normalizeMonth, nowIso } from '../util/date.js';
 import { buildCalendar } from './videos.js';
 
 const router = express.Router();
@@ -71,15 +71,18 @@ router.get('/overview', (req, res) => {
   }));
 
   const active = schools.filter((s) => s.registered && s.is_active);
+  // Dam olish kunida video yuborish shart emas — yubormaganlar "qarzdor" emas
+  const rest = isRestDay(day);
   res.json({
     day,
+    isRestDay: rest,
     schools,
     stats: {
       total: schools.length,
       registered: active.length,
       notRegistered: schools.filter((s) => !s.registered).length,
       sent: active.filter((s) => s.sent).length,
-      missed: active.filter((s) => !s.sent).length,
+      missed: rest ? 0 : active.filter((s) => !s.sent).length,
       videosToday: db.prepare('SELECT COUNT(*) n FROM videos WHERE day = ?').get(day).n,
       videosTotal: db.prepare('SELECT COUNT(*) n FROM videos').get().n,
       storageBytes: db.prepare('SELECT COALESCE(SUM(size),0) s FROM videos').get().s,

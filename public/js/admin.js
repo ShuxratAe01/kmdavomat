@@ -73,7 +73,8 @@ async function loadOverview(day) {
   try {
     const data = await api('/api/admin/overview' + (day ? `?day=${day}` : ''));
     $('#ovDay').value = data.day;
-    $('#ovDayLabel').textContent = formatDay(data.day);
+    $('#ovDayLabel').textContent =
+      formatDay(data.day) + (data.isRestDay ? ' — dam olish kuni' : '');
     $('#ovTotal').textContent = data.stats.registered;
     $('#ovSent').textContent = data.stats.sent;
     $('#ovMissed').textContent = data.stats.missed;
@@ -97,7 +98,9 @@ async function loadOverview(day) {
               ? '<span class="badge red">Bloklangan</span>'
               : s.sent
                 ? '<span class="badge green">✓ Yuborgan</span>'
-                : '<span class="badge red">✕ Yubormagan</span>';
+                : data.isRestDay
+                  ? '<span class="badge gray">Dam olish kuni</span>'
+                  : '<span class="badge red">✕ Yubormagan</span>';
           return `<tr>
             <td class="cell-main"><b>${esc(s.name)}</b>${
               s.registered ? `<div class="small muted">@${esc(s.username)}</div>` : ''

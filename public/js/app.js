@@ -230,9 +230,13 @@ function render() {
   const sentToday = Boolean(c.todayVideo);
   const st = $('#todayStatus');
   st.classList.toggle('done', sentToday);
-  st.textContent = sentToday
-    ? `✓ Bugungi video yuborilgan — ${formatTime(c.todayVideo.created_at)}`
-    : '⚠ Bugun uchun video yuborilmagan';
+  if (sentToday) {
+    st.textContent = `✓ Bugungi video yuborilgan — ${formatTime(c.todayVideo.created_at)}`;
+  } else if (c.todayIsRest) {
+    st.textContent = '☕ Bugun dam olish kuni — video yuborish shart emas';
+  } else {
+    st.textContent = '⚠ Bugun uchun video yuborilmagan';
+  }
 
   // Oy sarlavhasi
   $('#monthLabel').textContent = c.monthLabel;
@@ -247,17 +251,24 @@ function render() {
     if (d.hasVideo) cls.push('clickable');
     cells.push(
       `<div class="${cls.join(' ')}" data-date="${d.date}" title="${formatDay(d.date)} — ${
-        d.hasVideo ? 'video yuborilgan' : d.isFuture ? 'kelgusi kun' : 'video yuborilmagan'
+        {
+          sent: 'video yuborilgan',
+          rest: 'dam olish kuni, video shart emas',
+          upcoming: 'kelgusi kun',
+          missed: 'video yuborilmagan',
+        }[d.state]
       }">${d.dayNum}${d.hasVideo ? '<span class="dot"></span>' : ''}</div>`
     );
   }
   $('#calendar').innerHTML = cells.join('');
 
   // Statistika
+  // Dam olish kunlari hisobga kirmaydi — bajarilish faqat ish kunlari bo'yicha
   const done = c.stats.sent;
   const expected = c.stats.sent + c.stats.missed;
   $('#stSent').textContent = done;
   $('#stMissed').textContent = c.stats.missed;
+  $('#stRest').textContent = c.stats.rest ?? 0;
   $('#stPercent').textContent = expected ? Math.round((done / expected) * 100) + '%' : '—';
 
   // Bugungi video yuborilgan bo'lsa tugmani o'zgartirish

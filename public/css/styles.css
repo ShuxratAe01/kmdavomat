@@ -424,6 +424,8 @@ a { color: var(--brand); }
   padding: 4px 0;
 }
 .weekdays span.we { color: #b45309; }
+/* Yakshanba — dam olish kuni */
+.weekdays span.rest-day { color: #be123c; }
 
 .calendar {
   display: grid;
@@ -456,6 +458,14 @@ a { color: var(--brand); }
   background: var(--red-soft);
   border-color: var(--red-border);
   color: #7f1d1d;
+}
+/* Dam olish kuni (yakshanba) — video yuborish shart emas.
+   Qizil, lekin "yuborilmagan" dan farqli: ochroq va uzuq chiziqli ramka. */
+.day.rest {
+  background: #fff1f2;
+  border-color: #fca5a5;
+  border-style: dashed;
+  color: #be123c;
 }
 .day.upcoming {
   background: var(--surface-2);
@@ -497,6 +507,7 @@ a { color: var(--brand); }
 }
 .legend .sw-sent { background: var(--green-soft); border-color: var(--green-border); }
 .legend .sw-missed { background: var(--red-soft); border-color: var(--red-border); }
+.legend .sw-rest { background: #fff1f2; border-color: #fca5a5; border-style: dashed; }
 .legend .sw-upcoming { background: var(--surface-2); border-color: var(--border); }
 
 /* ===== Statistika ===== */

@@ -89,7 +89,9 @@ maktablar sonini `.env` dagi `SCHOOL_COUNT` belgilaydi.
 - **Profil kartochkasi**: rasm, F.I.SH., maktab raqami, telefon
 - Rasmni almashtirish va ma'lumotlarni tahrirlash — yuqoridagi ⋮ (Sozlamalar) tugmasi ostida
 - Yuqorida bugungi sana + hafta kuni + bugungi holat
-- Oylik kalendar: **yashil** = yuborilgan, **qizil** = yuborilmagan, **kulrang** = kelgusi kun
+- Oylik kalendar: **yashil** = yuborilgan, **qizil** = yuborilmagan,
+  **ochroq qizil (uzuq ramka)** = yakshanba, dam olish kuni, **kulrang** = kelgusi kun
+- **Yakshanba — dam olish kuni**: video yuborish shart emas, hisobotda "yuborilmagan" deb sanalmaydi
 - Oylar orasida `‹ ›` bilan yurish, oylik statistika (bajarilish foizi)
 - Video yuborish: **kamerada yozish** yoki **galereyadan tanlash** — maksimal **30 soniya**
 - Videolar Telegram uslubida **yumaloq** ko’rinadi: bosilganda o’ynaydi, atrofida vaqt halqasi aylanadi

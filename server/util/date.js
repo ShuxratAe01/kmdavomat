@@ -40,6 +40,15 @@ export function firstWeekdayMondayBased(month) {
   return (jsDay + 6) % 7;
 }
 
+/**
+ * Shu sana dam olish kunimi?
+ * Hozircha faqat yakshanba — bu kunlarda video yuborish shart emas.
+ */
+export function isRestDay(date) {
+  const [y, m, d] = String(date).split('-').map(Number);
+  return new Date(Date.UTC(y, m - 1, d)).getUTCDay() === 0; // 0 = yakshanba
+}
+
 /** Oydagi barcha sanalar ro'yxati */
 export function monthDays(month) {
   const n = daysInMonth(month);

@@ -4,7 +4,7 @@ import { db } from '../db.js';
 import { config, maxVideoBytes } from '../config.js';
 import { requireAuth } from '../auth.js';
 import { saveVideo, readVideo, extensionFor } from '../storage.js';
-import { dayStr, normalizeMonth, monthDays, firstWeekdayMondayBased, nowIso } from '../util/date.js';
+import { dayStr, normalizeMonth, monthDays, firstWeekdayMondayBased, isRestDay, nowIso } from '../util/date.js';
 
 const router = express.Router();
 
@@ -45,6 +45,7 @@ export function buildCalendar(userId, month) {
   const days = monthDays(month).map((date) => {
     const hit = byDay.get(date);
     const isFuture = date > today;
+    const rest = isRestDay(date);
     return {
       date,
       dayNum: Number(date.slice(8)),
@@ -53,8 +54,10 @@ export function buildCalendar(userId, month) {
       lastAt: hit ? hit.last_at : null,
       isToday: date === today,
       isFuture,
-      // 'sent' = yashil, 'missed' = qizil, 'upcoming' = kulrang
-      state: hit ? 'sent' : isFuture ? 'upcoming' : 'missed',
+      isRest: rest,
+      // 'sent' = yashil, 'rest' = dam olish kuni, 'missed' = qizil, 'upcoming' = kulrang.
+      // Dam olish kunida video yuborish shart emas — "yuborilmagan" deb sanalmaydi.
+      state: hit ? 'sent' : rest ? 'rest' : isFuture ? 'upcoming' : 'missed',
     };
   });
 
@@ -63,10 +66,12 @@ export function buildCalendar(userId, month) {
     monthLabel: monthLabel(month),
     firstWeekday: firstWeekdayMondayBased(month),
     today,
+    todayIsRest: isRestDay(today),
     days,
     stats: {
       sent: days.filter((d) => d.state === 'sent').length,
       missed: days.filter((d) => d.state === 'missed').length,
+      rest: days.filter((d) => d.state === 'rest').length,
       upcoming: days.filter((d) => d.state === 'upcoming').length,
       total: days.length,
     },

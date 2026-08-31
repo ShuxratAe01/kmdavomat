@@ -729,13 +729,13 @@ a { color: var(--brand); }
   align-items: center;
   justify-content: center;
   gap: 3px;
-  background: #edf1f7;
-  color: #0f172a;
+  background: #b796fe;
+  color: #2e1065;
   font-weight: 750;
   font-size: 18px;
   user-select: none;
 }
-.day.empty { background: #f5f7fa; }
+.day.empty { background: #efe8ff; }
 
 .day.sent {
   background: #e4f8ee;
@@ -764,8 +764,8 @@ a { color: var(--brand); }
   color: #e11d48;
 }
 .day.upcoming {
-  background: #f1f4f9;
-  color: #b3bdcc;
+  background: #b796fe;
+  color: #2e1065;
 }
 /* Bugungi kun — yumshoq halqa */
 .day.today {
@@ -822,7 +822,7 @@ a { color: var(--brand); }
   font-size: 8px;
   color: #e11d48;
 }
-.legend .sw-upcoming { background: #f1f4f9; border-color: #dde4ec; }
+.legend .sw-upcoming { background: #b796fe; border-color: #9d78f7; }
 
 /* ===== Statistika ===== */
 

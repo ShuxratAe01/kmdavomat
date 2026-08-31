@@ -4,7 +4,7 @@ import { db } from '../db.js';
 import { config, maxVideoBytes } from '../config.js';
 import { requireAuth } from '../auth.js';
 import { saveVideo, readVideo, extensionFor } from '../storage.js';
-import { dayStr, normalizeMonth, monthDays, firstWeekdayMondayBased, isRestDay, nowIso } from '../util/date.js';
+import { dayStr, normalizeMonth, monthDays, firstWeekdayMondayBased, isRestDay, holidayName, nowIso } from '../util/date.js';
 
 const router = express.Router();
 
@@ -55,6 +55,7 @@ export function buildCalendar(userId, month) {
       isToday: date === today,
       isFuture,
       isRest: rest,
+      holiday: holidayName(date),
       // 'sent' = yashil, 'rest' = dam olish kuni, 'missed' = qizil, 'upcoming' = kulrang.
       // Dam olish kunida video yuborish shart emas — "yuborilmagan" deb sanalmaydi.
       state: hit ? 'sent' : rest ? 'rest' : isFuture ? 'upcoming' : 'missed',
@@ -67,6 +68,7 @@ export function buildCalendar(userId, month) {
     firstWeekday: firstWeekdayMondayBased(month),
     today,
     todayIsRest: isRestDay(today),
+    todayHoliday: holidayName(today),
     days,
     stats: {
       sent: days.filter((d) => d.state === 'sent').length,

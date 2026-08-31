@@ -600,6 +600,18 @@ a { color: var(--brand); }
   border-style: dashed;
   color: #be123c;
 }
+
+/* Bayram kuni — yakshanba bilan bir xil dam olish ko‘rinishi,
+   farqi: burchakdagi yulduzcha. */
+.day.holiday::after {
+  content: '★';
+  position: absolute;
+  top: 3px;
+  right: 5px;
+  font-size: 10px;
+  line-height: 1;
+  color: #e11d48;
+}
 .day.upcoming {
   background: var(--surface-2);
   border-color: var(--border);
@@ -641,6 +653,22 @@ a { color: var(--brand); }
 .legend .sw-sent { background: var(--green-soft); border-color: var(--green-border); }
 .legend .sw-missed { background: var(--red-soft); border-color: var(--red-border); }
 .legend .sw-rest { background: #fff1f2; border-color: #fca5a5; border-style: dashed; }
+.legend .sw-holiday {
+  background: #fff1f2;
+  border-color: #fca5a5;
+  border-style: dashed;
+  position: relative;
+}
+.legend .sw-holiday::after {
+  content: '★';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 8px;
+  color: #e11d48;
+}
 .legend .sw-upcoming { background: var(--surface-2); border-color: var(--border); }
 
 /* ===== Statistika ===== */

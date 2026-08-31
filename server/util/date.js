@@ -41,10 +41,29 @@ export function firstWeekdayMondayBased(month) {
 }
 
 /**
+ * Har yili takrorlanadigan bayram kunlari — "MM-DD" -> nomi.
+ * Bu kunlar ham dam olish kuni hisoblanadi, video yuborish shart emas.
+ */
+export const HOLIDAYS = {
+  '01-01': 'Yangi yil',
+  '01-02': 'Yangi yil',
+  '09-01': 'Mustaqillik kuni',
+  '10-01': 'O‘qituvchi va murabbiylar kuni',
+  '12-08': 'Konstitutsiya kuni',
+  '12-31': 'Yangi yil arafasi',
+};
+
+/** Shu sana bayram bo'lsa nomini, aks holda null qaytaradi */
+export function holidayName(date) {
+  return HOLIDAYS[String(date).slice(5)] || null;
+}
+
+/**
  * Shu sana dam olish kunimi?
- * Hozircha faqat yakshanba — bu kunlarda video yuborish shart emas.
+ * Yakshanba yoki bayram kuni — bu kunlarda video yuborish shart emas.
  */
 export function isRestDay(date) {
+  if (holidayName(date)) return true;
   const [y, m, d] = String(date).split('-').map(Number);
   return new Date(Date.UTC(y, m - 1, d)).getUTCDay() === 0; // 0 = yakshanba
 }

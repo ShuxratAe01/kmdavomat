@@ -3,7 +3,7 @@ import crypto from 'node:crypto';
 import { db, generateInviteCode, schoolUsername, schoolName } from '../db.js';
 import { requireAdmin, hashPassword, destroyAllSessions, checkPasswordStrength } from '../auth.js';
 import { deleteVideoFile } from '../storage.js';
-import { dayStr, isDay, isRestDay, normalizeMonth, nowIso } from '../util/date.js';
+import { dayStr, isDay, isRestDay, holidayName, normalizeMonth, nowIso } from '../util/date.js';
 import { buildCalendar } from './videos.js';
 
 const router = express.Router();
@@ -76,6 +76,7 @@ router.get('/overview', (req, res) => {
   res.json({
     day,
     isRestDay: rest,
+    holiday: holidayName(day),
     schools,
     stats: {
       total: schools.length,

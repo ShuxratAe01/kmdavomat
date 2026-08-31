@@ -76,7 +76,7 @@ async function loadOverview(day) {
     const data = await api('/api/admin/overview' + (day ? `?day=${day}` : ''));
     $('#ovDay').value = data.day;
     $('#ovDayLabel').textContent =
-      formatDay(data.day) + (data.isRestDay ? ' — dam olish kuni' : '');
+      formatDay(data.day) + (data.holiday ? ' — ' + data.holiday : data.isRestDay ? ' — dam olish kuni' : '');
     $('#ovTotal').textContent = data.stats.registered;
     $('#ovSent').textContent = data.stats.sent;
     $('#ovMissed').textContent = data.stats.missed;

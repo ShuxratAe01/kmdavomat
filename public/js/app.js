@@ -412,7 +412,9 @@ function render() {
     $('#statusText').textContent = `Bugungi video yuborilgan — ${formatTime(c.todayVideo.created_at)}`;
   } else if (c.todayIsRest) {
     $('#statusIco').innerHTML = statusTriangle('rest');
-    $('#statusText').textContent = 'Bugun dam olish kuni — video yuborish shart emas';
+    $('#statusText').textContent = c.todayHoliday
+      ? c.todayHoliday + ' — video yuborish shart emas'
+      : 'Bugun dam olish kuni — video yuborish shart emas';
   } else {
     $('#statusIco').innerHTML = statusTriangle('missed');
     $('#statusText').textContent = 'Bugun uchun video yuborilmagan';
@@ -427,13 +429,14 @@ function render() {
   for (let i = 0; i < c.firstWeekday; i++) cells.push('<div class="day empty"></div>');
   for (const d of c.days) {
     const cls = ['day', d.state];
+    if (d.holiday) cls.push('holiday');
     if (d.isToday) cls.push('today');
     if (d.hasVideo) cls.push('clickable');
     cells.push(
       `<div class="${cls.join(' ')}" data-date="${d.date}" title="${formatDay(d.date)} — ${
         {
           sent: 'video yuborilgan',
-          rest: 'dam olish kuni, video shart emas',
+          rest: d.holiday ? d.holiday + ' — video shart emas' : 'dam olish kuni, video shart emas',
           upcoming: 'kelgusi kun',
           missed: 'video yuborilmagan',
         }[d.state]

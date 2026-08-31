@@ -306,6 +306,21 @@
         </button>
       </div>
 
+      <div class="card-title" style="margin-top:20px">Videolar</div>
+      <div class="settings-actions">
+        <button type="button" class="settings-action" id="videoManageBtn">
+          <span class="settings-ico">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="3" y="6" width="12.5" height="12" rx="2.5" />
+              <path d="M15.5 10.5l5-2.6v8.2l-5-2.6z" />
+            </svg>
+          </span>
+          Yuborilgan videolarni tahrirlash
+          <span class="settings-arrow">›</span>
+        </button>
+      </div>
+
       <form id="pwForm">
         <div class="card-title" style="margin-top:20px">Parolni o‘zgartirish</div>
         <div class="field">
@@ -322,6 +337,32 @@
 
       <div class="modal-foot" style="border-top:1px solid var(--border);padding-top:16px">
         <button class="btn danger" id="logoutBtn">Chiqish</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Yuborilgan videolarni tahrirlash -->
+  <div class="modal-bg" id="videoManageModal" hidden>
+    <div class="modal lg">
+      <div class="modal-head">
+        <h3>Yuborilgan videolar</h3>
+        <button class="icon-btn" data-close="videoManageModal" aria-label="Yopish">✕</button>
+      </div>
+
+      <div class="alert error" id="vmErr" hidden></div>
+      <div class="alert ok" id="vmOk" hidden></div>
+
+      <div class="cal-head" style="margin-bottom:14px">
+        <button class="icon-btn" id="vmPrev" aria-label="Oldingi oy">‹</button>
+        <div id="vmMonth" style="font-weight:650">—</div>
+        <button class="icon-btn" id="vmNext" aria-label="Keyingi oy">›</button>
+      </div>
+
+      <div id="vmList"></div>
+
+      <div class="alert info" style="margin-top:16px">
+        Xato video yuborilgan bo‘lsa uni o‘chirib, qaytadan yuborishingiz mumkin.
+        O‘chirilgan kun kalendarda yana qizil bo‘lib qoladi.
       </div>
     </div>
   </div>

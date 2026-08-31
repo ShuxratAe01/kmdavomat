@@ -56,6 +56,7 @@ async function init() {
   await loadCalendar();
   bindEvents();
   bindProfile();
+  bindVideoManage();
   bindClubs();
   loadClubs();
   startWeather();
@@ -490,6 +491,88 @@ async function loadVideoList() {
   } catch (e) {
     el.innerHTML = `<p class="alert error">${esc(e.message)}</p>`;
   }
+}
+
+// ---------- Yuborilgan videolarni tahrirlash (Sozlamalar ichida) ----------
+
+/**
+ * Xato video yuborilgan bo'lsa uni o'chirish uchun ro'yxat.
+ * Kalendar bilan bir xil oyni ko'rsatadi.
+ */
+async function renderVideoManage() {
+  $('#vmMonth').textContent = state.calendar?.monthLabel || '—';
+  $('#vmNext').disabled = state.month >= state.today.slice(0, 7);
+
+  const el = $('#vmList');
+  el.innerHTML = '<p class="muted small">Yuklanmoqda…</p>';
+  try {
+    const { videos } = await api(`/api/videos?month=${state.month}`);
+    if (!videos.length) {
+      el.innerHTML = '<div class="empty-state"><span class="ico">📭</span>Bu oyda video yuborilmagan</div>';
+      return;
+    }
+    el.innerHTML = `<div class="table-wrap"><table>
+      <thead><tr><th>Sana</th><th>Vaqt</th><th>Hajm</th><th></th></tr></thead>
+      <tbody>${videos
+        .map(
+          (v) => `<tr>
+            <td class="cell-main nowrap"><b>${formatDay(v.day, false)}</b></td>
+            <td data-label="Vaqt" class="nowrap small muted">${formatTime(v.created_at).slice(11)}</td>
+            <td data-label="Hajm" class="nowrap small">${formatSize(v.size)}</td>
+            <td class="cell-actions nowrap">
+              <button class="btn sm ghost" data-vm-play="${v.id}" data-day="${v.day}">▶ Ko‘rish</button>
+              <button class="btn sm danger" data-vm-del="${v.id}" data-day="${v.day}">🗑 O‘chirish</button>
+            </td>
+          </tr>`
+        )
+        .join('')}</tbody></table></div>`;
+  } catch (e) {
+    el.innerHTML = `<p class="alert error">${esc(e.message)}</p>`;
+  }
+}
+
+function bindVideoManage() {
+  $('#videoManageBtn').addEventListener('click', () => {
+    closeModal('menuModal');
+    hideAlert($('#vmErr'));
+    hideAlert($('#vmOk'));
+    openModal('videoManageModal');
+    renderVideoManage();
+  });
+
+  $('#vmPrev').addEventListener('click', async () => {
+    await loadCalendar(shiftMonth(state.month, -1));
+    renderVideoManage();
+  });
+  $('#vmNext').addEventListener('click', async () => {
+    await loadCalendar(shiftMonth(state.month, 1));
+    renderVideoManage();
+  });
+
+  $('#vmList').addEventListener('click', async (e) => {
+    const play = e.target.closest('[data-vm-play]');
+    if (play) return openDayVideo(play.dataset.vmPlay, play.dataset.day);
+
+    const del = e.target.closest('[data-vm-del]');
+    if (!del) return;
+
+    const when = formatDay(del.dataset.day);
+    if (!confirm(`${when} kuni yuborilgan video o‘chirilsinmi?\nBu amalni orqaga qaytarib bo‘lmaydi.`)) return;
+
+    del.disabled = true;
+    hideAlert($('#vmErr'));
+    try {
+      await api(`/api/videos/${del.dataset.vmDel}`, { method: 'DELETE' });
+      // Kalendar, statistika va sahifadagi ro'yxat ham yangilansin
+      await loadCalendar(state.month);
+      await renderVideoManage();
+      showAlert($('#vmOk'), 'Video o‘chirildi — o‘sha kunga qaytadan yuborishingiz mumkin', 'ok');
+      setTimeout(() => hideAlert($('#vmOk')), 5000);
+    } catch (err) {
+      del.disabled = false;
+      showAlert($('#vmErr'), err.message);
+    }
+  });
 }
 
 function openDayVideo(id, day) {

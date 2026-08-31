@@ -3,7 +3,7 @@ import multer from 'multer';
 import { db } from '../db.js';
 import { config, maxVideoBytes } from '../config.js';
 import { requireAuth } from '../auth.js';
-import { saveVideo, readVideo, extensionFor } from '../storage.js';
+import { saveVideo, readVideo, deleteVideoFile, extensionFor } from '../storage.js';
 import { dayStr, normalizeMonth, monthDays, firstWeekdayMondayBased, isRestDay, holidayName, nowIso } from '../util/date.js';
 
 const router = express.Router();
@@ -204,5 +204,20 @@ function serveVideo(req, res, { download = false } = {}) {
 
 router.get('/videos/:id/stream', requireAuth, (req, res) => serveVideo(req, res));
 router.get('/videos/:id/download', requireAuth, (req, res) => serveVideo(req, res, { download: true }));
+
+/**
+ * DELETE /api/videos/:id — o'z videosini o'chirish.
+ * Xato video yuborilgan bo'lsa, uni o'chirib qaytadan yuborish uchun.
+ * Faqat egasi o'chira oladi; o'sha kun kalendarda yana qizil bo'lib qoladi.
+ */
+router.delete('/videos/:id', requireAuth, (req, res) => {
+  const row = db.prepare('SELECT * FROM videos WHERE id = ?').get(Number(req.params.id));
+  if (!row) return res.status(404).json({ error: 'Video topilmadi' });
+  if (row.user_id !== req.user.id) return res.status(403).json({ error: 'Ruxsat yo‘q' });
+
+  deleteVideoFile(row);
+  db.prepare('DELETE FROM videos WHERE id = ?').run(row.id);
+  res.json({ ok: true, day: row.day });
+});
 
 export default router;

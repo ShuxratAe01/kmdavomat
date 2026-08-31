@@ -515,14 +515,93 @@ a { color: var(--brand); }
 
 /* ===== Kalendar ===== */
 
+/* Kalendar kartochkasi — oq, katta yumaloq, yumshoq rangli dog‘lar bilan */
+.calendar-card {
+  position: relative;
+  overflow: hidden;
+  border: none;
+  border-radius: 26px;
+  box-shadow: 0 18px 44px rgba(15, 23, 42, 0.09);
+  padding: 24px 22px 20px;
+}
+.calendar-card::before,
+.calendar-card::after {
+  content: '';
+  position: absolute;
+  pointer-events: none;
+  z-index: 0;
+}
+.calendar-card::before {
+  top: -125px;
+  left: -95px;
+  width: 330px;
+  height: 265px;
+  background: radial-gradient(circle at 45% 55%, rgba(150, 128, 240, 0.32), rgba(150, 128, 240, 0) 68%);
+}
+.calendar-card::after {
+  bottom: -115px;
+  left: -85px;
+  width: 345px;
+  height: 285px;
+  background: radial-gradient(circle at 45% 45%, rgba(110, 231, 183, 0.32), rgba(110, 231, 183, 0) 68%);
+}
+.calendar-card > * { position: relative; z-index: 1; }
+
 .cal-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 14px;
+  margin-bottom: 20px;
   gap: 8px;
 }
-.cal-month { font-size: 17px; font-weight: 650; }
+.cal-month {
+  position: relative;
+  padding-bottom: 14px;
+  font-size: 25px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  text-align: center;
+}
+/* Sarlavha ostidagi rangli chiziqcha va nuqta */
+.cal-month::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: 4px;
+  width: 92px;
+  height: 4px;
+  border-radius: 999px;
+  transform: translateX(-58%);
+  background: linear-gradient(90deg, #fb923c, #ec4899);
+}
+.cal-month::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: 3.5px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  transform: translateX(43px);
+  background: #ec4899;
+}
+
+/* Oy almashtirish tugmalari — yumshoq soyali oq kvadratchalar */
+.cal-head .icon-btn {
+  width: 42px;
+  height: 42px;
+  flex: none;
+  border: none;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.1);
+  font-size: 20px;
+  color: #0f172a;
+}
+.cal-head .icon-btn:hover {
+  background: #fff;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.16);
+}
 
 .icon-btn {
   width: 34px;
@@ -544,92 +623,90 @@ a { color: var(--brand); }
 .weekdays {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 6px;
-  margin-bottom: 6px;
+  gap: 8px;
+  margin-bottom: 8px;
 }
 .weekdays span {
   text-align: center;
-  font-size: 11px;
-  font-weight: 650;
-  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  color: #94a3b8;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
   padding: 4px 0;
 }
-.weekdays span.we { color: #b45309; }
+.weekdays span.we { color: #f97316; }
 /* Yakshanba — dam olish kuni */
-.weekdays span.rest-day { color: #be123c; }
+.weekdays span.rest-day { color: #e11d48; }
 
 .calendar {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 6px;
+  gap: 8px;
 }
 
 .day {
   position: relative;
-  aspect-ratio: 1 / 1;
-  border-radius: var(--radius-sm);
-  border: 1.5px solid transparent;
+  aspect-ratio: 3 / 2;
+  border-radius: 15px;
+  border: none;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
-  font-weight: 650;
-  font-size: 15px;
+  gap: 3px;
+  background: #edf1f7;
+  color: #0f172a;
+  font-weight: 750;
+  font-size: 18px;
   user-select: none;
 }
-.day.empty { background: none; border: none; }
+.day.empty { background: #f5f7fa; }
 
 .day.sent {
-  background: var(--green-soft);
-  border-color: var(--green-border);
-  color: #14532d;
+  background: #e4f8ee;
+  color: #059669;
+  box-shadow: inset 0 0 0 1.6px #6ee7b7;
 }
 .day.missed {
-  background: var(--red-soft);
-  border-color: var(--red-border);
-  color: #7f1d1d;
+  background: #fde5ed;
+  color: #e11d48;
 }
 /* Dam olish kuni (yakshanba) — video yuborish shart emas.
-   Qizil, lekin "yuborilmagan" dan farqli: ochroq va uzuq chiziqli ramka. */
+   Qizil, lekin "yuborilmagan" dan farqli: chiziqchali fon. */
 .day.rest {
-  background: #fff1f2;
-  border-color: #fca5a5;
-  border-style: dashed;
-  color: #be123c;
+  background: repeating-linear-gradient(135deg, #fdf2f6 0 7px, #fbe3ec 7px 14px);
+  color: #e11d48;
 }
 
-/* Bayram kuni — yakshanba bilan bir xil dam olish ko‘rinishi,
-   farqi: burchakdagi yulduzcha. */
+/* Bayram kuni — dam olish ko‘rinishi, farqi: burchakdagi yulduzcha */
 .day.holiday::after {
   content: '★';
   position: absolute;
-  top: 3px;
-  right: 5px;
+  top: 4px;
+  right: 6px;
   font-size: 10px;
   line-height: 1;
   color: #e11d48;
 }
 .day.upcoming {
-  background: var(--surface-2);
-  border-color: var(--border);
-  color: #94a3b8;
+  background: #f1f4f9;
+  color: #b3bdcc;
 }
+/* Bugungi kun — yumshoq halqa */
 .day.today {
-  outline: 2.5px solid var(--brand);
-  outline-offset: 1px;
+  outline: 2px solid rgba(106, 63, 224, 0.55);
+  outline-offset: 3px;
 }
 .day .dot {
-  width: 5px;
-  height: 5px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   background: currentColor;
-  opacity: 0.6;
+  opacity: 0.75;
 }
 .day.clickable { cursor: pointer; }
-.day.clickable:hover { filter: brightness(0.96); }
+.day.clickable:hover { filter: brightness(0.97); }
 
 .legend {
   display: flex;
@@ -650,13 +727,15 @@ a { color: var(--brand); }
   vertical-align: -1px;
   border: 1.5px solid;
 }
-.legend .sw-sent { background: var(--green-soft); border-color: var(--green-border); }
-.legend .sw-missed { background: var(--red-soft); border-color: var(--red-border); }
-.legend .sw-rest { background: #fff1f2; border-color: #fca5a5; border-style: dashed; }
+.legend .sw-sent { background: #e4f8ee; border-color: #6ee7b7; }
+.legend .sw-missed { background: #fde5ed; border-color: #f9a8c4; }
+.legend .sw-rest {
+  background: repeating-linear-gradient(135deg, #fdf2f6 0 4px, #fbe3ec 4px 8px);
+  border-color: #f7c2d5;
+}
 .legend .sw-holiday {
-  background: #fff1f2;
-  border-color: #fca5a5;
-  border-style: dashed;
+  background: repeating-linear-gradient(135deg, #fdf2f6 0 4px, #fbe3ec 4px 8px);
+  border-color: #f7c2d5;
   position: relative;
 }
 .legend .sw-holiday::after {
@@ -669,7 +748,7 @@ a { color: var(--brand); }
   font-size: 8px;
   color: #e11d48;
 }
-.legend .sw-upcoming { background: var(--surface-2); border-color: var(--border); }
+.legend .sw-upcoming { background: #f1f4f9; border-color: #dde4ec; }
 
 /* ===== Statistika ===== */
 
@@ -1475,7 +1554,12 @@ video { width: 100%; border-radius: var(--radius-sm); background: #000; display:
   .today-card { padding: 18px; gap: 12px; }
   .today-date { font-size: 25px; }
   .today-logo { width: 92px; }
-  .day { font-size: 14px; }
+  .calendar-card { padding: 18px 14px 16px; border-radius: 22px; }
+  .calendar-card::before { top: -95px; left: -75px; width: 225px; height: 185px; }
+  .calendar-card::after { bottom: -85px; left: -65px; width: 235px; height: 195px; }
+  .cal-month { font-size: 21px; }
+  .cal-head .icon-btn { width: 38px; height: 38px; border-radius: 12px; font-size: 18px; }
+  .day { font-size: 15px; border-radius: 12px; aspect-ratio: 1 / 1; }
   .calendar, .weekdays { gap: 5px; }
   .who strong { font-size: 13px; }
 }

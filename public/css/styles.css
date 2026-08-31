@@ -232,27 +232,48 @@ a { color: var(--brand); }
   color: rgba(255, 255, 255, 0.85);
 }
 
-/* Rasm ostidagi o'zgartirish tugmasi */
-.profile-photo-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  border: 1px solid rgba(255, 255, 255, 0.45);
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.18);
-  color: #fff;
-  font-family: inherit;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  backdrop-filter: blur(6px);
-  transition: background 0.15s;
-  white-space: nowrap;
+/* Sozlamalar oynasidagi amal tugmalari */
+.settings-actions {
+  display: grid;
+  gap: 8px;
 }
-.profile-photo-btn:hover { background: rgba(255, 255, 255, 0.3); }
-.profile-photo-btn svg { width: 15px; height: 15px; flex: none; }
-.profile-photo-btn:disabled { opacity: 0.6; cursor: default; }
+.settings-action {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 14.5px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.settings-action:hover { background: var(--surface-2); border-color: #cbd5e1; }
+.settings-action:disabled { opacity: 0.6; cursor: default; }
+
+.settings-ico {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: var(--brand-soft);
+  display: grid;
+  place-items: center;
+}
+.settings-ico svg { width: 18px; height: 18px; color: var(--brand); }
+
+.settings-arrow {
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 20px;
+  line-height: 1;
+}
 
 .profile-info {
   position: relative;
@@ -304,20 +325,6 @@ a { color: var(--brand); }
 }
 .profile-ico svg { width: 15px; height: 15px; color: #fff; }
 
-.profile-edit {
-  margin-top: 14px;
-  padding: 7px 14px;
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.14);
-  color: #fff;
-  font-family: inherit;
-  font-size: 12.5px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.15s;
-}
-.profile-edit:hover { background: rgba(255, 255, 255, 0.26); }
 
 /* O'ng tomondagi belgi */
 .profile-logo {

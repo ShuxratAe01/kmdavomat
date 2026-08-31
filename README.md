@@ -86,8 +86,8 @@ maktablar sonini `.env` dagi `SCHOOL_COUNT` belgilaydi.
 | `/admin` | admin | Bugungi davomat, videolar, maktablarni boshqarish |
 
 ### Maktab sahifasi
-- **Profil kartochkasi**: rasm (o'zi yuklaydi), F.I.SH., maktab raqami, telefon.
-  Rasm ostidagi tugma bilan almashtiriladi, ma'lumotlarni keyin tahrirlash mumkin
+- **Profil kartochkasi**: rasm, F.I.SH., maktab raqami, telefon
+- Rasmni almashtirish va ma'lumotlarni tahrirlash — yuqoridagi ⋮ (Sozlamalar) tugmasi ostida
 - Yuqorida bugungi sana + hafta kuni + bugungi holat
 - Oylik kalendar: **yashil** = yuborilgan, **qizil** = yuborilmagan, **kulrang** = kelgusi kun
 - Oylar orasida `‹ ›` bilan yurish, oylik statistika (bajarilish foizi)

@@ -140,7 +140,12 @@ function squarePhoto(file) {
 }
 
 function bindProfile() {
-  $('#photoBtn').addEventListener('click', () => $('#photoInput').click());
+  // Ikkalasi ham Sozlamalar oynasida — bosilganda o'sha oyna yopiladi,
+  // aks holda natija (rasm yoki tahrirlash oynasi) ortida qolib ketadi.
+  $('#photoBtn').addEventListener('click', () => {
+    closeModal('menuModal');
+    $('#photoInput').click();
+  });
 
   $('#photoInput').addEventListener('change', async (e) => {
     const file = e.target.files?.[0];
@@ -172,6 +177,7 @@ function bindProfile() {
   });
 
   $('#profileEditBtn').addEventListener('click', () => {
+    closeModal('menuModal');
     hideAlert($('#pfErr'));
     $('#pfName').value = state.profile?.contact_name || '';
     $('#pfPhone').value = prettyPhone(state.profile?.phone) === '—' ? '' : prettyPhone(state.profile?.phone);

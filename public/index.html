@@ -170,7 +170,7 @@
       <div id="uploadArea">
         <button class="btn big" id="sendBtn">🎬 Video yuborish</button>
         <p class="small muted" style="margin:10px 0 0;text-align:center">
-          Maksimal <span class="max-secs">30</span> soniya · <span id="maxSize">60</span> MB gacha
+          Maksimal <span class="max-secs">30</span> soniya · yumaloq video
         </p>
       </div>
 
@@ -220,6 +220,29 @@
 
         <input type="file" id="cameraInput" accept="video/*" capture="user" hidden />
         <input type="file" id="galleryInput" accept="video/*" hidden />
+      </div>
+
+      <!-- Tanlangan video yumaloq shaklga o'tkazilmoqda -->
+      <div id="prepStep" hidden>
+        <div class="round-video-wrap">
+          <div class="round-video">
+            <div class="round-video-frame">
+              <video id="prepPreview" playsinline></video>
+            </div>
+            <svg class="round-video-ring" viewBox="0 0 100 100" aria-hidden="true">
+              <circle class="track" cx="50" cy="50" r="48"></circle>
+              <circle class="bar" cx="50" cy="50" r="48"></circle>
+            </svg>
+            <span class="round-video-time" style="display:none">00:00</span>
+          </div>
+        </div>
+        <div class="small muted" id="prepText" style="margin:18px 0 6px;text-align:center">
+          Video yumaloq shaklga o‘tkazilmoqda…
+        </div>
+        <div class="progress"><i id="prepBar"></i></div>
+        <p class="small muted" style="margin:10px 0 0;text-align:center">
+          Video davomiyligicha vaqt oladi — oynani yopmang
+        </p>
       </div>
 
       <!-- 2-usul: brauzerda yozib olish -->

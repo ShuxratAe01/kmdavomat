@@ -48,13 +48,13 @@ export const config = {
   // Qaysi kamera ochilsin: 'user' = oldingi (selfi), 'environment' = orqadagi
   cameraFacing: process.env.CAMERA_FACING === 'environment' ? 'environment' : 'user',
 
-  // --- Yumaloq videoning sifati ---
-  // Kvadrat tomoni (piksel). 640 — yuz aniq ko'rinadi, fayl ham katta emas
-  videoSize: Number(process.env.VIDEO_SIZE || 640),
-  // Video oqim tezligi (kbit/s). Kattalashsa sifat yaxshi, fayl katta
-  videoBitrateKbps: Number(process.env.VIDEO_BITRATE_KBPS || 1200),
-  // Ovoz oqim tezligi (kbit/s). Nutq uchun 64 yetarli
-  audioBitrateKbps: Number(process.env.AUDIO_BITRATE_KBPS || 64),
+  // --- Yumaloq videoning sifati (Telegram'dagi yumaloq videoga yaqin) ---
+  // Kvadrat tomoni (piksel). Telegram 384–640 oralig'ida ishlatadi
+  videoSize: Number(process.env.VIDEO_SIZE || 480),
+  // Video oqim tezligi (kbit/s). 30 soniyalik video ~2 MB bo'ladi
+  videoBitrateKbps: Number(process.env.VIDEO_BITRATE_KBPS || 500),
+  // Ovoz oqim tezligi (kbit/s). Nutq uchun 48 yetarli
+  audioBitrateKbps: Number(process.env.AUDIO_BITRATE_KBPS || 48),
   // Sekundiga kadrlar
   videoFps: Number(process.env.VIDEO_FPS || 30),
   dbFile: process.env.DB_FILE || path.join(dataDir, 'app.db'),

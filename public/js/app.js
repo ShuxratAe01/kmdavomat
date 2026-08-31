@@ -45,7 +45,6 @@ async function init() {
   }
 
   $('#whoName').textContent = state.user.full_name || state.user.username;
-  $('#maxSize').textContent = state.config.maxVideoMb;
   $$('.max-secs').forEach((el) => (el.textContent = state.config.maxVideoSeconds));
   $('#recLimit').textContent = mmss(state.config.maxVideoSeconds);
   // Telefonda qaysi kamera ochilishini belgilaydi (user = selfi, environment = orqadagi)
@@ -476,13 +475,12 @@ async function loadVideoList() {
       return;
     }
     el.innerHTML = `<div class="table-wrap"><table>
-      <thead><tr><th>Sana</th><th>Vaqt</th><th>Hajm</th><th>Holat</th><th></th></tr></thead>
+      <thead><tr><th>Sana</th><th>Vaqt</th><th>Holat</th><th></th></tr></thead>
       <tbody>${videos
         .map(
           (v) => `<tr>
             <td class="cell-main nowrap"><b>${formatDay(v.day, false)}</b></td>
             <td data-label="Vaqt" class="nowrap small muted">${formatTime(v.created_at).slice(11)}</td>
-            <td data-label="Hajm" class="nowrap small">${formatSize(v.size)}</td>
             <td data-label="Holat">${statusBadge(v.status)}</td>
             <td class="cell-actions nowrap"><button class="btn sm ghost" data-play="${v.id}" data-day="${v.day}">▶ Ko‘rish</button></td>
           </tr>`
@@ -512,13 +510,12 @@ async function renderVideoManage() {
       return;
     }
     el.innerHTML = `<div class="table-wrap"><table>
-      <thead><tr><th>Sana</th><th>Vaqt</th><th>Hajm</th><th></th></tr></thead>
+      <thead><tr><th>Sana</th><th>Vaqt</th><th></th></tr></thead>
       <tbody>${videos
         .map(
           (v) => `<tr>
             <td class="cell-main nowrap"><b>${formatDay(v.day, false)}</b></td>
             <td data-label="Vaqt" class="nowrap small muted">${formatTime(v.created_at).slice(11)}</td>
-            <td data-label="Hajm" class="nowrap small">${formatSize(v.size)}</td>
             <td class="cell-actions nowrap">
               <button class="btn sm ghost" data-vm-play="${v.id}" data-day="${v.day}">▶ Ko‘rish</button>
               <button class="btn sm danger" data-vm-del="${v.id}" data-day="${v.day}">🗑 O‘chirish</button>
@@ -646,6 +643,7 @@ function resetSendModal() {
   state.pickedName = '';
   hideAlert($('#sendErr'));
   $('#pickStep').hidden = false;
+  $('#prepStep').hidden = true;
   $('#recordStep').hidden = true;
   $('#previewStep').hidden = true;
   $('#note').value = '';
@@ -700,6 +698,191 @@ function makeSquareStream(video, audioTrack) {
   const stream = canvas.captureStream(state.config.videoFps);
   if (audioTrack) stream.addTrack(audioTrack);
   return stream;
+}
+
+/** Brauzer tanlangan videoni qayta yoza oladimi? */
+function canConvertVideo() {
+  return (
+    typeof MediaRecorder !== 'undefined' &&
+    typeof document.createElement('canvas').captureStream === 'function' &&
+    typeof (window.AudioContext || window.webkitAudioContext) === 'function'
+  );
+}
+
+/**
+ * Telefon kamerasi yoki galereyadan olingan videoni Telegram'dagidek
+ * yumaloq (kvadrat) ko'rinishga o'tkazadi: o'rtasidan kvadrat qirqib,
+ * kichraytirib, past oqim tezligida qaytadan yozadi.
+ * Ovoz karnaydan chiqmasin deb Web Audio orqali to'g'ridan-to'g'ri
+ * yozuvga uzatiladi.
+ */
+function squareFromFile(file, onProgress) {
+  return new Promise((resolve, reject) => {
+    const size = state.config.videoSize;
+    const url = URL.createObjectURL(file);
+    const video = $('#prepPreview');
+    let audioCtx = null;
+    let raf = null;
+    let rec = null;
+    let guard = null;
+    let settled = false;
+
+    const cleanup = () => {
+      if (raf) cancelAnimationFrame(raf);
+      raf = null;
+      clearTimeout(guard);
+      try { video.pause(); } catch { /* allaqachon to'xtagan */ }
+      video.removeAttribute('src');
+      video.load();
+      URL.revokeObjectURL(url);
+      if (audioCtx) audioCtx.close().catch(() => {});
+    };
+
+    const fail = (msg, extra = {}) => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      reject(Object.assign(new Error(msg), extra));
+    };
+
+    video.onerror = () => fail('Bu faylni video sifatida ochib bo‘lmadi');
+
+    video.onloadedmetadata = async () => {
+      const dur = video.duration;
+      const limit = state.config.maxVideoSeconds;
+      if (Number.isFinite(dur) && dur > limit + 1.5) {
+        return fail(`Video ${limit} soniyadan uzun`, { tooLong: true });
+      }
+
+      const canvas = document.createElement('canvas');
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext('2d', { alpha: false });
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+
+      const stream = canvas.captureStream(state.config.videoFps);
+
+      try {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        audioCtx = new AC();
+        if (audioCtx.state === 'suspended') await audioCtx.resume();
+        // Manba grafikka ulangach ovoz karnayga bormaydi — faqat yozuvga tushadi
+        const src = audioCtx.createMediaElementSource(video);
+        const dest = audioCtx.createMediaStreamDestination();
+        src.connect(dest);
+        const track = dest.stream.getAudioTracks()[0];
+        if (track) stream.addTrack(track);
+      } catch {
+        /* ovozsiz bo'lsa ham video o'tadi */
+      }
+
+      const mimeType = pickRecorderMime();
+      try {
+        rec = new MediaRecorder(stream, {
+          ...(mimeType ? { mimeType } : {}),
+          videoBitsPerSecond: state.config.videoBitrateKbps * 1000,
+          audioBitsPerSecond: state.config.audioBitrateKbps * 1000,
+        });
+      } catch {
+        return fail('Brauzer videoni qayta yozishni qo‘llab-quvvatlamaydi');
+      }
+
+      const parts = [];
+      rec.ondataavailable = (e) => e.data.size && parts.push(e.data);
+      rec.onstop = () => {
+        if (settled) return;
+        settled = true;
+        const type = (rec.mimeType || mimeType || 'video/webm').split(';')[0];
+        const blob = new Blob(parts, { type });
+        cleanup();
+        if (!blob.size) return reject(new Error('Videoni o‘girib bo‘lmadi'));
+        resolve(blob);
+      };
+
+      const stop = () => {
+        if (rec && rec.state !== 'inactive') rec.stop();
+      };
+
+      const draw = () => {
+        const vw = video.videoWidth;
+        const vh = video.videoHeight;
+        if (vw && vh) {
+          const side = Math.min(vw, vh);
+          ctx.drawImage(video, (vw - side) / 2, (vh - side) / 2, side, side, 0, 0, size, size);
+        }
+        if (onProgress && Number.isFinite(dur) && dur > 0) {
+          onProgress(Math.min(100, Math.round((video.currentTime / dur) * 100)));
+        }
+        raf = requestAnimationFrame(draw);
+      };
+
+      video.onended = stop;
+      // Agar "ended" kelmasa ham cheksiz kutib qolmaymiz
+      guard = setTimeout(stop, ((Number.isFinite(dur) ? dur : limit) + 5) * 1000);
+
+      try {
+        rec.start(1000);
+        draw();
+        await video.play();
+      } catch {
+        // Ovozli avtomatik o'ynatishga ruxsat bo'lmasa — ovozsiz urinamiz
+        video.muted = true;
+        try {
+          await video.play();
+        } catch {
+          fail('Videoni o‘ynatib bo‘lmadi');
+        }
+      }
+    };
+
+    video.muted = false;
+    video.playsInline = true;
+    video.src = url;
+    video.load();
+  });
+}
+
+/** Yozuv uchun eng mos kodek: mp4/H.264 hamma joyda ochiladi, VP9 yaxshi siqadi */
+function pickRecorderMime() {
+  const types = [
+    'video/mp4;codecs=avc1.42E01E,mp4a.40.2',
+    'video/mp4',
+    'video/webm;codecs=vp9,opus',
+    'video/webm;codecs=vp8,opus',
+    'video/webm',
+  ];
+  return types.find((t) => MediaRecorder.isTypeSupported(t)) || '';
+}
+
+/** Tanlangan faylni yumaloq shaklga o'tkazib, ko'rib chiqishga beradi */
+async function prepareAndPreview(file) {
+  hideAlert($('#sendErr'));
+
+  if (!canConvertVideo()) return showPreview(file, file.name || 'video.mp4');
+
+  $('#pickStep').hidden = true;
+  $('#recordStep').hidden = true;
+  $('#previewStep').hidden = true;
+  $('#prepStep').hidden = false;
+  $('#prepBar').style.width = '0%';
+  $('#prepText').textContent = 'Video yumaloq shaklga o‘tkazilmoqda…';
+
+  try {
+    const blob = await squareFromFile(file, (pct) => {
+      $('#prepBar').style.width = pct + '%';
+      $('#prepText').textContent = `Video yumaloq shaklga o‘tkazilmoqda… ${pct}%`;
+    });
+    $('#prepStep').hidden = true;
+    showPreview(blob, `video-${state.today}.${blob.type.includes('mp4') ? 'mp4' : 'webm'}`);
+  } catch (err) {
+    $('#prepStep').hidden = true;
+    // O'girib bo'lmasa ham video yo'qolmasin — asl holida ko'rsatamiz
+    showPreview(file, file.name || 'video.mp4');
+    if (!err.tooLong) {
+      showAlert($('#sendErr'), 'Videoni yumaloq shaklga o‘tkazib bo‘lmadi — asl holida yuboriladi.');
+    }
+  }
 }
 
 function stopStream() {
@@ -814,12 +997,12 @@ function showPreview(blob, name) {
   const v = $('#preview');
   v.src = url;
   v.onloadeddata = () => URL.revokeObjectURL(url);
-  $('#fileMeta').textContent = `${name} · ${formatSize(blob.size)}`;
+  $('#fileMeta').textContent = '';
 
   // Hajm cheklovi
   const maxBytes = state.config.maxVideoMb * 1024 * 1024;
   if (blob.size > maxBytes) {
-    showAlert($('#sendErr'), `Video hajmi ${state.config.maxVideoMb} MB dan oshmasligi kerak (hozir ${formatSize(blob.size)})`);
+    showAlert($('#sendErr'), 'Video juda katta. Qisqaroq video oling.');
     $('#confirmSend').disabled = true;
     return;
   }
@@ -834,7 +1017,7 @@ function showPreview(blob, name) {
   v.onloadedmetadata = () => {
     const d = v.duration;
     if (Number.isFinite(d) && d > 0) {
-      $('#fileMeta').textContent = `${name} · ${formatSize(blob.size)} · ${mmss(d)}`;
+      $('#fileMeta').textContent = mmss(d);
       if (d > limit + 1.5) {
         showAlert(
           $('#sendErr'),
@@ -857,7 +1040,9 @@ function bindUpload() {
   for (const id of ['#cameraInput', '#galleryInput']) {
     $(id).addEventListener('change', (e) => {
       const f = e.target.files?.[0];
-      if (f) showPreview(f, f.name || 'video.mp4');
+      e.target.value = '';
+      // Telefon kamerasi to'rtburchak video beradi — uni yumaloq shaklga o'tkazamiz
+      if (f) prepareAndPreview(f);
     });
   }
 
@@ -870,16 +1055,7 @@ function bindUpload() {
     }
     const source = squareStream || mediaStream;
 
-    // Kodek tanlash: mp4/H.264 hamma joyda ochiladi, VP9 esa yaxshi siqadi.
-    // Ikkalasi ham bo'lmasa VP8 ga tushamiz.
-    const types = [
-      'video/mp4;codecs=avc1.42E01E,mp4a.40.2',
-      'video/mp4',
-      'video/webm;codecs=vp9,opus',
-      'video/webm;codecs=vp8,opus',
-      'video/webm',
-    ];
-    const mimeType = types.find((t) => MediaRecorder.isTypeSupported(t)) || '';
+    const mimeType = pickRecorderMime();
 
     // Oqim tezligini o'zimiz belgilaymiz — brauzerning standarti (~2.5 Mbit/s)
     // bunday kichik kvadrat uchun ortiqcha, fayl bekorga kattalashadi.

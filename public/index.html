@@ -14,9 +14,37 @@
     <div class="spacer"></div>
     <div class="who">
       <strong id="whoName">—</strong>
-      <span id="whoRole"></span>
+      <span id="whoRole">Sozlamalar</span>
     </div>
-    <button class="icon-btn" id="menuBtn" title="Sozlamalar" aria-label="Sozlamalar">⋮</button>
+    <button class="settings-btn" id="menuBtn" title="Sozlamalar" aria-label="Sozlamalar">
+      <svg viewBox="0 0 100 100" aria-hidden="true">
+        <defs>
+          <clipPath id="settingsCircle"><circle cx="50" cy="50" r="27" /></clipPath>
+        </defs>
+        <!-- Tishli g'ildirak -->
+        <g fill="#22314f">
+          <g>
+            <rect x="42" y="1" width="16" height="22" rx="3.5" />
+            <rect x="42" y="1" width="16" height="22" rx="3.5" transform="rotate(45 50 50)" />
+            <rect x="42" y="1" width="16" height="22" rx="3.5" transform="rotate(90 50 50)" />
+            <rect x="42" y="1" width="16" height="22" rx="3.5" transform="rotate(135 50 50)" />
+            <rect x="42" y="1" width="16" height="22" rx="3.5" transform="rotate(180 50 50)" />
+            <rect x="42" y="1" width="16" height="22" rx="3.5" transform="rotate(225 50 50)" />
+            <rect x="42" y="1" width="16" height="22" rx="3.5" transform="rotate(270 50 50)" />
+            <rect x="42" y="1" width="16" height="22" rx="3.5" transform="rotate(315 50 50)" />
+          </g>
+          <circle cx="50" cy="50" r="39" />
+        </g>
+        <!-- Ichkaridagi oq doira -->
+        <circle cx="50" cy="50" r="27" fill="#ffffff" />
+        <!-- Odam tasviri — doiradan chiqmasin -->
+        <g clip-path="url(#settingsCircle)" fill="#0b6bf2">
+          <circle cx="50" cy="38" r="9.5" />
+          <path d="M29 74c0-13 9-20 21-20s21 7 21 20z" />
+        </g>
+        <path d="M45.6 52.6 50 63l4.4-10.4-4.4-2z" fill="#ffffff" />
+      </svg>
+    </button>
   </header>
 
   <main class="container">

@@ -44,7 +44,6 @@ async function init() {
   }
 
   $('#whoName').textContent = state.user.full_name || state.user.username;
-  $('#whoRole').textContent = state.user.position || '@' + state.user.username;
   $('#maxSize').textContent = state.config.maxVideoMb;
   $$('.max-secs').forEach((el) => (el.textContent = state.config.maxVideoSeconds));
   $('#recLimit').textContent = mmss(state.config.maxVideoSeconds);
@@ -337,7 +336,9 @@ function bindEvents() {
     openModal('sendModal');
   });
 
+  // Belgining o'zi ham, yonidagi "Sozlamalar" yozuvi ham ochadi
   $('#menuBtn').addEventListener('click', () => openModal('menuModal'));
+  $('#whoRole').addEventListener('click', () => openModal('menuModal'));
 
   $('#logoutBtn').addEventListener('click', async () => {
     await api('/api/auth/logout', { method: 'POST' });

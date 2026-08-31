@@ -251,6 +251,28 @@ async function loadCalendar(month) {
 
 // ---------- Chizish ----------
 
+/**
+ * Bugungi holat belgisi — uch burchak.
+ * yuborilmagan -> qizil (ichida undov), yuborilgan -> yashil (ichida belgi),
+ * dam olish kuni -> kulrang.
+ */
+function statusTriangle(state) {
+  const color = { sent: '#22c55e', missed: '#f43f5e', rest: '#cbd5e1' }[state] || '#f43f5e';
+  const inner =
+    state === 'sent'
+      ? '<path d="M8.7 14.4l2.2 2.2 4.4-4.6" fill="none" stroke="#fff" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/>'
+      : state === 'rest'
+        ? '<circle cx="12" cy="15.6" r="1.35" fill="#fff"/>'
+        : '<rect x="11" y="9.4" width="2" height="6" rx="1" fill="#fff"/>' +
+          '<circle cx="12" cy="17.6" r="1.25" fill="#fff"/>';
+
+  return `<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+    <path d="M12 3.4c.72 0 1.38.38 1.74 1l8.06 13.96c.73 1.27-.18 2.85-1.65 2.85H3.85c-1.47 0-2.38-1.58-1.65-2.85L10.26 4.4c.36-.62 1.02-1 1.74-1z"
+          fill="${color}" />
+    ${inner}
+  </svg>`;
+}
+
 function render() {
   const c = state.calendar;
 
@@ -261,12 +283,16 @@ function render() {
   const sentToday = Boolean(c.todayVideo);
   const st = $('#todayStatus');
   st.classList.toggle('done', sentToday);
+
   if (sentToday) {
-    st.textContent = `✓ Bugungi video yuborilgan — ${formatTime(c.todayVideo.created_at)}`;
+    $('#statusIco').innerHTML = statusTriangle('sent');
+    $('#statusText').textContent = `Bugungi video yuborilgan — ${formatTime(c.todayVideo.created_at)}`;
   } else if (c.todayIsRest) {
-    st.textContent = '☕ Bugun dam olish kuni — video yuborish shart emas';
+    $('#statusIco').innerHTML = statusTriangle('rest');
+    $('#statusText').textContent = 'Bugun dam olish kuni — video yuborish shart emas';
   } else {
-    st.textContent = '⚠ Bugun uchun video yuborilmagan';
+    $('#statusIco').innerHTML = statusTriangle('missed');
+    $('#statusText').textContent = 'Bugun uchun video yuborilmagan';
   }
 
   // Oy sarlavhasi

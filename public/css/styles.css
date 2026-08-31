@@ -188,6 +188,19 @@ a { color: var(--brand); }
 }
 .today-status.done { background: rgba(34, 197, 94, 0.28); }
 
+/* Holat belgisi — uch burchak */
+.status-ico {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 18px;
+  height: 18px;
+}
+.status-ico svg {
+  display: block;
+  filter: drop-shadow(0 1px 2px rgba(10, 15, 50, 0.35));
+}
+
 /* Holat va ob-havo bir qatorda; joy yetmasa pastga tushadi */
 .today-bottom {
   display: flex;

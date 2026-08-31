@@ -78,6 +78,15 @@ a { color: var(--brand); }
   object-fit: contain;
 }
 
+/* To'liq logotip — nishon va "Kelajak Markazlari" yozuvi birga */
+.brand-logo {
+  height: 56px;
+  width: auto;
+  flex: none;
+  display: block;
+  object-fit: contain;
+}
+
 .topbar .spacer { flex: 1; }
 
 /* Sozlamalar tugmasi — tishli g'ildirak ichida odam */
@@ -1562,6 +1571,7 @@ video { width: 100%; border-radius: var(--radius-sm); background: #000; display:
   .day { font-size: 15px; border-radius: 12px; aspect-ratio: 1 / 1; }
   .calendar, .weekdays { gap: 5px; }
   .who strong { font-size: 13px; }
+  .brand-logo { height: 44px; }
 }
 
 /* ===== To'garaklar jadvali — to'q binafsha yozuv ===== */

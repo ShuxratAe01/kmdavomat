@@ -76,6 +76,15 @@ export const config = {
   adminUser: process.env.ADMIN_USERNAME || 'admin',
   adminPass: process.env.ADMIN_PASSWORD || null,
 
+  // --- Ob-havo ---
+  // Ma'lumot open-meteo.com dan olinadi: bepul, ro'yxatdan o'tish va kalit kerak emas
+  weatherEnabled: String(process.env.WEATHER_ENABLED || 'true') === 'true',
+  weatherCity: process.env.WEATHER_CITY || 'Toshkent',
+  weatherLat: Number(process.env.WEATHER_LAT || 41.2995),
+  weatherLon: Number(process.env.WEATHER_LON || 69.2401),
+  // Necha daqiqada bir yangilansin (serverda saqlab turiladi)
+  weatherCacheMinutes: Number(process.env.WEATHER_CACHE_MINUTES || 10),
+
   // Nechta maktab bo'lsin (faqat birinchi ishga tushganda ro'yxat yaratiladi)
   schoolCount: Number(process.env.SCHOOL_COUNT || 71),
   // Maktablar o'zlari ro'yxatdan o'tishi mumkinmi

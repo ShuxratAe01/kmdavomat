@@ -54,7 +54,16 @@
         <div class="today-label">Bugun</div>
         <div class="today-date" id="todayDate">—</div>
         <div class="today-weekday" id="todayWeekday"></div>
-        <div class="today-status" id="todayStatus">Yuklanmoqda…</div>
+        <div class="today-bottom">
+          <div class="today-status" id="todayStatus">Yuklanmoqda…</div>
+          <div class="weather" id="weather" hidden>
+            <span class="weather-ico" id="weatherIco"></span>
+            <span class="weather-text">
+              <b id="weatherTemp">—</b>
+              <small id="weatherDesc">—</small>
+            </span>
+          </div>
+        </div>
       </div>
       <img class="today-logo" src="/img/logo.png" alt="Kelajak Markazlari" />
     </section>
@@ -339,6 +348,7 @@
   </div>
 
   <script src="/js/common.js"></script>
+  <script src="/js/weather-icons.js"></script>
   <script src="/js/app.js"></script>
 </body>
 </html>

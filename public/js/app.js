@@ -55,6 +55,37 @@ async function init() {
   await loadCalendar();
   bindEvents();
   bindProfile();
+  startWeather();
+}
+
+// ---------- Ob-havo ----------
+
+/** Har necha daqiqada yangilanib turadi */
+async function loadWeather() {
+  try {
+    const w = await api('/api/weather');
+    const box = $('#weather');
+    if (!w.enabled || !w.ok) {
+      box.hidden = true;
+      return;
+    }
+    $('#weatherIco').innerHTML = weatherIconSvg(w.icon, 40);
+    $('#weatherTemp').textContent = `${w.temp}°`;
+    $('#weatherDesc').textContent = w.city ? `${w.text} · ${w.city}` : w.text;
+    box.hidden = false;
+  } catch {
+    $('#weather').hidden = true;
+  }
+}
+
+function startWeather() {
+  loadWeather();
+  // Har 10 daqiqada yangilaymiz
+  setInterval(loadWeather, 10 * 60 * 1000);
+  // Sahifaga qaytilganda ham — telefonni cho'ntakdan olganda eski raqam turmasin
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) loadWeather();
+  });
 }
 
 // ---------- Profil ----------

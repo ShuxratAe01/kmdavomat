@@ -88,7 +88,7 @@ maktablar sonini `.env` dagi `SCHOOL_COUNT` belgilaydi.
 ### Maktab sahifasi
 - **Profil kartochkasi**: rasm, F.I.SH., maktab raqami, telefon
 - Rasmni almashtirish va ma'lumotlarni tahrirlash — yuqoridagi ⋮ (Sozlamalar) tugmasi ostida
-- Yuqorida bugungi sana + hafta kuni + bugungi holat
+- Yuqorida bugungi sana + hafta kuni + bugungi holat + **real vaqtdagi ob-havo**
 - Oylik kalendar: **yashil** = yuborilgan, **qizil** = yuborilmagan,
   **ochroq qizil (uzuq ramka)** = yakshanba, dam olish kuni, **kulrang** = kelgusi kun
 - **Yakshanba — dam olish kuni**: video yuborish shart emas, hisobotda "yuborilmagan" deb sanalmaydi
@@ -123,6 +123,10 @@ cp .env.example .env
 | `SESSION_DAYS` | `90` | Sessiya necha kun saqlanadi |
 | `TZ_NAME` | `Asia/Tashkent` | Sanalar shu mintaqa bo'yicha hisoblanadi |
 | `STORAGE` | `db` | `db` = SQLite ichida, `disk` = `uploads/` papkada |
+| `WEATHER_ENABLED` | `true` | Sana kartochkasida ob-havo ko'rsatilsinmi |
+| `WEATHER_CITY` | `Toshkent` | Ko'rsatiladigan shahar nomi |
+| `WEATHER_LAT` / `WEATHER_LON` | Toshkent | Shahar koordinatalari |
+| `WEATHER_CACHE_MINUTES` | `10` | Ob-havo necha daqiqada bir yangilansin |
 | `MAX_VIDEO_SECONDS` | `30` | Bitta video uchun maksimal davomiylik |
 | `VIDEO_SIZE` | `640` | Yumaloq videoning kvadrat tomoni (piksel) |
 | `VIDEO_BITRATE_KBPS` | `1200` | Video oqim tezligi — sifat/hajm muvozanati |
@@ -169,6 +173,24 @@ zaxira nusxa olish oson. Videolar ko'payib baza fayli kattalashib ketsa (masalan
 `.env` da `STORAGE=disk` qilib qo'ying — yangi videolar `uploads/YYYY-MM/` papkasiga tushadi,
 bazada faqat ma'lumotlari qoladi. Eski videolar baribir ishlayveradi (har bir yozuvda qayerda
 turgani belgilab qo'yiladi).
+
+## Ob-havo
+
+Sana kartochkasida real vaqtdagi harorat va ob-havo belgisi turadi.
+Ma'lumot [open-meteo.com](https://open-meteo.com) dan olinadi — **bepul**,
+ro'yxatdan o'tish va API kalit kerak emas.
+
+- So'rovni **server yuboradi**, brauzer emas: xavfsizlik qoidasi (CSP) sahifaga
+  tashqi manzillarga murojaat qilishni taqiqlaydi. Server javobni 10 daqiqa saqlab
+  turadi — 71 ta maktab bir vaqtda ochsa ham tashqariga bitta so'rov ketadi
+- Brauzer har 10 daqiqada va sahifaga qaytilganda yangilaydi
+- Internet bo'lmasa oxirgi ma'lum qiymat ko'rsatiladi, u ham bo'lmasa blok yashiriladi
+- Belgilar SVG qilib chizilgan: quyosh, oy, bulut, quyosh+bulut, oy+bulut,
+  yomg'ir, momaqaldiroq, qor, muzli yomg'ir, tuman. Ob-havo kodiga qarab almashadi
+  (kechasi ochiq bo'lsa oy, kunduzi quyosh)
+
+Shahar `.env` dagi `WEATHER_CITY`, `WEATHER_LAT`, `WEATHER_LON` bilan belgilanadi
+(standart — Toshkent). Kerak bo'lmasa `WEATHER_ENABLED=false`.
 
 ## Telefonda ishlatish
 
@@ -240,11 +262,12 @@ server/
     auth.js         — kirish, chiqish, parol
     videos.js       — kalendar, video yuborish, oqim
     admin.js        — davomat, maktablar, videolar boshqaruvi
+    weather.js      — ob-havo (open-meteo, saqlab turiladi)
     profile.js      — profil ma'lumotlari va rasmi
 public/
   login.html · index.html · admin.html · parol.html · royxat.html
   css/styles.css
-  js/common.js · login.js · app.js · admin.js · parol.js · royxat.js
+  js/common.js · login.js · app.js · admin.js · parol.js · royxat.js · weather-icons.js
   img/logo.png · img/mark.png · img/apple-touch-icon.png
 ```
 

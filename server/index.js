@@ -9,6 +9,7 @@ import authRoutes from './routes/auth.js';
 import videoRoutes from './routes/videos.js';
 import adminRoutes from './routes/admin.js';
 import profileRoutes from './routes/profile.js';
+import weatherRoutes from './routes/weather.js';
 import { cleanupSessions } from './db.js';
 
 const app = express();
@@ -67,6 +68,7 @@ app.get('/api/config', (_req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api', videoRoutes);
 app.use('/api', profileRoutes);
+app.use('/api', weatherRoutes);
 app.use('/api/admin', adminRoutes);
 
 // --- Sahifalar ---

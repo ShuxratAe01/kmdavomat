@@ -188,6 +188,57 @@ a { color: var(--brand); }
 }
 .today-status.done { background: rgba(34, 197, 94, 0.28); }
 
+/* Holat va ob-havo bir qatorda; joy yetmasa pastga tushadi */
+.today-bottom {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+.today-bottom .today-status { margin-top: 0; }
+
+/* ===== Ob-havo ===== */
+
+.weather {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 14px 5px 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(4px);
+}
+.weather[hidden] { display: none !important; }
+
+.weather-ico {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 40px;
+  height: 40px;
+}
+.weather-icon {
+  display: block;
+  filter: drop-shadow(0 3px 5px rgba(15, 20, 60, 0.32));
+}
+
+.weather-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+.weather-text b {
+  font-size: 20px;
+  font-weight: 750;
+  letter-spacing: -0.01em;
+}
+.weather-text small {
+  font-size: 11.5px;
+  opacity: 0.82;
+  white-space: nowrap;
+}
+
 /* ===== Profil kartochkasi ===== */
 
 .profile-card {

@@ -1,3 +1,17 @@
+/* Logotip animatsiyasi rasm yuklangach boshlanadi.
+   Aks holda animatsiyaning boshlanishi bo‘sh joyda o‘tib ketadi:
+   maska harakatlanadi, lekin ostidagi rasm hali kelmagan bo‘ladi. */
+(function () {
+  const box = document.querySelector('.login-logo');
+  if (!box) return;
+  const start = () => box.classList.add('ready');
+  const im = new Image();
+  im.onload = start;
+  im.onerror = start;
+  im.src = '/img/logo.png';
+  // Rasm juda sekin kelsa ham cheksiz kutib turmaymiz
+  setTimeout(start, 2500);
+})();
 /* ===== Kirish sahifasi ===== */
 
 const form = document.getElementById('loginForm');

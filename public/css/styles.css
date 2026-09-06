@@ -1208,7 +1208,9 @@ tbody tr:hover { background: var(--surface-2); }
   margin: 0 auto 16px;
 }
 
-/* Kirish: asl logotip + imzo chizilishi */
+/* Kirish sahifasi: logotip o‘zini chizadi.
+   Emblema yuqoridan pastga ochiladi, "Kelajak" esa chapdan o‘ngga
+   qo‘lda yozilgandek paydo bo‘ladi, so‘ng "MARKAZLARI" qo‘shiladi. */
 .login-logo {
   width: 230px;
   max-width: 72%;
@@ -1219,60 +1221,62 @@ tbody tr:hover { background: var(--surface-2); }
   width: 100%;
   height: auto;
   overflow: visible;
+  transform-origin: 50% 62%;
+  animation: km-settle 0.7s cubic-bezier(0.22, 1, 0.3, 1) 2.86s both;
 }
 
-.km-icon-mask {
-  opacity: 0;
-  animation: km-fade 0.45s ease 0.04s forwards;
+/* Emblema — yuqoridan pastga yumshoq ochiladi */
+.km-emblem {
+  transform: translateY(-30px);
+  animation: km-drop 0.62s cubic-bezier(0.25, 0.8, 0.3, 1) 0.06s forwards;
 }
-.km-w {
-  stroke-dasharray: 1;
-  stroke-dashoffset: 1;
-}
-.km-w1 { animation: km-draw 0.48s cubic-bezier(0.4, 0, 0.2, 1) 0.36s forwards; }
-.km-w2 { animation: km-draw 0.26s cubic-bezier(0.4, 0, 0.2, 1) 0.84s forwards; }
-.km-w3 { animation: km-draw 1.68s cubic-bezier(0.37, 0.02, 0.16, 1) 1.10s forwards; }
-.km-w4 { animation: km-draw 0.22s cubic-bezier(0.4, 0, 0.2, 1) 2.78s forwards; }
-.km-w5 { animation: km-draw 0.28s cubic-bezier(0.4, 0, 0.2, 1) 3.00s forwards; }
-.km-w6 { animation: km-draw 0.42s cubic-bezier(0.4, 0, 0.2, 1) 3.28s forwards; }
-
-.km-jdot {
-  opacity: 0;
-  animation: km-fade 0.2s ease 2.55s forwards;
-}
-.km-sub-mask {
-  opacity: 0;
-  animation: km-fade 0.35s ease 3.70s forwards;
-}
-.km-full {
-  opacity: 0;
-  animation: km-fade 0.3s ease 4.00s forwards;
-}
-.km-nib { transition: opacity 0.16s linear; }
-
-@keyframes km-draw {
-  to { stroke-dashoffset: 0; }
-}
-@keyframes km-fade {
-  from { opacity: 0; }
-  to { opacity: 1; }
+@keyframes km-drop {
+  to { transform: translateY(200px); }
 }
 
+/* "Kelajak" — chegara chapdan o‘ngga suriladi */
+.km-write {
+  transform: translateX(25px);
+  animation: km-write 1.9s cubic-bezier(0.42, 0.02, 0.32, 1) 0.72s forwards;
+}
+@keyframes km-write {
+  to { transform: translateX(535px); }
+}
+
+/* "MARKAZLARI" — yozuv tugagach chapdan o‘ngga qo‘shiladi */
+.km-sub {
+  transform-box: fill-box;
+  transform-origin: 0% 50%;
+  transform: scaleX(0);
+  animation: km-sub 0.38s cubic-bezier(0.3, 0.7, 0.3, 1) 2.6s forwards;
+}
+@keyframes km-sub {
+  to { transform: scaleX(1); }
+}
+
+/* Oxirida logotip sal "joyiga o‘tirib" oladi */
+@keyframes km-settle {
+  from { transform: scale(1.014); }
+  to { transform: scale(1); }
+}
+
+/* Rasm kelmaguncha animatsiya kutib turadi */
+.login-logo-svg,
+.km-emblem,
+.km-write,
+.km-sub { animation-play-state: paused; }
+.login-logo.ready .login-logo-svg,
+.login-logo.ready .km-emblem,
+.login-logo.ready .km-write,
+.login-logo.ready .km-sub { animation-play-state: running; }
+
+/* Harakatni kamaytirish yoqilgan bo‘lsa — logotip darrov to‘liq ko‘rinadi */
 @media (prefers-reduced-motion: reduce) {
-  .km-icon-mask,
-  .km-jdot,
-  .km-sub-mask,
-  .km-full {
-    animation: none;
-    opacity: 1;
-  }
-  .km-w {
-    animation: none;
-    stroke-dashoffset: 0;
-  }
-  .km-nib { display: none; }
+  .login-logo-svg { animation: none; transform: none; }
+  .km-emblem { animation: none; transform: translateY(200px); }
+  .km-write { animation: none; transform: translateX(535px); }
+  .km-sub { animation: none; transform: scaleX(1); }
 }
-
 .login-card h1 {
   text-align: center;
   font-size: 23px;

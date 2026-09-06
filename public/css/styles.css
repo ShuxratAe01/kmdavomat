@@ -1208,6 +1208,71 @@ tbody tr:hover { background: var(--surface-2); }
   margin: 0 auto 16px;
 }
 
+/* Kirish: asl logotip + imzo chizilishi */
+.login-logo {
+  width: 230px;
+  max-width: 72%;
+  margin: 0 auto 16px;
+}
+.login-logo-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.km-icon-mask {
+  opacity: 0;
+  animation: km-fade 0.45s ease 0.04s forwards;
+}
+.km-w {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+}
+.km-w1 { animation: km-draw 0.48s cubic-bezier(0.4, 0, 0.2, 1) 0.36s forwards; }
+.km-w2 { animation: km-draw 0.26s cubic-bezier(0.4, 0, 0.2, 1) 0.84s forwards; }
+.km-w3 { animation: km-draw 1.68s cubic-bezier(0.37, 0.02, 0.16, 1) 1.10s forwards; }
+.km-w4 { animation: km-draw 0.22s cubic-bezier(0.4, 0, 0.2, 1) 2.78s forwards; }
+.km-w5 { animation: km-draw 0.28s cubic-bezier(0.4, 0, 0.2, 1) 3.00s forwards; }
+.km-w6 { animation: km-draw 0.42s cubic-bezier(0.4, 0, 0.2, 1) 3.28s forwards; }
+
+.km-jdot {
+  opacity: 0;
+  animation: km-fade 0.2s ease 2.55s forwards;
+}
+.km-sub-mask {
+  opacity: 0;
+  animation: km-fade 0.35s ease 3.70s forwards;
+}
+.km-full {
+  opacity: 0;
+  animation: km-fade 0.3s ease 4.00s forwards;
+}
+.km-nib { transition: opacity 0.16s linear; }
+
+@keyframes km-draw {
+  to { stroke-dashoffset: 0; }
+}
+@keyframes km-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .km-icon-mask,
+  .km-jdot,
+  .km-sub-mask,
+  .km-full {
+    animation: none;
+    opacity: 1;
+  }
+  .km-w {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+  .km-nib { display: none; }
+}
+
 .login-card h1 {
   text-align: center;
   font-size: 23px;

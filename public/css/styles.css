@@ -502,7 +502,11 @@ a { color: var(--brand); }
   margin: 0;
   padding: 0;
   display: grid;
-  gap: 9px;
+  /* Chapda lavozim va telefon, o'ngda to'garaklar va o'quvchilar soni */
+  grid-template-columns: auto auto;
+  justify-content: start;
+  align-items: center;
+  gap: 10px 28px;
 }
 .profile-rows li {
   display: flex;
@@ -568,6 +572,8 @@ a { color: var(--brand); }
 .clubs-count[hidden] { display: none !important; }
 
 @media (max-width: 620px) {
+  /* Tor ekranda qatorlar bitta ustunga tushadi */
+  .profile-rows { grid-template-columns: 1fr; gap: 9px; }
   .clubs-chip { margin-left: 0; }
   .profile-rows li { flex-wrap: wrap; }
 }
@@ -2582,9 +2588,5 @@ video { width: 100%; border-radius: var(--radius-sm); background: #000; display:
   letter-spacing: -0.01em;
 }
 
-/* "To'garaklar" tugmasi endi o'z qatorida — yozuvlar ostiga tekislanadi */
-.profile-rows .clubs-row { padding-left: 37px; }
+/* "To'garaklar" tugmasi o'ng ustunda turadi */
 .profile-rows .clubs-row .clubs-chip { margin-left: 0; }
-@media (max-width: 620px) {
-  .profile-rows .clubs-row { padding-left: 0; }
-}

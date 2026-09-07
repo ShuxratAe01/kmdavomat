@@ -2242,212 +2242,207 @@ video { width: 100%; border-radius: var(--radius-sm); background: #000; display:
 
 .sc-list { display: block; }
 
+/* Maktab kartochkasi — profil kartochkasi uslubida */
 .sc-card {
+  position: relative;
+  overflow: hidden;
   display: flex;
   align-items: center;
-  gap: 20px;
-  margin-bottom: 16px;
-  padding: 15px;
-  border-radius: 24px;
-  background: #fff;
-  border: 1px solid var(--sc-line);
-  box-shadow: var(--sc-shadow);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  gap: 18px;
+  margin-bottom: 14px;
+  padding: 18px 22px;
+  border-radius: 22px;
+  border: none;
+  color: #fff;
+  background: linear-gradient(135deg, #7c4dff 0%, #6a3fe0 55%, #8a5cf6 100%);
+  box-shadow: 0 12px 30px rgba(84, 40, 190, 0.24);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
 }
 .sc-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 14px 38px rgba(31, 80, 140, 0.12);
+  box-shadow: 0 18px 40px rgba(84, 40, 190, 0.32);
 }
 
-/* Rasm o'rni — haqiqiy surat yo'q, shuning uchun chiroyli o'rinbosar */
-.sc-media {
+/* Chap tomondagi yorug' yarim doira */
+.sc-card::before {
+  content: '';
+  position: absolute;
+  left: -70px;
+  top: -30%;
+  width: 300px;
+  height: 160%;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  pointer-events: none;
+}
+
+/* Ro'yxatdan o'tmagan maktablar biroz xiraroq */
+.sc-card.quiet {
+  background: linear-gradient(135deg, #8f76e8 0%, #7d6ad8 55%, #9a86ee 100%);
+  box-shadow: 0 8px 22px rgba(84, 40, 190, 0.16);
+}
+
+/* Raqamli doira — profil rasmining o‘rnida */
+.sc-ava {
   position: relative;
+  z-index: 1;
   flex: none;
-  width: 268px;
-  height: 152px;
-  border-radius: 19px;
-  overflow: hidden;
+  width: 74px;
+  height: 74px;
+  border-radius: 50%;
   display: grid;
   place-items: center;
-  background: linear-gradient(150deg, #eaf2ff 0%, #dfeaff 55%, #e9e5ff 100%);
+  background: rgba(255, 255, 255, 0.18);
+  border: 3px solid rgba(255, 255, 255, 0.92);
+  box-shadow:
+    0 0 0 5px rgba(255, 255, 255, 0.14),
+    0 6px 16px rgba(40, 15, 100, 0.28);
 }
-.sc-media-ico {
-  display: grid;
-  place-items: center;
-  color: rgba(37, 99, 235, 0.42);
-}
-.sc-media-ico svg { width: 54px; height: 54px; }
-.sc-media-txt {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 11px;
-  text-align: center;
-  font-size: 11.5px;
-  font-weight: 650;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: rgba(16, 42, 86, 0.42);
-}
-
-/* Maktab raqami */
 .sc-num {
-  position: absolute;
-  left: 11px;
-  top: 11px;
-  width: 46px;
-  height: 46px;
-  display: grid;
-  place-items: center;
-  border-radius: 14px;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  font-size: 18px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
+  font-size: 24px;
+  font-weight: 750;
+  letter-spacing: -0.03em;
   color: #fff;
-  box-shadow: 0 6px 16px rgba(16, 42, 86, 0.22);
 }
-
-/* ---------- Ma'lumot ---------- */
 
 .sc-info {
+  position: relative;
+  z-index: 1;
   flex: 1 1 auto;
   min-width: 0;
 }
 .sc-name {
-  font-size: 21px;
+  font-size: 17px;
   font-weight: 700;
   line-height: 1.25;
-  letter-spacing: -0.015em;
-  color: var(--sc-navy);
+  letter-spacing: -0.01em;
+  color: #fff;
   overflow-wrap: anywhere;
 }
-
-.sc-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  margin-top: 10px;
-  padding: 7px 15px;
-  border-radius: 999px;
-  font-size: 13px;
-  font-weight: 650;
+.sc-user {
+  margin: 3px 0 0;
+  font-size: 12.5px;
+  color: rgba(255, 255, 255, 0.78);
 }
-.sc-badge svg { width: 15px; height: 15px; }
-.sc-badge.ok { background: #ecfdf5; color: #059669; }
-.sc-badge.wait { background: #fff0f3; color: #e43d5b; }
-.sc-badge.warn { background: #fef6e7; color: #b45309; }
-.sc-badge.off { background: #eef2f7; color: #475569; }
 
 .sc-meta {
   list-style: none;
-  margin: 12px 0 0;
+  margin: 11px 0 0;
   padding: 0;
   display: flex;
   align-items: center;
-  gap: 8px 18px;
+  gap: 8px 16px;
   flex-wrap: wrap;
-  font-size: 13.5px;
-  color: var(--sc-soft);
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.92);
 }
 .sc-meta li {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
+  gap: 8px;
   min-width: 0;
 }
-.sc-meta svg {
-  width: 16px;
-  height: 16px;
+/* Belgilar — profil kartochkasidagidek yumaloq shaffof doirada */
+.sc-ico {
   flex: none;
-  color: var(--sc-blue);
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.22);
 }
+.sc-ico svg { width: 15px; height: 15px; color: #fff; }
 .sc-meta a { color: inherit; text-decoration: none; }
-.sc-meta a:hover { color: var(--sc-blue); text-decoration: underline; }
+.sc-meta a:hover { text-decoration: underline; }
+
+.sc-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 13px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 650;
+}
+.sc-badge svg { width: 14px; height: 14px; }
+.sc-badge.ok { background: #d7f9e8; color: #047857; }
+.sc-badge.wait { background: rgba(255, 255, 255, 0.9); color: #b33; }
+.sc-badge.warn { background: #fdf0d5; color: #92580a; }
+.sc-badge.off { background: rgba(255, 255, 255, 0.86); color: #475569; }
 
 .sc-code {
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  font-size: 13px;
-  letter-spacing: 0.06em;
-  padding: 3px 9px;
+  font-size: 12.5px;
+  letter-spacing: 0.08em;
+  padding: 3px 10px;
   border-radius: 8px;
-  background: #f1f5fb;
-  color: var(--sc-navy);
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
   cursor: pointer;
 }
-.sc-code:hover { background: #e6eefc; }
+.sc-code:hover { background: rgba(255, 255, 255, 0.34); }
 
 /* ---------- Amallar ---------- */
 
 .sc-act {
+  position: relative;
+  z-index: 1;
   flex: none;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 10px;
+  gap: 9px;
 }
 
 .sc-open {
   display: inline-flex;
   align-items: center;
-  gap: 9px;
-  height: 50px;
-  padding: 0 23px;
+  gap: 8px;
+  height: 44px;
+  padding: 0 20px;
   border: none;
-  border-radius: 16px;
+  border-radius: 14px;
+  background: #fff;
   font: inherit;
-  font-size: 14.5px;
+  font-size: 14px;
   font-weight: 650;
-  color: #fff;
+  color: #5b34d6;
   cursor: pointer;
   white-space: nowrap;
+  box-shadow: 0 6px 16px rgba(40, 15, 100, 0.22);
   transition: transform 0.18s ease, box-shadow 0.18s ease;
 }
-.sc-open svg { width: 18px; height: 18px; transition: transform 0.18s ease; }
-.sc-open:hover { transform: translateY(-1px); }
+.sc-open svg { width: 17px; height: 17px; transition: transform 0.18s ease; }
+.sc-open:hover { transform: translateY(-1px); box-shadow: 0 10px 22px rgba(40, 15, 100, 0.3); }
 .sc-open:hover svg { transform: translateX(3px); }
-.sc-open:focus-visible { outline: 3px solid rgba(37, 99, 235, 0.4); outline-offset: 2px; }
+.sc-open:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
 
 .sc-icons { display: flex; gap: 6px; }
 .sc-ico-btn {
-  width: 36px;
-  height: 36px;
+  width: 34px;
+  height: 34px;
   display: grid;
   place-items: center;
-  border-radius: 11px;
-  border: 1px solid var(--sc-line);
-  background: #fff;
-  color: var(--sc-soft);
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
   cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  transition: background 0.15s ease;
 }
-.sc-ico-btn svg { width: 17px; height: 17px; }
-.sc-ico-btn:hover { background: #f4f8ff; color: var(--sc-blue); border-color: rgba(37, 99, 235, 0.3); }
-.sc-ico-btn.danger:hover { background: #fff1f4; color: #e11d48; border-color: rgba(225, 29, 72, 0.3); }
-.sc-ico-btn:focus-visible { outline: 3px solid rgba(37, 99, 235, 0.4); outline-offset: 2px; }
+.sc-ico-btn svg { width: 16px; height: 16px; }
+.sc-ico-btn:hover { background: rgba(255, 255, 255, 0.36); }
+.sc-ico-btn.danger:hover { background: rgba(255, 120, 140, 0.55); }
+.sc-ico-btn:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
 
-/* ---------- Kartochka ranglari ---------- */
-
-.sc-card.tone-blue .sc-num,
-.sc-card.tone-blue .sc-open { background: linear-gradient(135deg, #2563eb, #3b82f6); }
-.sc-card.tone-blue .sc-open:hover { box-shadow: 0 10px 22px rgba(37, 99, 235, 0.32); }
-
-.sc-card.tone-green .sc-num,
-.sc-card.tone-green .sc-open { background: linear-gradient(135deg, #10b981, #34d399); }
-.sc-card.tone-green .sc-open:hover { box-shadow: 0 10px 22px rgba(16, 185, 129, 0.32); }
-
-.sc-card.tone-purple .sc-num,
-.sc-card.tone-purple .sc-open { background: linear-gradient(135deg, #7c3aed, #8b5cf6); }
-.sc-card.tone-purple .sc-open:hover { box-shadow: 0 10px 22px rgba(124, 58, 237, 0.32); }
-
-.sc-card.tone-orange .sc-num,
-.sc-card.tone-orange .sc-open { background: linear-gradient(135deg, #f97316, #fb923c); }
-.sc-card.tone-orange .sc-open:hover { box-shadow: 0 10px 22px rgba(249, 115, 22, 0.32); }
-
-.sc-card.tone-pink .sc-num,
-.sc-card.tone-pink .sc-open { background: linear-gradient(135deg, #ec4899, #f43f5e); }
-.sc-card.tone-pink .sc-open:hover { box-shadow: 0 10px 22px rgba(236, 72, 153, 0.32); }
-
+/* Kartochka ranglari faqat raqamli doirada ko‘rinadi */
+.sc-card.tone-blue .sc-ava { background: rgba(59, 130, 246, 0.55); }
+.sc-card.tone-green .sc-ava { background: rgba(16, 185, 129, 0.55); }
+.sc-card.tone-purple .sc-ava { background: rgba(139, 92, 246, 0.5); }
+.sc-card.tone-orange .sc-ava { background: rgba(249, 115, 22, 0.55); }
+.sc-card.tone-pink .sc-ava { background: rgba(236, 72, 153, 0.55); }
 /* ---------- Hech narsa topilmasa ---------- */
 
 .sc-empty {
@@ -2516,7 +2511,7 @@ video { width: 100%; border-radius: var(--radius-sm); background: #000; display:
   .sc-hero { padding: 22px 22px 24px; }
   .sc-title { font-size: 42px; }
   .sc-hero-art { width: 190px; opacity: 0.06; }
-  .sc-media { width: 210px; height: 132px; }
+  .sc-ava { width: 68px; height: 68px; }
   .sc-name { font-size: 19px; }
   .sc-card { gap: 16px; }
 }
@@ -2549,14 +2544,13 @@ video { width: 100%; border-radius: var(--radius-sm); background: #000; display:
   .sc-card {
     flex-direction: column;
     align-items: stretch;
-    gap: 16px;
-    padding: 13px;
-    border-radius: 22px;
+    gap: 14px;
+    padding: 18px;
   }
-  .sc-media { width: 100%; height: 200px; }
-  .sc-media-ico svg { width: 62px; height: 62px; }
-  .sc-name { font-size: 18px; }
-  .sc-meta { font-size: 13px; gap: 8px 14px; }
+  .sc-ava { width: 66px; height: 66px; }
+  .sc-num { font-size: 22px; }
+  .sc-name { font-size: 16px; }
+  .sc-meta { font-size: 12.5px; gap: 8px 12px; }
 
   .sc-act { align-items: stretch; }
   .sc-open { width: 100%; justify-content: center; height: 52px; }

@@ -369,13 +369,13 @@ function renderSchools() {
       // Faqat haqiqiy ma‘lumot ko‘rsatiladi
       const meta = s.registered
         ? [
-            s.contact_name ? `<li>${scIco('person')}${esc(s.contact_name)}</li>` : '',
-            s.phone ? `<li>${scIco('phone')}<a href="tel:${esc(s.phone)}">${esc(s.phone)}</a></li>` : '',
-            `<li>${scIco('film')}${s.video_count} video</li>`,
-            s.last_day ? `<li>${scIco('calendar')}${formatDay(s.last_day, false)}</li>` : '',
+            s.contact_name ? `<li><span class="sc-ico">${scIco('person')}</span>${esc(s.contact_name)}</li>` : '',
+            s.phone ? `<li><span class="sc-ico">${scIco('phone')}</span><a href="tel:${esc(s.phone)}">${esc(s.phone)}</a></li>` : '',
+            `<li><span class="sc-ico">${scIco('film')}</span>${s.video_count} video</li>`,
+            s.last_day ? `<li><span class="sc-ico">${scIco('calendar')}</span>${formatDay(s.last_day, false)}</li>` : '',
           ]
         : [
-            `<li>${scIco('key')}<code class="sc-code" data-copy="${esc(s.invite_code)}"
+            `<li><span class="sc-ico">${scIco('key')}</span><code class="sc-code" data-copy="${esc(s.invite_code)}"
               title="Nusxalash">${S.showCodes ? esc(s.invite_code) : '••••-••••'}</code></li>`,
           ];
 
@@ -397,17 +397,16 @@ function renderSchools() {
             ['sdel', 'trash', 'Maktabni o‘chirish', 'danger'],
           ];
 
-      return `<article class="sc-card tone-${tone}">
-        <div class="sc-media">
-          <span class="sc-num">${s.number}</span>
-          <span class="sc-media-ico">${scIco('school')}</span>
-          <span class="sc-media-txt">Maktab</span>
-        </div>
+      return `<article class="sc-card tone-${tone} ${s.registered ? '' : 'quiet'}">
+        <div class="sc-ava"><span class="sc-num">${s.number}</span></div>
 
         <div class="sc-info">
           <h3 class="sc-name">${esc(s.name)}</h3>
-          <span class="sc-badge ${st.cls}">${scIco(st.ico)}${st.text}</span>
-          <ul class="sc-meta">${meta.filter(Boolean).join('')}</ul>
+          <p class="sc-user">${s.registered ? '@' + esc(s.username) : 'hisob ochilmagan'}</p>
+          <ul class="sc-meta">
+            <li><span class="sc-badge ${st.cls}">${scIco(st.ico)}${st.text}</span></li>
+            ${meta.filter(Boolean).join('')}
+          </ul>
         </div>
 
         <div class="sc-act">

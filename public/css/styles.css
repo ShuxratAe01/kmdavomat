@@ -2607,3 +2607,6 @@ video { width: 100%; border-radius: var(--radius-sm); background: #000; display:
 }
 .profile-set:hover { border-bottom-color: #fff; }
 .profile-set:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+
+/* O'quvchilar soni qatori bir tekis, bitta qatorda tursin */
+.profile-rows .students-row { white-space: nowrap; }

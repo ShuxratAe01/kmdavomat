@@ -239,7 +239,7 @@ async function loadProfile() {
     // Son kiritilmagan bo'lsa — bosib qo'yish mumkin bo'lgan taklif
     const stud = $('#profileStudents');
     if (p.students_total) {
-      stud.textContent = `${p.students_total} nafar`;
+      stud.textContent = String(p.students_total);
     } else {
       stud.innerHTML =
         '<button type="button" class="profile-set" aria-label="O‘quvchilar sonini kiritish"></button>';

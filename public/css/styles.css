@@ -2591,18 +2591,19 @@ video { width: 100%; border-radius: var(--radius-sm); background: #000; display:
 /* "To'garaklar" tugmasi o'ng ustunda turadi */
 .profile-rows .clubs-row .clubs-chip { margin-left: 0; }
 
-/* O'quvchilar soni hali kiritilmagan bo'lsa — bosib qo'yish taklifi */
+/* O'quvchilar soni hali kiritilmagan bo'lsa — raqam uchun chiziqcha */
 .profile-set {
   font: inherit;
-  font-size: 13px;
-  font-weight: 600;
-  padding: 3px 12px;
-  border-radius: 999px;
-  border: 1px dashed rgba(255, 255, 255, 0.55);
-  background: rgba(255, 255, 255, 0.14);
-  color: #fff;
+  display: inline-block;
+  width: 62px;
+  height: 20px;
+  padding: 0;
+  border: none;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.6);
+  border-radius: 0;
+  background: none;
   cursor: pointer;
-  transition: background 0.15s ease;
+  transition: border-color 0.15s ease;
 }
-.profile-set:hover { background: rgba(255, 255, 255, 0.28); }
-.profile-set:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.profile-set:hover { border-bottom-color: #fff; }
+.profile-set:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }

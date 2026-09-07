@@ -241,7 +241,8 @@ async function loadProfile() {
     if (p.students_total) {
       stud.textContent = `${p.students_total} nafar`;
     } else {
-      stud.innerHTML = '<button type="button" class="profile-set">kiritilmagan</button>';
+      stud.innerHTML =
+        '<button type="button" class="profile-set" aria-label="O‘quvchilar sonini kiritish"></button>';
     }
 
     showPhoto(p.photo_updated_at);

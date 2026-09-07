@@ -2575,3 +2575,9 @@ video { width: 100%; border-radius: var(--radius-sm); background: #000; display:
   .sc-open:hover { transform: none; }
   .sc-open:hover svg { transform: none; }
 }
+
+/* Profil kartochkasidagi o'quvchilar soni */
+.profile-count {
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}

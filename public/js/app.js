@@ -236,6 +236,8 @@ async function loadProfile() {
     phoneLink.textContent = prettyPhone(p.phone);
     phoneLink.href = p.phone ? `tel:${p.phone}` : '#';
 
+    $('#profileStudents').textContent = p.students_total ? `${p.students_total} nafar` : '—';
+
     showPhoto(p.photo_updated_at);
   } catch (e) {
     showAlert($('#flash'), e.message, 'error');
@@ -332,7 +334,13 @@ function bindProfile() {
     hideAlert($('#pfErr'));
     $('#pfName').value = state.profile?.contact_name || '';
     $('#pfPhone').value = prettyPhone(state.profile?.phone) === '—' ? '' : prettyPhone(state.profile?.phone);
+    $('#pfStudents').value = state.profile?.students_total || '';
     openModal('profileModal');
+  });
+
+  // Faqat raqam kiritilsin
+  $('#pfStudents').addEventListener('input', (e) => {
+    e.target.value = e.target.value.replace(/\D/g, '');
   });
 
   $('#pfPhone').addEventListener('focus', (e) => {
@@ -351,6 +359,7 @@ function bindProfile() {
         body: JSON.stringify({
           contact_name: $('#pfName').value,
           phone: $('#pfPhone').value,
+          students_total: Number($('#pfStudents').value || 0),
         }),
       });
       closeModal('profileModal');

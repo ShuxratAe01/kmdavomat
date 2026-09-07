@@ -42,11 +42,20 @@ function checkPhone(value) {
   return { value: digits.length === 9 ? `+998${digits}` : `+${digits}` };
 }
 
+/** Maktabdagi jami o'quvchilar sonini tekshiradi */
+function checkStudentsTotal(value) {
+  const n = Number(String(value ?? '').replace(/\s/g, ''));
+  if (!Number.isInteger(n) || n < 0 || n > 100000) {
+    return { error: 'O‘quvchilar sonini to‘g‘ri kiriting (0 dan 100000 gacha)' };
+  }
+  return { value: n };
+}
+
 /** Profil ma'lumotlari */
 router.get('/profile', requireAuth, (req, res) => {
   const row = db
     .prepare(
-      `SELECT u.username, u.full_name, u.contact_name, u.phone, u.created_at,
+      `SELECT u.username, u.full_name, u.contact_name, u.phone, u.created_at, u.students_total,
               s.number AS school_number, s.name AS school_name,
               (SELECT updated_at FROM user_photos p WHERE p.user_id = u.id) AS photo_updated_at
        FROM users u LEFT JOIN schools s ON s.id = u.school_id
@@ -60,6 +69,7 @@ router.get('/profile', requireAuth, (req, res) => {
     school_name: row.school_name || row.full_name,
     contact_name: row.contact_name,
     phone: row.phone,
+    students_total: row.students_total || 0,
     photo_updated_at: row.photo_updated_at || null,
     joined_at: row.created_at,
   });
@@ -80,6 +90,12 @@ router.patch('/profile', requireAuth, (req, res) => {
     const r = checkPhone(req.body.phone);
     if (r.error) return res.status(400).json({ error: r.error });
     fields.push('phone = ?');
+    values.push(r.value);
+  }
+  if (req.body?.students_total !== undefined) {
+    const r = checkStudentsTotal(req.body.students_total);
+    if (r.error) return res.status(400).json({ error: r.error });
+    fields.push('students_total = ?');
     values.push(r.value);
   }
 

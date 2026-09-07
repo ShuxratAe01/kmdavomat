@@ -129,6 +129,10 @@ if (!userCols.includes('contact_name')) {
 if (!userCols.includes('phone')) {
   db.exec("ALTER TABLE users ADD COLUMN phone TEXT NOT NULL DEFAULT ''");
 }
+// Maktabdagi jami o'quvchilar soni — xodim sozlamalardan o'zi kiritadi
+if (!userCols.includes('students_total')) {
+  db.exec('ALTER TABLE users ADD COLUMN students_total INTEGER NOT NULL DEFAULT 0');
+}
 
 // Eski sessions jadvalida token ochiq saqlangan edi — uni tashlab yuboramiz
 // (hamma qaytadan kiradi, bu ataylab shunday).

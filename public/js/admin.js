@@ -90,33 +90,48 @@ async function loadOverview(day) {
       return;
     }
 
-    $('#ovList').innerHTML = `<div class="table-wrap"><table>
-      <thead><tr><th>Maktab</th><th>Holat</th><th>Vaqt</th><th>Oyda</th><th></th></tr></thead>
-      <tbody>${data.schools
-        .map((s) => {
-          const holat = !s.registered
-            ? '<span class="badge gray">Ro‘yxatdan o‘tmagan</span>'
-            : !s.is_active
-              ? '<span class="badge red">Bloklangan</span>'
-              : s.sent
-                ? '<span class="badge green">✓ Yuborgan</span>'
-                : data.isRestDay
-                  ? '<span class="badge gray">Dam olish kuni</span>'
-                  : '<span class="badge red">✕ Yubormagan</span>';
-          return `<tr>
-            <td class="cell-main"><b>${esc(s.name)}</b>${
-              s.registered ? `<div class="small muted">@${esc(s.username)}</div>` : ''
-            }</td>
-            <td data-label="Holat">${holat}</td>
-            <td data-label="Vaqt" class="small nowrap">${s.sent_at ? formatTime(s.sent_at).slice(11) : '—'}</td>
-            <td data-label="Oyda" class="small nowrap">${s.registered ? s.month_days + ' kun' : '—'}</td>
-            <td class="cell-actions nowrap${s.video_id || s.registered ? '' : ' no-actions'}">
-              ${s.video_id ? `<button class="btn sm" data-video="${s.video_id}" data-name="${esc(s.name)}" data-day="${data.day}">▶ Ko‘rish</button>` : ''}
-              ${s.registered ? `<button class="btn sm ghost" data-cal="${s.id}" data-name="${esc(s.name)}">📅 Kalendar</button>` : ''}
-            </td>
-          </tr>`;
-        })
-        .join('')}</tbody></table></div>`;
+    $('#ovList').innerHTML = `<div class="school-grid">${data.schools
+      .map((s) => {
+        // Holat kartochkaning rangini ham belgilaydi
+        const holat = !s.registered
+          ? { cls: 'new', badge: 'gray', text: 'Ro‘yxatdan o‘tmagan' }
+          : !s.is_active
+            ? { cls: 'blocked', badge: 'red', text: 'Bloklangan' }
+            : s.sent
+              ? { cls: 'sent', badge: 'green', text: '✓ Yuborgan' }
+              : data.isRestDay
+                ? { cls: 'rest', badge: 'gray', text: 'Dam olish kuni' }
+                : { cls: 'missed', badge: 'red', text: '✕ Yubormagan' };
+
+        const vaqt = s.sent_at ? formatTime(s.sent_at).slice(11) : null;
+        const tugmalar = [
+          s.video_id
+            ? `<button class="btn sm" data-video="${s.video_id}" data-name="${esc(s.name)}" data-day="${data.day}">▶ Ko‘rish</button>`
+            : '',
+          s.registered
+            ? `<button class="btn sm ghost" data-cal="${s.id}" data-name="${esc(s.name)}">📅 Kalendar</button>`
+            : '',
+        ].join('');
+
+        return `<article class="school-card ${holat.cls}">
+          <header class="school-head">
+            <span class="school-num">${s.number}</span>
+            <div class="school-id">
+              <b title="${esc(s.name)}">${esc(s.name)}</b>
+              ${s.registered ? `<span>@${esc(s.username)}</span>` : ''}
+            </div>
+          </header>
+          <div class="school-row">
+            <span class="badge ${holat.badge}">${holat.text}</span>
+            <span class="school-facts">${
+              [vaqt ? '🕒 ' + vaqt : '', s.registered ? '📆 ' + s.month_days + ' kun' : '']
+                .filter(Boolean).join('<i></i>')
+            }</span>
+          </div>
+          ${tugmalar ? `<div class="school-actions">${tugmalar}</div>` : ''}
+        </article>`;
+      })
+      .join('')}</div>`;
   } catch (e) {
     flash(e.message, 'error');
   }

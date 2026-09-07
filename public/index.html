@@ -348,6 +348,20 @@
           Ma‘lumotlarni tahrirlash
           <span class="settings-arrow">›</span>
         </button>
+
+        <button type="button" class="settings-action" id="studentsBtn">
+          <span class="settings-ico">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="9" cy="8" r="3.2" />
+              <path d="M2.5 19c0-3.2 2.9-5.4 6.5-5.4s6.5 2.2 6.5 5.4" />
+              <path d="M16.5 5.4a3.2 3.2 0 0 1 0 5.9" />
+              <path d="M18.5 13.9c1.9.7 3 2.2 3 4.1" />
+            </svg>
+          </span>
+          O‘quvchilar soni
+          <span class="settings-arrow">›</span>
+        </button>
       </div>
 
       <div class="card-title" style="margin-top:20px">Videolar</div>
@@ -494,13 +508,33 @@
           <input type="tel" id="pfPhone" autocomplete="tel" inputmode="tel"
                  placeholder="+998 90 123 45 67" maxlength="20" required />
         </div>
+        <div class="modal-foot">
+          <button type="button" class="btn ghost" data-close="profileModal">Bekor qilish</button>
+          <button type="submit" class="btn">Saqlash</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- O'quvchilar soni -->
+  <div class="modal-bg" id="studentsModal" hidden>
+    <div class="modal">
+      <div class="modal-head">
+        <h3>O‘quvchilar soni</h3>
+        <button class="icon-btn" data-close="studentsModal" aria-label="Yopish">✕</button>
+      </div>
+
+      <div class="alert error" id="studentsErr" hidden></div>
+
+      <form id="studentsForm">
         <div class="field">
           <label for="pfStudents">Jami o‘quvchilar soni</label>
           <input type="text" id="pfStudents" inputmode="numeric"
-                 placeholder="masalan: 450" maxlength="6" />
+                 placeholder="masalan: 450" maxlength="6" required />
+          <div class="small muted" style="margin-top:6px">Maktabdagi barcha o‘quvchilar soni</div>
         </div>
         <div class="modal-foot">
-          <button type="button" class="btn ghost" data-close="profileModal">Bekor qilish</button>
+          <button type="button" class="btn ghost" data-close="studentsModal">Bekor qilish</button>
           <button type="submit" class="btn">Saqlash</button>
         </div>
       </form>

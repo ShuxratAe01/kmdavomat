@@ -334,13 +334,37 @@ function bindProfile() {
     hideAlert($('#pfErr'));
     $('#pfName').value = state.profile?.contact_name || '';
     $('#pfPhone').value = prettyPhone(state.profile?.phone) === '—' ? '' : prettyPhone(state.profile?.phone);
-    $('#pfStudents').value = state.profile?.students_total || '';
     openModal('profileModal');
+  });
+
+  // O'quvchilar soni — alohida oynada o'zgaradi
+  $('#studentsBtn').addEventListener('click', () => {
+    closeModal('menuModal');
+    hideAlert($('#studentsErr'));
+    $('#pfStudents').value = state.profile?.students_total || '';
+    openModal('studentsModal');
   });
 
   // Faqat raqam kiritilsin
   $('#pfStudents').addEventListener('input', (e) => {
     e.target.value = e.target.value.replace(/\D/g, '');
+  });
+
+  $('#studentsForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    hideAlert($('#studentsErr'));
+    try {
+      await api('/api/profile', {
+        method: 'PATCH',
+        body: JSON.stringify({ students_total: Number($('#pfStudents').value || 0) }),
+      });
+      closeModal('studentsModal');
+      await loadProfile();
+      showAlert($('#flash'), '✓ O‘quvchilar soni saqlandi', 'ok');
+      setTimeout(() => hideAlert($('#flash')), 4000);
+    } catch (err) {
+      showAlert($('#studentsErr'), err.message);
+    }
   });
 
   $('#pfPhone').addEventListener('focus', (e) => {
@@ -359,7 +383,6 @@ function bindProfile() {
         body: JSON.stringify({
           contact_name: $('#pfName').value,
           phone: $('#pfPhone').value,
-          students_total: Number($('#pfStudents').value || 0),
         }),
       });
       closeModal('profileModal');

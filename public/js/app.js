@@ -236,7 +236,13 @@ async function loadProfile() {
     phoneLink.textContent = prettyPhone(p.phone);
     phoneLink.href = p.phone ? `tel:${p.phone}` : '#';
 
-    $('#profileStudents').textContent = p.students_total ? `${p.students_total} nafar` : '—';
+    // Son kiritilmagan bo'lsa — bosib qo'yish mumkin bo'lgan taklif
+    const stud = $('#profileStudents');
+    if (p.students_total) {
+      stud.textContent = `${p.students_total} nafar`;
+    } else {
+      stud.innerHTML = '<button type="button" class="profile-set">kiritilmagan</button>';
+    }
 
     showPhoto(p.photo_updated_at);
   } catch (e) {
@@ -338,11 +344,18 @@ function bindProfile() {
   });
 
   // O'quvchilar soni — alohida oynada o'zgaradi
-  $('#studentsBtn').addEventListener('click', () => {
+  const openStudents = () => {
     closeModal('menuModal');
     hideAlert($('#studentsErr'));
     $('#pfStudents').value = state.profile?.students_total || '';
     openModal('studentsModal');
+  };
+
+  $('#studentsBtn').addEventListener('click', openStudents);
+
+  // Kartochkadagi "kiritilmagan" yozuvi ham o'sha oynani ochadi
+  $('#profileStudents').addEventListener('click', (e) => {
+    if (e.target.closest('.profile-set')) openStudents();
   });
 
   // Faqat raqam kiritilsin

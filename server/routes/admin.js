@@ -152,7 +152,9 @@ router.get('/schools', (req, res) => {
     .prepare(
       `SELECT s.id, s.number, s.name, s.invite_code, s.registered_at, s.user_id,
               u.username, u.is_active, u.last_login_at, u.must_change_password,
-              u.contact_name, u.phone,
+              u.contact_name, u.phone, u.students_total,
+              (SELECT updated_at FROM user_photos p WHERE p.user_id = s.user_id) AS photo_updated_at,
+              (SELECT COUNT(*) FROM clubs c WHERE c.user_id = s.user_id) AS clubs_count,
               (SELECT COUNT(DISTINCT day) FROM videos v WHERE v.user_id = s.user_id AND v.day LIKE ?) AS month_days,
               (SELECT COUNT(*) FROM videos v WHERE v.user_id = s.user_id) AS video_count,
               (SELECT MAX(day) FROM videos v WHERE v.user_id = s.user_id) AS last_day
@@ -168,6 +170,9 @@ router.get('/schools', (req, res) => {
       registered: Boolean(s.user_id),
       is_active: s.is_active === null ? null : s.is_active === 1,
       must_change_password: s.must_change_password === 1,
+      students_total: s.students_total || 0,
+      clubs_count: s.clubs_count || 0,
+      photo_updated_at: s.photo_updated_at || null,
     })),
     stats: {
       total: schools.length,

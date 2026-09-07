@@ -323,8 +323,6 @@ const SC_ICO = {
   film: '<rect x="3" y="5" width="18" height="14" rx="2.4"/><path d="M10 9.5v5l4.5-2.5z"/>',
   calendar: '<rect x="3.5" y="5" width="17" height="15" rx="2.4"/><path d="M3.5 10h17M8 3.5v3M16 3.5v3"/>',
   key: '<circle cx="8" cy="12" r="3.6"/><path d="M11.6 12H21M18 12v3M15 12v2.2"/>',
-  home: '<path d="M3 21h18M5 21V10l7-5 7 5v11"/><path d="M10 21v-5h4v5"/>',
-  cap: '<path d="M21.4 8.6 12 4 2.6 8.6 12 13.2z"/><path d="M6 11v5.2c0 1.9 2.7 3.4 6 3.4s6-1.5 6-3.4V11"/>',
   check: '<circle cx="12" cy="12" r="8.5"/><path d="m8.6 12.2 2.3 2.3 4.5-4.7"/>',
   dot: '<circle cx="12" cy="12" r="5"/>',
   arrow: '<path d="M5 12h13M13 6.5 18.5 12 13 17.5"/>',
@@ -368,28 +366,16 @@ function renderSchools() {
       const tone = SC_TONES[(s.number - 1) % SC_TONES.length];
       const st = schoolState(s);
 
-      // Profil kartochkasidagi kabi: rasm, F.I.SH., maktab, lavozim, telefon
-      const photo = s.photo_updated_at
-        ? `<img src="/api/users/${s.user_id}/photo?v=${encodeURIComponent(s.photo_updated_at)}"
-             alt="${esc(s.contact_name || s.name)}" loading="lazy" />`
-        : scIco('person', 'sc-photo-empty');
-
+      // Faqat haqiqiy ma‘lumot ko‘rsatiladi
       const meta = s.registered
         ? [
-            `<li><span class="sc-ico">${scIco('home')}</span>Maktab maslahatchisi</li>`,
-            `<li><span class="sc-ico">${scIco('cap')}</span>To‘garaklar: ${s.clubs_count}</li>`,
-            s.phone
-              ? `<li><span class="sc-ico">${scIco('phone')}</span><a href="tel:${esc(s.phone)}">${esc(s.phone)}</a></li>`
-              : '',
-            `<li><span class="sc-ico">${scIco('person')}</span>O‘quvchilar soni: ${
-              s.students_total || '—'
-            }</li>`,
-            `<li><span class="sc-ico">${scIco('film')}</span>${s.video_count} video${
-              s.last_day ? ' · ' + formatDay(s.last_day, false) : ''
-            }</li>`,
+            s.contact_name ? `<li>${scIco('person')}${esc(s.contact_name)}</li>` : '',
+            s.phone ? `<li>${scIco('phone')}<a href="tel:${esc(s.phone)}">${esc(s.phone)}</a></li>` : '',
+            `<li>${scIco('film')}${s.video_count} video</li>`,
+            s.last_day ? `<li>${scIco('calendar')}${formatDay(s.last_day, false)}</li>` : '',
           ]
         : [
-            `<li><span class="sc-ico">${scIco('key')}</span><code class="sc-code" data-copy="${esc(s.invite_code)}"
+            `<li>${scIco('key')}<code class="sc-code" data-copy="${esc(s.invite_code)}"
               title="Nusxalash">${S.showCodes ? esc(s.invite_code) : '••••-••••'}</code></li>`,
           ];
 
@@ -411,18 +397,17 @@ function renderSchools() {
             ['sdel', 'trash', 'Maktabni o‘chirish', 'danger'],
           ];
 
-      return `<article class="sc-card tone-${tone} ${s.registered ? '' : 'quiet'}">
-        <div class="sc-photo">${photo}<span class="sc-num">${s.number}</span></div>
+      return `<article class="sc-card tone-${tone}">
+        <div class="sc-media">
+          <span class="sc-num">${s.number}</span>
+          <span class="sc-media-ico">${scIco('school')}</span>
+          <span class="sc-media-txt">Maktab</span>
+        </div>
 
         <div class="sc-info">
-          <h3 class="sc-name">${esc(s.registered && s.contact_name ? s.contact_name : s.name)}</h3>
-          <p class="sc-user">${
-            s.registered ? esc(s.name) : 'hisob ochilmagan'
-          }</p>
-          <ul class="sc-meta">
-            <li><span class="sc-badge ${st.cls}">${scIco(st.ico)}${st.text}</span></li>
-            ${meta.filter(Boolean).join('')}
-          </ul>
+          <h3 class="sc-name">${esc(s.name)}</h3>
+          <span class="sc-badge ${st.cls}">${scIco(st.ico)}${st.text}</span>
+          <ul class="sc-meta">${meta.filter(Boolean).join('')}</ul>
         </div>
 
         <div class="sc-act">

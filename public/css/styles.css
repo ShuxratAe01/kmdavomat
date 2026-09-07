@@ -2581,3 +2581,10 @@ video { width: 100%; border-radius: var(--radius-sm); background: #000; display:
   font-weight: 700;
   letter-spacing: -0.01em;
 }
+
+/* "To'garaklar" tugmasi endi o'z qatorida — yozuvlar ostiga tekislanadi */
+.profile-rows .clubs-row { padding-left: 37px; }
+.profile-rows .clubs-row .clubs-chip { margin-left: 0; }
+@media (max-width: 620px) {
+  .profile-rows .clubs-row { padding-left: 0; }
+}

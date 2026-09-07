@@ -283,7 +283,7 @@ function bindSchools() {
 
   $('#scCodes').addEventListener('click', () => {
     S.showCodes = !S.showCodes;
-    $('#scCodes').textContent = S.showCodes ? '🙈 Kodlarni yashirish' : '🔑 Kodlarni ko‘rsatish';
+    $('#scCodes').textContent = S.showCodes ? 'Kodlarni yashirish' : 'Kodlarni ko‘rsatish';
     renderSchools();
   });
 
@@ -314,62 +314,124 @@ function visibleSchools() {
   });
 }
 
+/* Kartochka belgilari — lucide uslubidagi ingichka chiziqli ikonkalar.
+   Loyihada ikonka kutubxonasi yo‘q, shuning uchun SVG shu yerda. */
+const SC_ICO = {
+  school: '<path d="M3 21h18M5 21V9l7-4.5L19 9v12"/><path d="M9.5 21v-4.5h5V21"/>',
+  person: '<circle cx="12" cy="8" r="3.4"/><path d="M4.8 20c0-3.5 3.2-5.6 7.2-5.6s7.2 2.1 7.2 5.6"/>',
+  phone: '<path d="M6.5 3.5h3l1.5 4-2 1.4a12 12 0 0 0 6.1 6.1l1.4-2 4 1.5v3a2 2 0 0 1-2.2 2C11.4 19 5 12.6 4.5 5.7a2 2 0 0 1 2-2.2z"/>',
+  film: '<rect x="3" y="5" width="18" height="14" rx="2.4"/><path d="M10 9.5v5l4.5-2.5z"/>',
+  calendar: '<rect x="3.5" y="5" width="17" height="15" rx="2.4"/><path d="M3.5 10h17M8 3.5v3M16 3.5v3"/>',
+  key: '<circle cx="8" cy="12" r="3.6"/><path d="M11.6 12H21M18 12v3M15 12v2.2"/>',
+  check: '<circle cx="12" cy="12" r="8.5"/><path d="m8.6 12.2 2.3 2.3 4.5-4.7"/>',
+  dot: '<circle cx="12" cy="12" r="5"/>',
+  arrow: '<path d="M5 12h13M13 6.5 18.5 12 13 17.5"/>',
+  pencil: '<path d="M4 20h4L19 9a2.1 2.1 0 0 0-3-3L5 17z"/><path d="m14.5 7.5 3 3"/>',
+  refresh: '<path d="M20 11a8 8 0 0 0-13.7-5.2L4 8"/><path d="M4 4v4h4"/><path d="M4 13a8 8 0 0 0 13.7 5.2L20 16"/><path d="M20 20v-4h-4"/>',
+  trash: '<path d="M4.5 7h15M9.5 7V5h5v2M6.5 7l1 13h9l1-13"/>',
+};
+
+function scIco(name, cls) {
+  return `<svg class="${cls || ''}" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${SC_ICO[name]}</svg>`;
+}
+
+// Kartochkalarning navbatma-navbat almashinuvchi ranglari
+const SC_TONES = ['blue', 'green', 'purple', 'orange', 'pink'];
+
+/** Maktabning haqiqiy holati — bitta joyda hisoblanadi */
+function schoolState(s) {
+  if (!s.registered) return { cls: 'wait', ico: 'dot', text: 'Ro‘yxatdan o‘tmagan' };
+  if (!s.is_active) return { cls: 'off', ico: 'dot', text: 'Bloklangan' };
+  if (s.must_change_password) return { cls: 'warn', ico: 'dot', text: 'Parol kutilmoqda' };
+  return { cls: 'ok', ico: 'check', text: 'Ro‘yxatdan o‘tgan' };
+}
+
 function renderSchools() {
   const rows = visibleSchools();
+  const el = $('#schoolList');
+
   if (!rows.length) {
-    $('#schoolList').innerHTML = '<div class="empty-state"><span class="ico">🏫</span>Maktab topilmadi</div>';
+    el.innerHTML = `<div class="sc-empty">
+      <span class="sc-empty-ico">${scIco('school')}</span>
+      <b>Mos maktab topilmadi</b>
+      <p>Qidiruv yoki filtr parametrlarini o‘zgartirib ko‘ring.</p>
+      <button class="btn ghost" data-clear>Filtrlarni tozalash</button>
+    </div>`;
     return;
   }
 
-  $('#schoolList').innerHTML = `<div class="table-wrap"><table>
-    <thead><tr><th>Maktab</th><th>Mas‘ul shaxs</th><th>Ro‘yxat kodi</th><th>Holat</th><th>Videolar</th><th>Oxirgi</th><th></th></tr></thead>
-    <tbody>${rows
-      .map((s) => {
-        const holat = !s.registered
-          ? '<span class="badge amber">Kutilmoqda</span>'
-          : !s.is_active
-            ? '<span class="badge red">Bloklangan</span>'
-            : s.must_change_password
-              ? '<span class="badge amber">Parol kutilmoqda</span>'
-              : '<span class="badge green">Faol</span>';
-        // Kod faqat ro'yxatdan o'tmagan maktab uchun kerak
-        const kod = s.registered
-          ? '<span class="muted small">—</span>'
-          : S.showCodes
-            ? `<code class="code-chip" data-copy="${esc(s.invite_code)}" title="Nusxalash">${esc(s.invite_code)}</code>`
-            : '<span class="muted small">••••-••••</span>';
-        return `<tr>
-          <td class="cell-main"><b>${esc(s.name)}</b>${
-            s.registered ? `<div class="small muted">@${esc(s.username)}</div>` : ''
-          }</td>
-          <td data-label="Mas‘ul shaxs" class="small">${
-            s.contact_name
-              ? `${esc(s.contact_name)}${
-                  s.phone ? `<div class="muted"><a href="tel:${esc(s.phone)}">${esc(s.phone)}</a></div>` : ''
-                }`
-              : '<span class="muted">—</span>'
-          }</td>
-          <td data-label="Kod">${kod}</td>
-          <td data-label="Holat">${holat}</td>
-          <td data-label="Videolar" class="small nowrap">${s.registered ? s.video_count : '—'}</td>
-          <td data-label="Oxirgi" class="small nowrap muted">${s.last_day ? formatDay(s.last_day, false) : '—'}</td>
-          <td class="cell-actions nowrap">
-            <button class="btn sm ghost" data-sedit="${s.id}" title="Nomini o‘zgartirish">✎</button>
-            ${
-              s.registered
-                ? `<button class="btn sm ghost" data-scal="${s.id}" data-uid="${s.id}" data-name="${esc(s.name)}" title="Kalendar">📅</button>
-                   <button class="btn sm ghost" data-sreset="${s.id}" title="Parolni tiklash">🔑</button>
-                   <button class="btn sm danger" data-sdelacc="${s.id}" title="Hisobni o‘chirish">🗑</button>`
-                : `<button class="btn sm ghost" data-snewcode="${s.id}" title="Yangi kod">♻</button>
-                   <button class="btn sm danger" data-sdel="${s.id}" title="Maktabni o‘chirish">🗑</button>`
-            }
-          </td>
-        </tr>`;
-      })
-      .join('')}</tbody></table></div>`;
-}
+  el.innerHTML = rows
+    .map((s) => {
+      const tone = SC_TONES[(s.number - 1) % SC_TONES.length];
+      const st = schoolState(s);
 
+      // Faqat haqiqiy ma‘lumot ko‘rsatiladi
+      const meta = s.registered
+        ? [
+            s.contact_name ? `<li>${scIco('person')}${esc(s.contact_name)}</li>` : '',
+            s.phone ? `<li>${scIco('phone')}<a href="tel:${esc(s.phone)}">${esc(s.phone)}</a></li>` : '',
+            `<li>${scIco('film')}${s.video_count} video</li>`,
+            s.last_day ? `<li>${scIco('calendar')}${formatDay(s.last_day, false)}</li>` : '',
+          ]
+        : [
+            `<li>${scIco('key')}<code class="sc-code" data-copy="${esc(s.invite_code)}"
+              title="Nusxalash">${S.showCodes ? esc(s.invite_code) : '••••-••••'}</code></li>`,
+          ];
+
+      const open = s.registered
+        ? `<button class="sc-open" data-scal="${s.id}" data-uid="${s.id}" data-name="${esc(s.name)}">
+             Batafsil ${scIco('arrow', 'sc-open-arrow')}</button>`
+        : `<button class="sc-open" data-copy="${esc(s.invite_code)}">
+             Kodni nusxalash ${scIco('arrow', 'sc-open-arrow')}</button>`;
+
+      const tools = s.registered
+        ? [
+            ['sedit', 'pencil', 'Nomini o‘zgartirish'],
+            ['sreset', 'key', 'Parolni tiklash'],
+            ['sdelacc', 'trash', 'Hisobni o‘chirish', 'danger'],
+          ]
+        : [
+            ['sedit', 'pencil', 'Nomini o‘zgartirish'],
+            ['snewcode', 'refresh', 'Yangi kod'],
+            ['sdel', 'trash', 'Maktabni o‘chirish', 'danger'],
+          ];
+
+      return `<article class="sc-card tone-${tone}">
+        <div class="sc-media">
+          <span class="sc-num">${s.number}</span>
+          <span class="sc-media-ico">${scIco('school')}</span>
+          <span class="sc-media-txt">Maktab</span>
+        </div>
+
+        <div class="sc-info">
+          <h3 class="sc-name">${esc(s.name)}</h3>
+          <span class="sc-badge ${st.cls}">${scIco(st.ico)}${st.text}</span>
+          <ul class="sc-meta">${meta.filter(Boolean).join('')}</ul>
+        </div>
+
+        <div class="sc-act">
+          ${open}
+          <div class="sc-icons">${tools
+            .map(([attr, icon, label, kind]) =>
+              `<button class="sc-ico-btn ${kind || ''}" data-${attr}="${s.id}"
+                 title="${label}" aria-label="${esc(s.name)}: ${label}">${scIco(icon)}</button>`)
+            .join('')}</div>
+        </div>
+      </article>`;
+    })
+    .join('');
+}
 async function onSchoolListClick(e) {
+  const clear = e.target.closest('[data-clear]');
+  if (clear) {
+    $('#scSearch').value = '';
+    $('#scFilter').value = '';
+    renderSchools();
+    $('#scSearch').focus();
+    return;
+  }
+
   const copy = e.target.closest('[data-copy]');
   if (copy) {
     try {

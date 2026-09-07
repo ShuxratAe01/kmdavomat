@@ -103,36 +103,108 @@
 
     <!-- ===== Maktablar ===== -->
     <section id="tab-schools" hidden>
-      <div class="card">
-        <div class="stats" style="margin-bottom:16px">
-          <div class="stat blue"><b id="scTotal">0</b><span>Jami maktab</span></div>
-          <div class="stat green"><b id="scRegistered">0</b><span>Ro‘yxatdan o‘tgan</span></div>
-          <div class="stat red"><b id="scWaiting">0</b><span>Kutilmoqda</span></div>
+      <!-- Sarlavha -->
+      <header class="sc-hero">
+        <svg class="sc-hero-art" viewBox="0 0 220 180" aria-hidden="true">
+          <path d="M110 22 208 62 110 102 12 62z" />
+          <path d="M52 80v42c0 14 26 26 58 26s58-12 58-26V80l-58 24z" />
+          <path d="M196 70v46" />
+        </svg>
+
+        <div class="sc-hero-top">
+          <div class="sc-brand">
+            <span class="sc-brand-ico" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
+                   stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21.4 8.6 12 4 2.6 8.6 12 13.2z" />
+                <path d="M6 11v5.2c0 1.9 2.7 3.4 6 3.4s6-1.5 6-3.4V11" />
+                <path d="M20.4 9.6v5.6" />
+              </svg>
+            </span>
+            <div>
+              <h2>Maktablar</h2>
+              <p>Ta’lim — kelajak sari qadam</p>
+            </div>
+          </div>
+
+          <div class="sc-count">
+            <span class="sc-count-ico" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
+                   stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 21h18M5 21V9l7-4.5L19 9v12" />
+                <path d="M9.5 21v-4.5h5V21" />
+                <path d="M9.5 11h1.5M13 11h1.5" />
+              </svg>
+            </span>
+            <div class="sc-count-txt">
+              <b><span id="scTotal">0</span> ta maktab</b>
+              <span>Maktablar ro‘yxati</span>
+            </div>
+          </div>
         </div>
-        <div class="row">
-          <div>
-            <label class="small muted" for="scSearch">Qidirish</label>
-            <input type="search" id="scSearch" placeholder="Maktab raqami yoki nomi" />
-          </div>
-          <div>
-            <label class="small muted" for="scFilter">Holat</label>
-            <select id="scFilter">
-              <option value="">Barchasi</option>
-              <option value="waiting">Ro‘yxatdan o‘tmagan</option>
-              <option value="registered">Ro‘yxatdan o‘tgan</option>
-            </select>
-          </div>
-          <div class="fixed"><button class="btn ghost" id="scCodes">🔑 Kodlarni ko‘rsatish</button></div>
-          <div class="fixed"><button class="btn ghost" id="scExport">⬇ Kodlarni yuklab olish</button></div>
-          <div class="fixed"><button class="btn" id="scAdd">+ Maktab</button></div>
+
+        <h1 class="sc-title">Yaxshiroq ta’lim,<br /><span>yorqin kelajak!</span></h1>
+        <p class="sc-sub">Sizning hududingizdagi umumiy o‘rta ta’lim maktablari</p>
+
+        <ul class="sc-pills">
+          <li class="ok"><b id="scRegistered">0</b> ro‘yxatdan o‘tgan</li>
+          <li class="wait"><b id="scWaiting">0</b> kutilmoqda</li>
+        </ul>
+      </header>
+
+      <!-- Qidiruv va filtr -->
+      <div class="sc-toolbar">
+        <div class="sc-search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="7" /><path d="m20 20-3.6-3.6" />
+          </svg>
+          <input type="search" id="scSearch" autocomplete="off"
+                 placeholder="Maktab nomi bo‘yicha qidirish..."
+                 aria-label="Maktab nomi yoki raqami bo‘yicha qidirish" />
+        </div>
+
+        <div class="sc-filter">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M4 7h10M18 7h2M4 17h4M12 17h8" />
+            <circle cx="16" cy="7" r="2" /><circle cx="10" cy="17" r="2" />
+          </svg>
+          <select id="scFilter" aria-label="Holat bo‘yicha saralash">
+            <option value="">Barchasi</option>
+            <option value="registered">Ro‘yxatdan o‘tgan</option>
+            <option value="waiting">Ro‘yxatdan o‘tmagan</option>
+          </select>
+          <svg class="sc-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="m6 9 6 6 6-6" />
+          </svg>
         </div>
       </div>
-      <div class="card">
-        <div id="schoolList"></div>
+
+      <div class="sc-tools">
+        <button class="btn ghost" id="scCodes">Kodlarni ko‘rsatish</button>
+        <button class="btn ghost" id="scExport">Kodlarni yuklab olish</button>
+        <button class="btn" id="scAdd">+ Maktab</button>
       </div>
+
+      <div id="schoolList" class="sc-list"></div>
+
+      <aside class="sc-banner">
+        <span class="sc-banner-ico" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
+               stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="9" cy="8" r="3.2" />
+            <path d="M2.5 19c0-3.2 2.9-5.4 6.5-5.4s6.5 2.2 6.5 5.4" />
+            <path d="M16.5 5.4a3.2 3.2 0 0 1 0 5.9" />
+            <path d="M18.5 13.9c1.9.7 3 2.2 3 4.1" />
+          </svg>
+        </span>
+        <b>Ta’limda birlashsak — kelajakni birga quramiz!</b>
+      </aside>
     </section>
 
-    <!-- ===== To'garaklar ===== -->
+<!-- ===== To'garaklar ===== -->
     <section id="tab-clubs" hidden>
       <div class="card glass-frame">
         <div class="stats" style="margin-bottom:16px">

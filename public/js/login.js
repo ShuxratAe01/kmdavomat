@@ -76,6 +76,45 @@ document.getElementById('toggleMode').addEventListener('click', (e) => {
   (adminMode ? document.getElementById('username') : schoolSelect).focus();
 });
 
+// --- Parolni ko‘rsatish / yashirish ---
+// Yumilgan ko‘z = yashirin nuqtalar. Ochiq ko‘z = yozilgan matn ko‘rinadi.
+(function () {
+  const input = document.getElementById('password');
+  const btn = document.getElementById('pwToggle');
+  if (!input || !btn) return;
+  function isVisible() {
+    return input.type === 'text';
+  }
+
+  function syncIcon() {
+    const visible = isVisible();
+    btn.setAttribute('aria-pressed', visible ? 'true' : 'false');
+    btn.setAttribute('aria-label', visible ? 'Parolni yashirish' : 'Parolni ko‘rsatish');
+  }
+
+  function setVisible(visible) {
+    const start = input.selectionStart;
+    const end = input.selectionEnd;
+    input.type = visible ? 'text' : 'password';
+    input.style.removeProperty('-webkit-text-security');
+    input.classList.toggle('is-revealed', visible);
+    syncIcon();
+    try {
+      input.setSelectionRange(start, end);
+    } catch {
+      /* type=password ba'zan selectionni qo'llab-quvvatlamaydi */
+    }
+  }
+
+  btn.addEventListener('click', () => {
+    setVisible(!isVisible());
+    input.focus({ preventScroll: true });
+  });
+
+  input.addEventListener('input', syncIcon);
+  syncIcon();
+})();
+
 // --- Yuborish ---
 form.addEventListener('submit', async (e) => {
   e.preventDefault();

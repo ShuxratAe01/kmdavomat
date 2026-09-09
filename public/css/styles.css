@@ -106,15 +106,80 @@ a { color: var(--brand); }
 
 /* Yuqori paneldagi yuguruvchi eslatma — o'ngdan chapga, 10 soniyada bir marta.
    O'z ustunida yuradi, yonidagi yozuvlarga tegmaydi. */
-/* Pastki paneldagi yuguruvchi yozuv */
+/* Pastki panel — e'lon o'ngdan chapga yuradi */
 .ticker {
   flex: 1 1 auto;
   min-width: 0;
   overflow: hidden;
-  height: 20px;
-  line-height: 20px;
-  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 6%, #000 94%, transparent 100%);
-  mask-image: linear-gradient(90deg, transparent 0, #000 6%, #000 94%, transparent 100%);
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 8%, #000 92%, transparent 100%);
+  mask-image: linear-gradient(90deg, transparent 0, #000 8%, #000 92%, transparent 100%);
+}
+.ticker-track {
+  display: inline-flex;
+  align-items: center;
+  gap: 64px;
+  width: max-content;
+  will-change: transform;
+  animation: ticker-run 18s linear infinite;
+}
+.ticker-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  white-space: nowrap;
+  font-size: 15px;
+  font-weight: 750;
+  letter-spacing: -0.01em;
+  color: #1e3a8a;
+}
+.ticker-elon {
+  display: block;
+  height: 44px;
+  width: auto;
+  object-fit: contain;
+  flex: none;
+}
+@keyframes ticker-run {
+  from { transform: translateX(100vw); }
+  to { transform: translateX(-100%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ticker-track { animation: none; transform: none; }
+}
+
+.announcement-list { margin-top: 16px; }
+.announcement-items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.announcement-items li {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+}
+.announcement-text {
+  font-weight: 600;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+.announcement-meta {
+  font-size: 12px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+@media (max-width: 620px) {
+  .announcement-items li {
+    grid-template-columns: 1fr auto;
+  }
+  .announcement-meta { grid-column: 1; }
 }
 
 /* Pastki panel — yuqoridagi kabi, sahifa ostida qotib turadi */
@@ -132,27 +197,6 @@ a { color: var(--brand); }
   padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
   box-shadow: 0 -2px 10px rgba(16, 24, 40, 0.05);
 }
-.ticker span {
-  display: inline-block;
-  white-space: nowrap;
-  padding-left: 100%;
-  font-size: 12.5px;
-  font-weight: 650;
-  letter-spacing: 0.01em;
-  color: #b45309;
-  will-change: transform;
-  animation: ticker-run 10s linear infinite;
-}
-@keyframes ticker-run {
-  from { transform: translateX(0); }
-  to { transform: translateX(-100%); }
-}
-
-/* Harakatni kamaytirish yoqilgan bo'lsa — tinch tursin */
-@media (prefers-reduced-motion: reduce) {
-  .ticker span { animation: none; padding-left: 0; }
-}
-
 /* Sozlamalar tugmasi — tishli g'ildirak ichida odam */
 .settings-btn {
   flex: none;
@@ -188,6 +232,7 @@ a { color: var(--brand); }
   /* Pastdagi panel oxirgi qatorni bosib qolmasin */
   padding: 16px 16px 76px;
 }
+
 .container.wide { max-width: 1180px; }
 
 .card {
@@ -206,6 +251,246 @@ a { color: var(--brand); }
   letter-spacing: 0.05em;
   color: var(--muted);
   margin-bottom: 14px;
+}
+.card-title-teal {
+  color: #306E91;
+}
+
+/* ===== Oy videolari — iOS kartochka ===== */
+
+.video-month { margin-bottom: 18px; }
+
+.video-cards {
+  display: grid;
+  gap: 14px;
+}
+
+@property --vcard-neon {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+.vcard {
+  --vcard-neon: 0deg;
+  position: relative;
+  isolation: isolate;
+  border: none;
+  border-radius: 22px;
+  background: linear-gradient(180deg, #ECE5FF 0%, #FFDBED 100%);
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
+  padding: 18px 16px 16px;
+}
+.vcard::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 2px;
+  background: conic-gradient(
+    from var(--vcard-neon),
+    transparent 0deg,
+    #7F00FF 28deg,
+    #E100FF 52deg,
+    #7F00FF 76deg,
+    transparent 110deg,
+    transparent 360deg
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: 1;
+  animation: vcard-neon 2.6s linear infinite;
+}
+@keyframes vcard-neon {
+  to { --vcard-neon: 360deg; }
+}
+
+.vcard-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.vcard-cal {
+  flex: none;
+  width: 46px;
+  height: 46px;
+  border-radius: 13px;
+  background: linear-gradient(160deg, #4facfe 0%, #3b82f6 48%, #6366f1 100%);
+  box-shadow: 0 8px 16px rgba(59, 130, 246, 0.28);
+  display: grid;
+  place-items: center;
+  color: #fff;
+}
+.vcard-cal svg { width: 22px; height: 22px; }
+
+.vcard-pair {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-areas:
+    "date timek"
+    "sub timev";
+  column-gap: 16px;
+  row-gap: 2px;
+  align-items: baseline;
+}
+.vcard-date {
+  grid-area: date;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: #0f172a;
+}
+.vcard-sub {
+  grid-area: sub;
+  font-size: 13px;
+  color: #000070;
+}
+.vcard-time-k {
+  grid-area: timek;
+  text-align: right;
+  font-size: 13px;
+  font-weight: 650;
+  color: #000070;
+}
+.vcard-time-v {
+  grid-area: timev;
+  text-align: right;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: #0f172a;
+}
+
+.vcard-today {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 10px 0 0 58px;
+  padding: 6px 11px;
+  border-radius: 999px;
+  background: #e8f1ff;
+  color: #2563eb;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.vcard-today svg { width: 14px; height: 14px; }
+
+.vcard-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 4px;
+  padding: 13px 0;
+  border-top: 1px solid #eef2f6;
+}
+
+.vcard-ico {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+}
+.vcard-ico svg { width: 18px; height: 18px; }
+.vcard-ico.time { background: #e8f1ff; color: #2563eb; }
+.vcard-ico.ok { background: #e8f8ef; color: #16a34a; }
+.vcard-ico.wait { background: #fff7ed; color: #d97706; }
+.vcard-ico.bad { background: #fef2f2; color: #dc2626; }
+
+.vcard-meta { flex: 1; min-width: 0; }
+.vcard-meta small {
+  display: block;
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+.vcard-meta b {
+  display: block;
+  margin-top: 2px;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #0f172a;
+}
+
+.vcard-badge {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px 5px 5px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 750;
+  white-space: nowrap;
+}
+.vcard-badge i {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+}
+.vcard-badge i svg { width: 11px; height: 11px; }
+.vcard-badge.ok { background: #e8f8ef; color: #15803d; }
+.vcard-badge.ok i { background: #16a34a; color: #fff; }
+.vcard-badge.wait { background: #fff7ed; color: #c2410c; }
+.vcard-badge.wait i { background: #ea580c; color: #fff; }
+.vcard-badge.bad { background: #fef2f2; color: #b91c1c; }
+.vcard-badge.bad i { background: #dc2626; color: #fff; }
+
+.vcard-play {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  margin-top: 2px;
+  padding: 13px 16px;
+  border: none;
+  border-radius: 16px;
+  background: linear-gradient(90deg, #60a5fa 0%, #2563eb 52%, #4f46e5 100%);
+  box-shadow: 0 8px 18px rgba(37, 99, 235, 0.28);
+  color: #fff;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 750;
+  cursor: pointer;
+  transition: transform 0.12s ease, filter 0.12s ease;
+}
+.vcard-play svg { width: 16px; height: 16px; flex: none; }
+.vcard-play span { flex: none; }
+.vcard-play .vcard-chev {
+  margin-left: auto;
+  font-size: 20px;
+  font-weight: 500;
+  line-height: 1;
+  opacity: 0.88;
+}
+.vcard-play:hover { filter: brightness(1.05); }
+.vcard-play:active { transform: translateY(1px); }
+
+@media (max-width: 420px) {
+  .vcard-today { margin-left: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vcard::after { animation: none; }
+  .vcard-play { transition: none; }
+  .vcard-play:active { transform: none; }
 }
 
 /* ===== Bugungi sana bloki ===== */
@@ -483,12 +768,39 @@ a { color: var(--brand); }
 }
 
 .profile-name {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 0.38em;
   font-size: 21px;
   font-weight: 750;
   letter-spacing: 0.01em;
   text-transform: uppercase;
   margin: 0 0 2px;
   overflow-wrap: anywhere;
+}
+.profile-name-clip {
+  display: inline-block;
+  overflow: hidden;
+  line-height: 1.2;
+}
+.profile-name-word {
+  display: inline-block;
+  animation: profile-name-in 0.9s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+.profile-name-word.from-top { --name-from: -100%; }
+.profile-name-word.from-bottom { --name-from: 100%; }
+@keyframes profile-name-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--name-from));
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .profile-name-word { animation: none; }
 }
 .profile-position {
   margin: 0 0 14px;
@@ -498,17 +810,23 @@ a { color: var(--brand); }
 }
 
 .profile-rows {
-  list-style: none;
-  margin: 0;
-  padding: 0;
   display: grid;
-  /* Chapda lavozim va telefon, o'ngda to'garaklar va o'quvchilar soni */
-  grid-template-columns: auto auto;
+  grid-template-columns: max-content max-content;
   justify-content: start;
-  align-items: center;
-  gap: 10px 28px;
+  align-items: start;
+  column-gap: 36px;
+  row-gap: 10px;
 }
-.profile-rows li {
+.profile-col {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+.profile-col-side {
+  align-items: flex-start;
+}
+.profile-meta-item {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -536,10 +854,10 @@ a { color: var(--brand); }
   gap: 7px;
   margin-left: 12px;
   padding: 5px 12px 5px 7px;
-  border: 1px solid #a4e5d7;
+  border: 1px solid #88F9B3;
   border-radius: 999px;
-  background: #a4e5d7;
-  color: #0f4f43;
+  background: #88F9B3;
+  color: #022c22;
   font-family: inherit;
   font-size: 13px;
   font-weight: 650;
@@ -547,7 +865,7 @@ a { color: var(--brand); }
   white-space: nowrap;
   transition: background 0.15s, transform 0.06s;
 }
-.clubs-chip:hover { background: #b8ece1; }
+.clubs-chip:hover { background: #6ef0a3; }
 .clubs-chip:active { transform: translateY(1px); }
 
 .cap-ico {
@@ -562,20 +880,25 @@ a { color: var(--brand); }
   min-width: 20px;
   padding: 0 6px;
   border-radius: 999px;
-  background: #0f4f43;
-  color: #a4e5d7;
+  background: #022c22;
+  color: #88F9B3;
   font-size: 11.5px;
   font-weight: 750;
   line-height: 18px;
   text-align: center;
 }
 .clubs-count[hidden] { display: none !important; }
+.clubs-chip[aria-disabled] { cursor: default; }
+.clubs-chip[aria-disabled]:hover { background: #88F9B3; }
+.clubs-chip[aria-disabled]:active { transform: none; }
 
 @media (max-width: 620px) {
-  /* Tor ekranda qatorlar bitta ustunga tushadi */
-  .profile-rows { grid-template-columns: 1fr; gap: 9px; }
+  .profile-rows {
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: 14px;
+    width: 100%;
+  }
   .clubs-chip { margin-left: 0; }
-  .profile-rows li { flex-wrap: wrap; }
 }
 
 
@@ -588,8 +911,11 @@ a { color: var(--brand); }
     padding: 22px 18px;
   }
   .profile-card::before { left: 50%; top: -120px; transform: translateX(-50%); width: 340px; height: 300px; }
-  .profile-info { width: 100%; }
-  .profile-rows li { justify-content: flex-start; }
+  .profile-info { width: 100%; text-align: left; }
+  .profile-name,
+  .profile-position { text-align: center; }
+  .profile-name { justify-content: center; }
+  .profile-rows { justify-content: space-between; }
   .profile-name { font-size: 19px; }
 }
 
@@ -703,8 +1029,8 @@ a { color: var(--brand); }
 .weekdays {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 8px;
-  margin-bottom: 8px;
+  gap: 10px;
+  margin-bottom: 10px;
 }
 .weekdays span {
   text-align: center;
@@ -717,76 +1043,106 @@ a { color: var(--brand); }
 }
 .weekdays span.we { color: #f97316; }
 /* Yakshanba — dam olish kuni */
-.weekdays span.rest-day { color: #e11d48; }
+.weekdays span.rest-day { color: #CB3C18; }
 
 .calendar {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 8px;
+  gap: 10px;
 }
 
+/* Sana — zamonaviy katak, aniq o‘qiladigan raqam */
 .day {
   position: relative;
-  aspect-ratio: 3 / 2;
-  border-radius: 15px;
+  aspect-ratio: 1 / 1;
   border: none;
+  border-radius: 16px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 3px;
-  background: #b796fe;
-  color: #2e1065;
-  font-weight: 750;
-  font-size: 18px;
+  background: #F9F9F9;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.07);
+  color: #0f172a;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   user-select: none;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
 }
-.day.empty { background: #efe8ff; }
+.day-num {
+  font-size: clamp(16px, 4.6vw, 22px);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: inherit;
+}
+.day.empty {
+  background: transparent;
+  box-shadow: none;
+}
 
 .day.sent {
-  background: #e4f8ee;
-  color: #059669;
-  box-shadow: inset 0 0 0 1.6px #6ee7b7;
+  background: #24E744;
+  color: #064e3b;
+  box-shadow: 0 6px 16px rgba(36, 231, 68, 0.28);
 }
 .day.missed {
-  background: #fde5ed;
-  color: #e11d48;
+  background: #FEE701;
+  color: #000;
+  box-shadow: 0 6px 16px rgba(254, 231, 1, 0.32);
 }
-/* Dam olish kuni (yakshanba) — video yuborish shart emas.
-   Qizil, lekin "yuborilmagan" dan farqli: chiziqchali fon. */
-.day.rest {
-  background: repeating-linear-gradient(135deg, #fdf2f6 0 7px, #fbe3ec 7px 14px);
-  color: #e11d48;
+/* Yakshanba — #CB3C18, oq raqam */
+.day.sunday,
+.day.rest:not(.holiday) {
+  background: #CB3C18;
+  color: #fff;
+  box-shadow: 0 6px 16px rgba(203, 60, 24, 0.28);
 }
 
-/* Bayram kuni — dam olish ko‘rinishi, farqi: burchakdagi yulduzcha */
+/* Bayram kuni — #FC4ECF */
+.day.holiday {
+  background: #FC4ECF;
+  color: #fff;
+  box-shadow: 0 6px 16px rgba(252, 78, 207, 0.28);
+}
 .day.holiday::after {
   content: '★';
   position: absolute;
-  top: 4px;
+  top: 5px;
   right: 6px;
   font-size: 10px;
   line-height: 1;
-  color: #e11d48;
+  color: #fff;
 }
 .day.upcoming {
-  background: #b796fe;
-  color: #2e1065;
+  background: #F9F9F9;
+  color: #0f172a;
 }
-/* Bugungi kun — yumshoq halqa */
+/* Bugungi kun — to‘q gradient, oq raqam */
 .day.today {
-  outline: 2px solid rgba(106, 63, 224, 0.55);
-  outline-offset: 3px;
+  background: linear-gradient(160deg, #3b82f6 0%, #2563eb 48%, #4f46e5 100%);
+  color: #fff;
+  box-shadow: 0 10px 22px rgba(37, 99, 235, 0.32);
 }
+.day.today.holiday::after { color: #fff; }
 .day .dot {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
   border-radius: 50%;
   background: currentColor;
-  opacity: 0.75;
+  opacity: 0.7;
 }
+.day.today .dot { background: #fff; opacity: 0.95; }
 .day.clickable { cursor: pointer; }
-.day.clickable:hover { filter: brightness(0.97); }
+.day.clickable:hover {
+  transform: translateY(-2px);
+  filter: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .day { transition: none; }
+  .day.clickable:hover { transform: none; }
+}
 
 .legend {
   display: flex;
@@ -807,15 +1163,15 @@ a { color: var(--brand); }
   vertical-align: -1px;
   border: 1.5px solid;
 }
-.legend .sw-sent { background: #e4f8ee; border-color: #6ee7b7; }
-.legend .sw-missed { background: #fde5ed; border-color: #f9a8c4; }
+.legend .sw-sent { background: #24E744; border-color: #24E744; }
+.legend .sw-missed { background: #FEE701; border-color: #FEE701; }
 .legend .sw-rest {
-  background: repeating-linear-gradient(135deg, #fdf2f6 0 4px, #fbe3ec 4px 8px);
-  border-color: #f7c2d5;
+  background: #CB3C18;
+  border-color: #CB3C18;
 }
 .legend .sw-holiday {
-  background: repeating-linear-gradient(135deg, #fdf2f6 0 4px, #fbe3ec 4px 8px);
-  border-color: #f7c2d5;
+  background: #FC4ECF;
+  border-color: #FC4ECF;
   position: relative;
 }
 .legend .sw-holiday::after {
@@ -826,9 +1182,9 @@ a { color: var(--brand); }
   align-items: center;
   justify-content: center;
   font-size: 8px;
-  color: #e11d48;
+  color: #fff;
 }
-.legend .sw-upcoming { background: #b796fe; border-color: #9d78f7; }
+.legend .sw-upcoming { background: #F9F9F9; border-color: #e5e5e5; }
 
 /* ===== Statistika ===== */
 
@@ -836,6 +1192,17 @@ a { color: var(--brand); }
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
   gap: 10px;
+}
+.cal-stats {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+.cal-stats .stat {
+  min-width: 0;
+  padding: 10px 8px;
+}
+.cal-stats .stat span {
+  font-size: 11px;
 }
 .stat {
   background: var(--surface-2);
@@ -848,6 +1215,27 @@ a { color: var(--brand); }
 .stat.green b { color: var(--green); }
 .stat.red b { color: var(--red); }
 .stat.blue b { color: var(--brand); }
+
+.clubs-stats {
+  grid-template-columns: 1fr 1fr;
+}
+.clubs-stats .stat {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 72px;
+  padding: 10px 12px;
+  background: #fff;
+}
+.clubs-stats .stat-copy { min-width: 0; }
+.clubs-stats .stat-pic {
+  flex: none;
+  width: 52px;
+  height: 52px;
+  object-fit: contain;
+  pointer-events: none;
+}
 
 /* ===== Tugmalar ===== */
 
@@ -1015,6 +1403,47 @@ textarea { resize: vertical; min-height: 70px; }
   margin: auto;
 }
 .modal.lg { max-width: 760px; }
+#calModal .cal-modal {
+  position: relative;
+  max-width: 720px;
+  padding: 24px 22px 20px;
+  border: none;
+  border-radius: 26px;
+  box-shadow: 0 18px 44px rgba(15, 23, 42, 0.09);
+}
+#calModal .cal-modal.calendar-card {
+  overflow: hidden;
+}
+#calModal .cal-modal-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 2;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.1);
+  font-size: 16px;
+  color: #94a3b8;
+}
+#calModal .cal-modal-close:hover {
+  background: #fff;
+  color: #0f172a;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.16);
+}
+#calModal .cal-modal-school {
+  margin: 0 44px 6px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 650;
+  color: #6b7589;
+  line-height: 1.3;
+}
+#calModal .cal-stats {
+  margin-top: 16px;
+}
 .modal-head {
   display: flex;
   align-items: center;
@@ -1328,19 +1757,19 @@ tbody tr:hover { background: var(--surface-2); }
   filter: blur(14px);
 }
 
-/* Yuzasidagi yorug'lik aksi */
+/* Yuzasidagi yorug'lik aksi — faqat yuqori chet, matnni yuvmasin */
 .input-wrap::after {
   content: '';
   position: absolute;
-  inset: 0;
-  border-radius: 15px;
+  inset: 0 0 auto 0;
+  height: 42%;
+  border-radius: 15px 15px 40% 40%;
   pointer-events: none;
   z-index: 2;
   background: linear-gradient(
-    115deg,
-    rgba(255, 255, 255, 0.75) 0%,
-    rgba(255, 255, 255, 0.28) 32%,
-    rgba(255, 255, 255, 0) 52%
+    180deg,
+    rgba(255, 255, 255, 0.55) 0%,
+    rgba(255, 255, 255, 0) 100%
   );
 }
 
@@ -1353,7 +1782,100 @@ tbody tr:hover { background: var(--surface-2); }
   height: 20px;
   color: #4d7d79;
   pointer-events: none;
-  z-index: 3;
+  z-index: 4;
+}
+
+.login-card .input-wrap:has(.pw-toggle) input {
+  padding-right: 46px;
+}
+
+.pw-toggle {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 4;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: #3d6b67;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+.pw-toggle:hover,
+.pw-toggle:focus-visible {
+  color: #1a3d3a;
+  background: rgba(255, 255, 255, 0.4);
+  outline: none;
+}
+.pw-toggle:active .pw-eye {
+  transform: scale(0.86);
+}
+
+.pw-eye {
+  width: 22px;
+  height: 22px;
+  display: block;
+  overflow: visible;
+  transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.pw-eye-socket,
+.pw-eye-pupil {
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+}
+.pw-eye-socket {
+  transition: transform 0.38s cubic-bezier(0.22, 1.2, 0.36, 1);
+}
+.pw-eye-pupil {
+  transition:
+    transform 0.3s cubic-bezier(0.22, 1.2, 0.36, 1) 0.04s,
+    opacity 0.2s ease;
+}
+.pw-eye-lashes {
+  transform-origin: 12px 12px;
+  transition:
+    opacity 0.2s ease,
+    transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Yumilgan — qovoq yopiladi, qorachiq yo‘qoladi, kiprik chiqadi */
+.pw-toggle[aria-pressed='false'] .pw-eye-socket {
+  transform: scaleY(0.13);
+}
+.pw-toggle[aria-pressed='false'] .pw-eye-pupil {
+  transform: scale(0.15);
+  opacity: 0;
+}
+.pw-toggle[aria-pressed='false'] .pw-eye-lashes {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Ochiq — qovoq ochiladi, qorachiq paydo bo‘ladi */
+.pw-toggle[aria-pressed='true'] .pw-eye-socket {
+  transform: scaleY(1);
+}
+.pw-toggle[aria-pressed='true'] .pw-eye-pupil {
+  transform: scale(1);
+  opacity: 1;
+}
+.pw-toggle[aria-pressed='true'] .pw-eye-lashes {
+  opacity: 0;
+  transform: translateY(3px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pw-eye,
+  .pw-eye-socket,
+  .pw-eye-pupil,
+  .pw-eye-lashes {
+    transition: none;
+  }
 }
 
 .login-card input[type='text'],
@@ -1366,7 +1888,10 @@ tbody tr:hover { background: var(--surface-2); }
   border: none;
   border-radius: 15px;
   background: var(--lc-field);
-  color: var(--lc-ink);
+  color-scheme: light;
+  color: #241c4d;
+  -webkit-text-fill-color: #241c4d;
+  caret-color: #241c4d;
   font-size: 15px;
   font-family: inherit;
   box-shadow:
@@ -1378,20 +1903,39 @@ tbody tr:hover { background: var(--surface-2); }
 .login-card .input-wrap input,
 .login-card .input-wrap select {
   position: relative;
-  z-index: 1;
+  z-index: 3;
   padding-left: 46px;
-  color: #1f3a38;
-  /* Shisha rangi — #C8DBD9 */
-  background-color: rgba(200, 219, 217, 0.62);
-  backdrop-filter: blur(16px) saturate(180%);
-  -webkit-backdrop-filter: blur(16px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.6);
+  color-scheme: light;
+  color: #0a1f1d !important;
+  -webkit-text-fill-color: #0a1f1d !important;
+  caret-color: #0a1f1d;
+  font-weight: 600;
+  background-color: #c8dbd9;
+  border: 1px solid rgba(255, 255, 255, 0.75);
   box-shadow:
     inset 0 1px 1px rgba(255, 255, 255, 0.9),
     inset 0 -10px 18px rgba(200, 219, 217, 0.45),
     0 8px 22px rgba(43, 79, 76, 0.16);
 }
-.login-card .input-wrap input::placeholder { color: rgba(31, 58, 56, 0.45); }
+.login-card .input-wrap input::placeholder,
+.login-card .input-wrap select option {
+  color: rgba(10, 31, 29, 0.45);
+  -webkit-text-fill-color: rgba(10, 31, 29, 0.45);
+  font-weight: 500;
+}
+
+.login-card .input-wrap input:-webkit-autofill,
+.login-card .input-wrap input:-webkit-autofill:hover,
+.login-card .input-wrap input:-webkit-autofill:focus {
+  -webkit-text-fill-color: #0a1f1d;
+  caret-color: #0a1f1d;
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.9),
+    inset 0 -10px 18px rgba(200, 219, 217, 0.45),
+    0 8px 22px rgba(43, 79, 76, 0.16),
+    0 0 0 1000px rgba(200, 219, 217, 0.92) inset;
+  transition: background-color 9999s ease-out;
+}
 
 .login-card .input-wrap input:focus,
 .login-card .input-wrap select:focus {
@@ -1414,7 +1958,11 @@ tbody tr:hover { background: var(--surface-2); }
   background-position: right 16px center;
 }
 
-.login-card input::placeholder { color: #b0abc9; }
+.login-card input::placeholder {
+  color: rgba(36, 28, 77, 0.38);
+  -webkit-text-fill-color: rgba(36, 28, 77, 0.38);
+  opacity: 1;
+}
 
 .login-card input:focus,
 .login-card select:focus {
@@ -1708,32 +2256,102 @@ video { width: 100%; border-radius: var(--radius-sm); background: #000; display:
   .calendar-card::after { bottom: -85px; left: -65px; width: 235px; height: 195px; }
   .cal-month { font-size: 21px; }
   .cal-head .icon-btn { width: 38px; height: 38px; border-radius: 12px; font-size: 18px; }
-  .day { font-size: 15px; border-radius: 12px; aspect-ratio: 1 / 1; }
-  .calendar, .weekdays { gap: 5px; }
+  .day { border-radius: 14px; aspect-ratio: 1 / 1; }
+  .day-num { font-size: 16px; }
+  .calendar, .weekdays { gap: 6px; }
+  #calModal .cal-modal { padding: 18px 14px 16px; border-radius: 22px; }
+  #calModal .cal-modal-close { top: 12px; right: 12px; }
   .who strong { font-size: 13px; }
   .brand-logo { height: 44px; }
 }
 
-/* ===== To'garaklar jadvali — to'q binafsha yozuv ===== */
+/* ===== To'garaklar — mint fon, to'q o‘qiladigan yozuv ===== */
+
+#clubsModal .modal {
+  background: #B8E5B9;
+  border: 3px solid #7cbc7d;
+  color: #022c22;
+}
+#clubsModal .modal-head h3 { color: #022c22; }
+#clubsModal .empty-state,
+#clubsModal .muted,
+#clubsModal .small { color: #065f46; }
 
 #clubsList th,
-#clubList th { color: #6d28d9; }
+#clubList th { color: #022c22; }
 
 #clubsList td,
-#clubList td { color: #4c1d95; }
+#clubList td { color: #064e3b; }
 
 #clubsList td b,
-#clubList td b { color: #3b0764; }
+#clubList td b { color: #022c22; }
 
 #clubsList td.muted,
-#clubList td.muted { color: #5b21b6; }
+#clubList td.muted { color: #047857; }
 
 #clubsList td::before,
-#clubList td::before { color: #6d28d9; }
+#clubList td::before { color: #065f46; }
 
-/* To'garaklar bo'limining ramkasi */
-#clubsModal .modal {
-  border: 3px solid #a4e5d7;
+.ac-club-list {
+  display: grid;
+  gap: 12px;
+}
+.ac-club-card {
+  border-radius: 16px;
+  border: 1px solid rgba(91, 140, 96, 0.22);
+  background: linear-gradient(180deg, #F2FFF0 0%, #B8E0B1 100%);
+  overflow: hidden;
+  color: #022c22;
+  box-shadow: 0 6px 16px rgba(46, 92, 52, 0.08);
+}
+.ac-club-head {
+  padding: 16px 18px 12px;
+}
+.ac-club-head h3 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 750;
+  letter-spacing: -0.02em;
+  color: #0f3d32;
+}
+.ac-club-head p {
+  margin: 5px 0 0;
+  font-size: 13px;
+  color: #5b7464;
+}
+.ac-club-meta {
+  margin: 0;
+  padding: 8px 18px 14px;
+  border-top: 1px solid rgba(15, 61, 50, 0.12);
+}
+.ac-club-meta > div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 8px 0;
+}
+.ac-club-meta dt {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #0f3d32;
+}
+.ac-club-meta dd {
+  margin: 0;
+  text-align: right;
+  font-size: 14px;
+  font-weight: 600;
+  color: #0f766e;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 720px) {
+  #clubsModal .table-wrap tr {
+    background: rgba(255, 255, 255, 0.72);
+    border-color: #34d399;
+  }
 }
 
 /* ===== Bugungi davomat — maktablar ro'yxati shisha ramkada ===== */
@@ -1997,7 +2615,7 @@ video { width: 100%; border-radius: var(--radius-sm); background: #000; display:
 
 .sc-hero {
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   margin-bottom: 22px;
   padding: 26px 30px 28px;
   border-radius: 26px;
@@ -2096,25 +2714,9 @@ video { width: 100%; border-radius: var(--radius-sm); background: #000; display:
   color: var(--sc-soft);
 }
 
-.sc-title {
-  position: relative;
-  margin: 26px 0 0;
-  text-align: center;
-  font-size: 52px;
-  font-weight: 800;
-  line-height: 1.08;
-  letter-spacing: -0.03em;
-  color: var(--sc-navy);
-}
-.sc-title span {
-  background: linear-gradient(90deg, var(--sc-blue), var(--sc-purple));
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
 .sc-sub {
   position: relative;
-  margin: 12px 0 0;
+  margin: 22px 0 0;
   text-align: center;
   font-size: 16px;
   color: var(--sc-soft);
@@ -2238,215 +2840,62 @@ video { width: 100%; border-radius: var(--radius-sm); background: #000; display:
   margin-bottom: 20px;
 }
 
-/* ---------- Maktab kartochkasi ---------- */
+/* ---------- Maktab kartochkasi — Mening davomatim profili bilan bir xil ---------- */
 
 .sc-list { display: block; }
 
-.sc-card {
-  display: flex;
-  align-items: center;
-  gap: 20px;
+.sc-card.profile-card {
   margin-bottom: 16px;
-  padding: 15px;
-  border-radius: 24px;
-  background: #fff;
-  border: 1px solid var(--sc-line);
-  box-shadow: var(--sc-shadow);
+  background: linear-gradient(180deg, #6A11CB 0%, #2575FC 100%);
+  box-shadow: 0 14px 34px rgba(37, 117, 252, 0.28);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
-.sc-card:hover {
+.sc-card.profile-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 14px 38px rgba(31, 80, 140, 0.12);
+  box-shadow: 0 18px 40px rgba(37, 117, 252, 0.36);
 }
 
-/* Rasm o'rni — haqiqiy surat yo'q, shuning uchun chiroyli o'rinbosar */
-.sc-media {
-  position: relative;
-  flex: none;
-  width: 268px;
-  height: 152px;
-  border-radius: 19px;
-  overflow: hidden;
-  display: grid;
-  place-items: center;
-  background: linear-gradient(150deg, #eaf2ff 0%, #dfeaff 55%, #e9e5ff 100%);
-}
-.sc-media-ico {
-  display: grid;
-  place-items: center;
-  color: rgba(37, 99, 235, 0.42);
-}
-.sc-media-ico svg { width: 54px; height: 54px; }
-.sc-media-txt {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 11px;
-  text-align: center;
-  font-size: 11.5px;
-  font-weight: 650;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: rgba(16, 42, 86, 0.42);
-}
-
-/* Maktab raqami */
-.sc-num {
-  position: absolute;
-  left: 11px;
-  top: 11px;
-  width: 46px;
-  height: 46px;
-  display: grid;
-  place-items: center;
-  border-radius: 14px;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  font-size: 18px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  color: #fff;
-  box-shadow: 0 6px 16px rgba(16, 42, 86, 0.22);
-}
-
-/* ---------- Ma'lumot ---------- */
-
-.sc-info {
-  flex: 1 1 auto;
-  min-width: 0;
-}
-.sc-name {
+.sc-card .profile-name {
   font-size: 21px;
-  font-weight: 700;
-  line-height: 1.25;
-  letter-spacing: -0.015em;
-  color: var(--sc-navy);
-  overflow-wrap: anywhere;
+  display: block;
 }
-
-.sc-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  margin-top: 10px;
-  padding: 7px 15px;
-  border-radius: 999px;
-  font-size: 13px;
-  font-weight: 650;
-}
-.sc-badge svg { width: 15px; height: 15px; }
-.sc-badge.ok { background: #ecfdf5; color: #059669; }
-.sc-badge.wait { background: #fff0f3; color: #e43d5b; }
-.sc-badge.warn { background: #fef6e7; color: #b45309; }
-.sc-badge.off { background: #eef2f7; color: #475569; }
-
-.sc-meta {
-  list-style: none;
-  margin: 12px 0 0;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  gap: 8px 18px;
-  flex-wrap: wrap;
-  font-size: 13.5px;
-  color: var(--sc-soft);
-}
-.sc-meta li {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  min-width: 0;
-}
-.sc-meta svg {
-  width: 16px;
-  height: 16px;
-  flex: none;
-  color: var(--sc-blue);
-}
-.sc-meta a { color: inherit; text-decoration: none; }
-.sc-meta a:hover { color: var(--sc-blue); text-decoration: underline; }
-
-.sc-code {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  font-size: 13px;
-  letter-spacing: 0.06em;
-  padding: 3px 9px;
-  border-radius: 8px;
-  background: #f1f5fb;
-  color: var(--sc-navy);
-  cursor: pointer;
-}
-.sc-code:hover { background: #e6eefc; }
-
-/* ---------- Amallar ---------- */
 
 .sc-act {
-  flex: none;
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 10px;
-}
-
-.sc-open {
-  display: inline-flex;
   align-items: center;
-  gap: 9px;
-  height: 50px;
-  padding: 0 23px;
-  border: none;
-  border-radius: 16px;
-  font: inherit;
-  font-size: 14.5px;
-  font-weight: 650;
-  color: #fff;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  gap: 10px;
+  margin-top: 14px;
+  flex-wrap: wrap;
 }
-.sc-open svg { width: 18px; height: 18px; transition: transform 0.18s ease; }
-.sc-open:hover { transform: translateY(-1px); }
-.sc-open:hover svg { transform: translateX(3px); }
-.sc-open:focus-visible { outline: 3px solid rgba(37, 99, 235, 0.4); outline-offset: 2px; }
-
-.sc-icons { display: flex; gap: 6px; }
+.sc-icons { display: flex; gap: 6px; margin-left: auto; }
 .sc-ico-btn {
   width: 36px;
   height: 36px;
   display: grid;
   place-items: center;
   border-radius: 11px;
-  border: 1px solid var(--sc-line);
-  background: #fff;
-  color: var(--sc-soft);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
   cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  transition: background 0.15s ease, color 0.15s ease;
 }
 .sc-ico-btn svg { width: 17px; height: 17px; }
-.sc-ico-btn:hover { background: #f4f8ff; color: var(--sc-blue); border-color: rgba(37, 99, 235, 0.3); }
-.sc-ico-btn.danger:hover { background: #fff1f4; color: #e11d48; border-color: rgba(225, 29, 72, 0.3); }
-.sc-ico-btn:focus-visible { outline: 3px solid rgba(37, 99, 235, 0.4); outline-offset: 2px; }
+.sc-ico-btn:hover { background: rgba(255, 255, 255, 0.3); color: #fff; }
+.sc-ico-btn.danger:hover { background: rgba(255, 80, 110, 0.38); color: #fff; }
+.sc-ico-btn:focus-visible { outline: 3px solid rgba(255, 255, 255, 0.45); outline-offset: 2px; }
 
-/* ---------- Kartochka ranglari ---------- */
-
-.sc-card.tone-blue .sc-num,
-.sc-card.tone-blue .sc-open { background: linear-gradient(135deg, #2563eb, #3b82f6); }
-.sc-card.tone-blue .sc-open:hover { box-shadow: 0 10px 22px rgba(37, 99, 235, 0.32); }
-
-.sc-card.tone-green .sc-num,
-.sc-card.tone-green .sc-open { background: linear-gradient(135deg, #10b981, #34d399); }
-.sc-card.tone-green .sc-open:hover { box-shadow: 0 10px 22px rgba(16, 185, 129, 0.32); }
-
-.sc-card.tone-purple .sc-num,
-.sc-card.tone-purple .sc-open { background: linear-gradient(135deg, #7c3aed, #8b5cf6); }
-.sc-card.tone-purple .sc-open:hover { box-shadow: 0 10px 22px rgba(124, 58, 237, 0.32); }
-
-.sc-card.tone-orange .sc-num,
-.sc-card.tone-orange .sc-open { background: linear-gradient(135deg, #f97316, #fb923c); }
-.sc-card.tone-orange .sc-open:hover { box-shadow: 0 10px 22px rgba(249, 115, 22, 0.32); }
-
-.sc-card.tone-pink .sc-num,
-.sc-card.tone-pink .sc-open { background: linear-gradient(135deg, #ec4899, #f43f5e); }
-.sc-card.tone-pink .sc-open:hover { box-shadow: 0 10px 22px rgba(236, 72, 153, 0.32); }
+.sc-code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  padding: 5px 10px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+  cursor: pointer;
+}
+.sc-code:hover { background: rgba(255, 255, 255, 0.28); }
 
 /* ---------- Hech narsa topilmasa ---------- */
 
@@ -2514,11 +2963,8 @@ video { width: 100%; border-radius: var(--radius-sm); background: #000; display:
 
 @media (max-width: 1023px) {
   .sc-hero { padding: 22px 22px 24px; }
-  .sc-title { font-size: 42px; }
   .sc-hero-art { width: 190px; opacity: 0.06; }
-  .sc-media { width: 210px; height: 132px; }
-  .sc-name { font-size: 19px; }
-  .sc-card { gap: 16px; }
+  .sc-card .profile-name { font-size: 19px; }
 }
 
 /* ---------- Telefon ---------- */
@@ -2534,7 +2980,6 @@ video { width: 100%; border-radius: var(--radius-sm); background: #000; display:
   .sc-brand-ico { width: 52px; height: 52px; border-radius: 17px; }
   .sc-brand-ico svg { width: 27px; height: 27px; }
   .sc-brand h2 { font-size: 22px; }
-  .sc-title { font-size: 34px; margin-top: 20px; }
   .sc-sub { font-size: 14.5px; }
 
   .sc-toolbar { flex-direction: column; gap: 10px; }
@@ -2545,22 +2990,9 @@ video { width: 100%; border-radius: var(--radius-sm); background: #000; display:
   .sc-tools { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
   .sc-tools .btn:last-child { grid-column: 1 / -1; }
 
-  /* Kartochka tik joylashadi */
-  .sc-card {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 16px;
-    padding: 13px;
-    border-radius: 22px;
-  }
-  .sc-media { width: 100%; height: 200px; }
-  .sc-media-ico svg { width: 62px; height: 62px; }
-  .sc-name { font-size: 18px; }
-  .sc-meta { font-size: 13px; gap: 8px 14px; }
-
-  .sc-act { align-items: stretch; }
-  .sc-open { width: 100%; justify-content: center; height: 52px; }
-  .sc-icons { justify-content: center; }
+  .sc-card .profile-name { font-size: 18px; }
+  .sc-act { justify-content: center; }
+  .sc-icons { margin-left: 0; justify-content: center; }
   .sc-ico-btn { flex: 1 1 auto; max-width: 84px; height: 40px; }
 
   .sc-banner {
@@ -2574,12 +3006,8 @@ video { width: 100%; border-radius: var(--radius-sm); background: #000; display:
 
 /* Harakatni kamaytirish yoqilgan bo'lsa — kartochkalar qimirlamaydi */
 @media (prefers-reduced-motion: reduce) {
-  .sc-card,
-  .sc-open,
-  .sc-open svg { transition: none; }
-  .sc-card:hover,
-  .sc-open:hover { transform: none; }
-  .sc-open:hover svg { transform: none; }
+  .sc-card.profile-card { transition: none; }
+  .sc-card.profile-card:hover { transform: none; }
 }
 
 /* Profil kartochkasidagi o'quvchilar soni */

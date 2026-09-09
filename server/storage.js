@@ -12,10 +12,18 @@ const EXT_BY_MIME = {
   'video/x-msvideo': '.avi',
 };
 
-export function extensionFor(mime, originalName = '') {
-  const fromName = path.extname(originalName).toLowerCase();
-  if (fromName && fromName.length <= 6) return fromName;
+export function extensionFor(mime) {
   return EXT_BY_MIME[mime] || '.mp4';
+}
+
+/** uploads/ ichidan tashqariga chiqib ketmasin */
+function resolveUploadPath(rel) {
+  if (!rel || typeof rel !== 'string' || rel.includes('\0')) return null;
+  const root = path.resolve(config.uploadDir);
+  const full = path.resolve(root, rel);
+  const out = path.relative(root, full);
+  if (!out || out.startsWith('..') || path.isAbsolute(out)) return null;
+  return full;
 }
 
 /**
@@ -23,13 +31,13 @@ export function extensionFor(mime, originalName = '') {
  * STORAGE=db  -> SQLite ichiga BLOB sifatida
  * STORAGE=disk -> uploads/YYYY-MM/ papkaga fayl sifatida
  */
-export function saveVideo({ buffer, mime, originalName, userId, day }) {
+export function saveVideo({ buffer, mime, userId, day }) {
   if (config.storage === 'db') {
     return { storage: 'db', data: buffer, path: null };
   }
   const dir = path.join(config.uploadDir, day.slice(0, 7));
   fs.mkdirSync(dir, { recursive: true });
-  const name = `${day}_u${userId}_${crypto.randomBytes(6).toString('hex')}${extensionFor(mime, originalName)}`;
+  const name = `${day}_u${userId}_${crypto.randomBytes(6).toString('hex')}${extensionFor(mime)}`;
   const full = path.join(dir, name);
   fs.writeFileSync(full, buffer);
   const rel = path.relative(config.uploadDir, full).split(path.sep).join('/');
@@ -43,15 +51,16 @@ export function readVideo(row) {
     if (!blob) return null;
     return Buffer.isBuffer(blob) ? blob : Buffer.from(blob);
   }
-  const full = path.join(config.uploadDir, row.path || '');
-  if (!fs.existsSync(full)) return null;
+  const full = resolveUploadPath(row.path);
+  if (!full || !fs.existsSync(full)) return null;
   return fs.readFileSync(full);
 }
 
 /** Diskdagi faylni o'chiradi (db rejimida hech narsa qilmaydi) */
 export function deleteVideoFile(row) {
   if (row.storage !== 'disk' || !row.path) return;
-  const full = path.join(config.uploadDir, row.path);
+  const full = resolveUploadPath(row.path);
+  if (!full) return;
   try {
     fs.unlinkSync(full);
   } catch {

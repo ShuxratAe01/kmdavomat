@@ -3,6 +3,7 @@ import multer from 'multer';
 import { db } from '../db.js';
 import { requireAuth } from '../auth.js';
 import { nowIso } from '../util/date.js';
+import { sniffImage } from '../util/file-type.js';
 
 const router = express.Router();
 
@@ -12,7 +13,7 @@ const ALLOWED_MIMES = ['image/jpeg', 'image/png', 'image/webp'];
 
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: MAX_PHOTO_BYTES, files: 1 },
+  limits: { fileSize: MAX_PHOTO_BYTES, files: 1, fields: 4, fieldSize: 1024 },
   fileFilter(_req, file, cb) {
     if (!ALLOWED_MIMES.includes(file.mimetype)) {
       return cb(new Error('Faqat rasm yuborish mumkin (JPG, PNG yoki WEBP)'));
@@ -118,13 +119,18 @@ router.post('/profile/photo', requireAuth, (req, res) => {
     }
     if (!req.file) return res.status(400).json({ error: 'Rasm tanlanmadi' });
 
+    const sniffed = sniffImage(req.file.buffer);
+    if (!sniffed) {
+      return res.status(400).json({ error: 'Fayl rasm formatida emas (JPG, PNG yoki WEBP)' });
+    }
+
     const updatedAt = nowIso();
     db.prepare(
       `INSERT INTO user_photos (user_id, mime, size, data, updated_at) VALUES (?, ?, ?, ?, ?)
        ON CONFLICT(user_id) DO UPDATE SET mime = ?, size = ?, data = ?, updated_at = ?`
     ).run(
-      req.user.id, req.file.mimetype, req.file.size, req.file.buffer, updatedAt,
-      req.file.mimetype, req.file.size, req.file.buffer, updatedAt
+      req.user.id, sniffed.mime, req.file.size, req.file.buffer, updatedAt,
+      sniffed.mime, req.file.size, req.file.buffer, updatedAt
     );
 
     res.status(201).json({ ok: true, photo_updated_at: updatedAt });

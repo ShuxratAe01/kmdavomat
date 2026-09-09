@@ -1,13 +1,57 @@
 import express from 'express';
 import crypto from 'node:crypto';
 import { db, generateInviteCode, schoolUsername, schoolName } from '../db.js';
-import { requireAdmin, hashPassword, destroyAllSessions, checkPasswordStrength } from '../auth.js';
+import {
+  requireAdmin,
+  hashPassword,
+  destroyAllSessions,
+  checkPasswordStrength,
+  verifyPassword,
+  clientIp,
+  lockedSeconds,
+  registerFailedAttempt,
+  clearFailedAttempts,
+} from '../auth.js';
 import { deleteVideoFile } from '../storage.js';
 import { dayStr, isDay, isRestDay, holidayName, normalizeMonth, nowIso } from '../util/date.js';
 import { buildCalendar } from './videos.js';
+import { tooMany } from '../util/rate-limit.js';
 
 const router = express.Router();
 router.use(requireAdmin);
+
+/** Xavfli amallar uchun admin o‘z parolini qayta kiritadi. */
+function requireStepUp(req, res) {
+  const pw = String(req.get('x-admin-password') || '');
+  const ip = clientIp(req);
+  const key = `adminpw:${req.user.id}:${ip}`;
+  const locked = lockedSeconds(key);
+  if (locked > 0) {
+    res.status(429).json({
+      error: `Juda ko‘p xato urinish. ${locked} soniyadan keyin qayta urinib ko‘ring.`,
+    });
+    return false;
+  }
+  if (!pw) {
+    res.status(403).json({
+      error: 'Bu amal uchun o‘z parolingizni kiriting',
+      code: 'ADMIN_PASSWORD_REQUIRED',
+    });
+    return false;
+  }
+  const row = db.prepare('SELECT password_hash FROM users WHERE id = ?').get(req.user.id);
+  if (!row || !verifyPassword(pw, row.password_hash)) {
+    const wait = registerFailedAttempt(key);
+    res.status(403).json({
+      error: wait > 0
+        ? `Juda ko‘p xato urinish. ${wait} soniyadan keyin qayta urinib ko‘ring.`
+        : 'Parol noto‘g‘ri',
+    });
+    return false;
+  }
+  clearFailedAttempts(key);
+  return true;
+}
 
 const USER_COLS = 'id, username, full_name, position, role, is_active, created_at';
 
@@ -152,7 +196,9 @@ router.get('/schools', (req, res) => {
     .prepare(
       `SELECT s.id, s.number, s.name, s.invite_code, s.registered_at, s.user_id,
               u.username, u.is_active, u.last_login_at, u.must_change_password,
-              u.contact_name, u.phone,
+              u.contact_name, u.phone, u.students_total,
+              (SELECT updated_at FROM user_photos p WHERE p.user_id = s.user_id) AS photo_updated_at,
+              (SELECT COUNT(*) FROM clubs c WHERE c.user_id = s.user_id) AS clubs_count,
               (SELECT COUNT(DISTINCT day) FROM videos v WHERE v.user_id = s.user_id AND v.day LIKE ?) AS month_days,
               (SELECT COUNT(*) FROM videos v WHERE v.user_id = s.user_id) AS video_count,
               (SELECT MAX(day) FROM videos v WHERE v.user_id = s.user_id) AS last_day
@@ -210,6 +256,7 @@ router.post('/schools', (req, res) => {
 
 /** Ro'yxat kodini yangilash (eskisi tarqalib ketgan bo'lsa) */
 router.post('/schools/:id/new-code', (req, res) => {
+  if (!requireStepUp(req, res)) return;
   const school = db.prepare('SELECT * FROM schools WHERE id = ?').get(Number(req.params.id));
   if (!school) return res.status(404).json({ error: 'Maktab topilmadi' });
 
@@ -223,6 +270,7 @@ router.post('/schools/:id/new-code', (req, res) => {
  * Maktab shu parol bilan kirib, darhol o'z parolini qo'yadi. Videolari saqlanib qoladi.
  */
 router.post('/schools/:id/reset-password', (req, res) => {
+  if (!requireStepUp(req, res)) return;
   const school = db.prepare('SELECT * FROM schools WHERE id = ?').get(Number(req.params.id));
   if (!school) return res.status(404).json({ error: 'Maktab topilmadi' });
   if (!school.user_id) return res.status(400).json({ error: 'Bu maktab hali ro‘yxatdan o‘tmagan' });
@@ -242,6 +290,7 @@ router.post('/schools/:id/reset-password', (req, res) => {
  * DIQQAT: barcha videolari ham o'chadi.
  */
 router.delete('/schools/:id/account', (req, res) => {
+  if (!requireStepUp(req, res)) return;
   const school = db.prepare('SELECT * FROM schools WHERE id = ?').get(Number(req.params.id));
   if (!school) return res.status(404).json({ error: 'Maktab topilmadi' });
   if (!school.user_id) return res.status(400).json({ error: 'Bu maktab hali ro‘yxatdan o‘tmagan' });
@@ -258,6 +307,7 @@ router.delete('/schools/:id/account', (req, res) => {
 
 /** Maktabni ro'yxatdan butunlay olib tashlash */
 router.delete('/schools/:id', (req, res) => {
+  if (!requireStepUp(req, res)) return;
   const school = db.prepare('SELECT * FROM schools WHERE id = ?').get(Number(req.params.id));
   if (!school) return res.status(404).json({ error: 'Maktab topilmadi' });
   if (school.user_id) {
@@ -282,6 +332,7 @@ router.get('/users', (_req, res) => {
 });
 
 router.post('/users', (req, res) => {
+  if (!requireStepUp(req, res)) return;
   const username = String(req.body?.username || '').trim().toLowerCase();
   const password = String(req.body?.password || '');
   const fullName = String(req.body?.full_name || '').trim();
@@ -320,6 +371,12 @@ router.patch('/users/:id', (req, res) => {
   const id = Number(req.params.id);
   const user = db.prepare('SELECT * FROM users WHERE id = ?').get(id);
   if (!user) return res.status(404).json({ error: 'Foydalanuvchi topilmadi' });
+
+  const wantsPassword = typeof req.body?.password === 'string' && req.body.password;
+  const wantsActive = typeof req.body?.is_active === 'boolean';
+  const roleChanging =
+    (req.body?.role === 'admin' || req.body?.role === 'user') && req.body.role !== user.role;
+  if ((wantsPassword || wantsActive || roleChanging) && !requireStepUp(req, res)) return;
 
   const fields = [];
   const values = [];
@@ -370,6 +427,7 @@ router.patch('/users/:id', (req, res) => {
 });
 
 router.delete('/users/:id', (req, res) => {
+  if (!requireStepUp(req, res)) return;
   const id = Number(req.params.id);
   if (id === req.user.id) return res.status(400).json({ error: 'O‘zingizni o‘chira olmaysiz' });
   const user = db.prepare('SELECT id FROM users WHERE id = ?').get(id);
@@ -460,6 +518,49 @@ router.delete('/videos/:id', (req, res) => {
   if (!row) return res.status(404).json({ error: 'Video topilmadi' });
   deleteVideoFile(row);
   db.prepare('DELETE FROM videos WHERE id = ?').run(id);
+  res.json({ ok: true });
+});
+
+const ANN_MAX = 200;
+
+router.get('/announcements', (_req, res) => {
+  const items = db
+    .prepare(
+      `SELECT a.id, a.body, a.created_at, u.full_name AS author
+       FROM announcements a
+       LEFT JOIN users u ON u.id = a.created_by
+       WHERE a.is_active = 1
+       ORDER BY a.id DESC
+       LIMIT 20`
+    )
+    .all();
+  res.json({ items });
+});
+
+router.post('/announcements', (req, res) => {
+  const wait = tooMany(`ann:${req.user.id}`, 20, 60 * 60 * 1000);
+  if (wait > 0) {
+    res.setHeader('Retry-After', String(wait));
+    return res.status(429).json({ error: `Juda ko‘p e’lon. ${wait} soniyadan keyin qayta urinib ko‘ring.` });
+  }
+  const body = String(req.body?.body || '').replace(/\s+/g, ' ').trim();
+  if (body.length < 3) {
+    return res.status(400).json({ error: 'E’lon matnini yozing (kamida 3 ta belgi)' });
+  }
+  if (body.length > ANN_MAX) {
+    return res.status(400).json({ error: `E’lon ${ANN_MAX} belgidan oshmasin` });
+  }
+  const r = db
+    .prepare('INSERT INTO announcements (body, created_by, created_at) VALUES (?, ?, ?)')
+    .run(body, req.user.id, nowIso());
+  res.json({ ok: true, id: r.lastInsertRowid, body });
+});
+
+router.delete('/announcements/:id', (req, res) => {
+  const id = Number(req.params.id);
+  const row = db.prepare('SELECT id FROM announcements WHERE id = ?').get(id);
+  if (!row) return res.status(404).json({ error: 'E’lon topilmadi' });
+  db.prepare('DELETE FROM announcements WHERE id = ?').run(id);
   res.json({ ok: true });
 });
 

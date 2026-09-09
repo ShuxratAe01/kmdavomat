@@ -59,6 +59,8 @@ async function init() {
   bindClubs();
   loadClubs();
   startWeather();
+  loadTicker();
+  setInterval(loadTicker, 45 * 1000);
 }
 
 // ---------- To'garaklar ----------
@@ -224,12 +226,27 @@ function prettyPhone(phone) {
   return phone || '—';
 }
 
+/** F.I.SH. so‘zlarini yuqoridan / pastdan opacity bilan chiqaradi */
+function renderProfileName(name) {
+  const el = $('#profileName');
+  const words = String(name || '').trim().split(/\s+/).filter(Boolean);
+  if (!words.length) {
+    el.textContent = '—';
+    return;
+  }
+  el.innerHTML = words.map((word, i) => {
+    const dir = i % 2 === 0 ? 'from-top' : 'from-bottom';
+    const delay = (0.08 + i * 0.22).toFixed(2);
+    return `<span class="profile-name-clip"><span class="profile-name-word ${dir}" style="animation-delay:${delay}s">${esc(word)}</span></span>`;
+  }).join(' ');
+}
+
 async function loadProfile() {
   try {
     const p = await api('/api/profile');
     state.profile = p;
 
-    $('#profileName').textContent = p.contact_name || p.school_name || p.username;
+    renderProfileName(p.contact_name || p.school_name || p.username);
     $('#profileSchool').textContent = p.school_name || '';
 
     const phoneLink = $('#profilePhone');
@@ -321,6 +338,7 @@ function bindProfile() {
       const res = await fetch('/api/profile/photo', {
         method: 'POST',
         credentials: 'same-origin',
+        headers: csrfHeaders(),
         body: fd,
       });
       const data = await res.json().catch(() => ({}));
@@ -475,6 +493,7 @@ function render() {
   for (let i = 0; i < c.firstWeekday; i++) cells.push('<div class="day empty"></div>');
   for (const d of c.days) {
     const cls = ['day', d.state];
+    if (new Date(`${d.date}T00:00:00Z`).getUTCDay() === 0) cls.push('sunday');
     if (d.holiday) cls.push('holiday');
     if (d.isToday) cls.push('today');
     if (d.hasVideo) cls.push('clickable');
@@ -486,7 +505,7 @@ function render() {
           upcoming: 'kelgusi kun',
           missed: 'video yuborilmagan',
         }[d.state]
-      }">${d.dayNum}${d.hasVideo ? '<span class="dot"></span>' : ''}</div>`
+      }"><span class="day-num">${d.dayNum}</span>${d.hasVideo ? '<span class="dot"></span>' : ''}</div>`
     );
   }
   $('#calendar').innerHTML = cells.join('');
@@ -500,15 +519,77 @@ function render() {
   $('#stRest').textContent = c.stats.rest ?? 0;
   $('#stPercent').textContent = expected ? Math.round((done / expected) * 100) + '%' : '—';
 
-  // Bugungi video yuborilgan bo'lsa tugmani o'zgartirish
+  // Yakshanba va bayramda yuborish o‘chiq; boshqa kunlarda — yuborilgan bo‘lsa ham
   const btn = $('#sendBtn');
-  if (sentToday && !state.config.allowMultiplePerDay) {
+  const hint = $('#sendHint');
+  const workHint = `Maksimal <span class="max-secs">${state.config.maxVideoSeconds}</span> soniya · yumaloq video`;
+  if (c.todayIsRest) {
+    btn.disabled = true;
+    btn.textContent = c.todayHoliday
+      ? 'Bayram kuni — video yuborilmaydi'
+      : 'Yakshanba — video yuborilmaydi';
+    if (hint) {
+      hint.textContent = c.todayHoliday
+        ? `${c.todayHoliday} — video yuborish shart emas`
+        : 'Yakshanba kuni video yuborish shart emas';
+    }
+  } else if (sentToday && !state.config.allowMultiplePerDay) {
     btn.disabled = true;
     btn.textContent = '✓ Bugungi video yuborilgan';
+    if (hint) hint.innerHTML = workHint;
   } else {
     btn.disabled = false;
     btn.textContent = '🎬 Video yuborish';
+    if (hint) hint.innerHTML = workHint;
   }
+}
+
+const VCARD_CAL =
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5.5" width="16" height="14.5" rx="2.4"/><path d="M4 10h16M8 3.6v3.4M16 3.6v3.4"/></svg>';
+const VCARD_DOC =
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4h7l4 4v12H7z"/><path d="M14 4v4h4M9.5 13h5M9.5 16.5h5"/></svg>';
+const VCARD_TODAY =
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5.5" width="16" height="14.5" rx="2.2"/><path d="M4 10h16M8 3.8v3.2M16 3.8v3.2"/></svg>';
+const VCARD_PLAY =
+  '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8.4 6.4v11.2c0 .7.8 1.1 1.4.7l8.2-5.6c.5-.4.5-1.1 0-1.4L9.8 5.7c-.6-.4-1.4 0-1.4.7z"/></svg>';
+const VCARD_CHECK =
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 12.2 10.2 16 17.5 8.2"/></svg>';
+const VCARD_WAIT =
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/></svg>';
+const VCARD_X =
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M8 8l8 8M16 8l-8 8"/></svg>';
+
+function videoCardHtml(v) {
+  const year = String(v.day || '').slice(0, 4);
+  const time = formatTime(v.created_at).slice(11);
+  const isToday = v.day === state.today;
+  const map = {
+    accepted: { cls: 'ok', label: 'Qabul qilindi', mark: VCARD_CHECK },
+    rejected: { cls: 'bad', label: 'Rad etildi', mark: VCARD_X },
+    new: { cls: 'wait', label: 'Yangi', mark: VCARD_WAIT },
+  };
+  const st = map[v.status] || { cls: 'wait', label: '—', mark: VCARD_WAIT };
+
+  return `<article class="vcard">
+    <div class="vcard-head">
+      <span class="vcard-cal">${VCARD_CAL}</span>
+      <div class="vcard-pair">
+        <b class="vcard-date">${esc(formatDay(v.day, false))}</b>
+        <small class="vcard-time-k">Vaqt</small>
+        <span class="vcard-sub">${esc(weekdayName(v.day))}, ${esc(year)}</span>
+        <b class="vcard-time-v">${esc(time)}</b>
+      </div>
+    </div>
+    ${isToday ? `<span class="vcard-today">${VCARD_TODAY} Bugungi kun</span>` : ''}
+    <div class="vcard-row">
+      <span class="vcard-ico ${st.cls}">${VCARD_DOC}</span>
+      <div class="vcard-meta"><small>Holat</small><b>${st.label}</b></div>
+      <span class="vcard-badge ${st.cls}"><i>${st.mark}</i>${st.label}</span>
+    </div>
+    <button type="button" class="vcard-play" data-play="${esc(v.id)}" data-day="${esc(v.day)}">
+      ${VCARD_PLAY}<span>Ko‘rish</span><span class="vcard-chev" aria-hidden="true">›</span>
+    </button>
+  </article>`;
 }
 
 async function loadVideoList() {
@@ -520,18 +601,7 @@ async function loadVideoList() {
       el.innerHTML = '<div class="empty-state"><span class="ico">📭</span>Bu oyda video yuborilmagan</div>';
       return;
     }
-    el.innerHTML = `<div class="table-wrap"><table>
-      <thead><tr><th>Sana</th><th>Vaqt</th><th>Holat</th><th></th></tr></thead>
-      <tbody>${videos
-        .map(
-          (v) => `<tr>
-            <td class="cell-main nowrap"><b>${formatDay(v.day, false)}</b></td>
-            <td data-label="Vaqt" class="nowrap small muted">${formatTime(v.created_at).slice(11)}</td>
-            <td data-label="Holat">${statusBadge(v.status)}</td>
-            <td class="cell-actions nowrap"><button class="btn sm ghost" data-play="${v.id}" data-day="${v.day}">▶ Ko‘rish</button></td>
-          </tr>`
-        )
-        .join('')}</tbody></table></div>`;
+    el.innerHTML = videos.map(videoCardHtml).join('');
   } catch (e) {
     el.innerHTML = `<p class="alert error">${esc(e.message)}</p>`;
   }
@@ -650,6 +720,7 @@ function bindEvents() {
   });
 
   $('#sendBtn').addEventListener('click', () => {
+    if ($('#sendBtn').disabled || state.calendar?.todayIsRest) return;
     resetSendModal();
     openModal('sendModal');
   });
@@ -1176,6 +1247,8 @@ function sendVideo() {
   const xhr = new XMLHttpRequest();
   xhr.open('POST', '/api/videos');
   xhr.withCredentials = true;
+  const csrf = csrfHeaders()['X-CSRF-Token'];
+  if (csrf) xhr.setRequestHeader('X-CSRF-Token', csrf);
 
   xhr.upload.onprogress = (e) => {
     if (!e.lengthComputable) return;

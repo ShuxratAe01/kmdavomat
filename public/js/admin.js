@@ -27,10 +27,13 @@ async function init() {
   bindSchools();
   bindClubs();
   bindUsers();
+  bindAnnouncements();
 
   await loadSchools();
   await loadUsers();
   await loadOverview();
+  loadTicker();
+  loadAnnouncements();
 }
 
 function bindTabs() {
@@ -42,9 +45,15 @@ function bindTabs() {
         $(`#tab-${name}`).hidden = name !== t.dataset.tab;
       });
       if (t.dataset.tab === 'videos') loadVideos(1);
-      if (t.dataset.tab === 'schools') loadSchools();
+      if (t.dataset.tab === 'schools') {
+        loadSchools();
+        requestAnimationFrame(() => window.ScrollRevealText?.refresh());
+      }
       if (t.dataset.tab === 'clubs') loadClubs();
-      if (t.dataset.tab === 'users') renderUsers();
+      if (t.dataset.tab === 'users') {
+        renderUsers();
+        loadAnnouncements();
+      }
     })
   );
 
@@ -81,7 +90,6 @@ async function loadOverview(day) {
     $('#ovSent').textContent = data.stats.sent;
     $('#ovMissed').textContent = data.stats.missed;
     $('#ovVideosTotal').textContent = data.stats.videosTotal;
-    $('#ovStorage').textContent = formatSize(data.stats.storageBytes);
     $('#ovWaiting').textContent = data.stats.notRegistered;
 
     if (!data.schools.length) {
@@ -175,7 +183,7 @@ async function loadVideos(page = 1) {
     }
 
     $('#vidList').innerHTML = `<div class="table-wrap"><table>
-      <thead><tr><th>Maktab</th><th>Sana</th><th>Vaqt</th><th>Hajm</th><th>Holat</th><th>Izoh</th><th></th></tr></thead>
+      <thead><tr><th>Maktab</th><th>Sana</th><th>Vaqt</th><th>Holat</th><th>Izoh</th><th></th></tr></thead>
       <tbody>${data.videos
         .map(
           (v) => `<tr>
@@ -186,7 +194,6 @@ async function loadVideos(page = 1) {
             </td>
             <td data-label="Sana" class="nowrap hide-sm">${formatDay(v.day)}</td>
             <td data-label="Vaqt" class="small nowrap muted hide-sm">${formatTime(v.created_at).slice(11)}</td>
-            <td data-label="Hajm" class="small nowrap">${formatSize(v.size)}</td>
             <td data-label="Holat">${statusBadge(v.status)}</td>
             <td data-label="Izoh" class="small muted">${esc(v.note || '—')}</td>
             <td class="cell-actions nowrap">
@@ -298,6 +305,7 @@ async function loadSchools() {
     $('#scRegistered').textContent = data.stats.registered;
     $('#scWaiting').textContent = data.stats.waiting;
     renderSchools();
+    requestAnimationFrame(() => window.ScrollRevealText?.refresh());
   } catch (e) {
     flash(e.message, 'error');
   }
@@ -313,6 +321,32 @@ function visibleSchools() {
     return true;
   });
 }
+
+function prettyPhone(phone) {
+  const d = String(phone || '').replace(/\D/g, '');
+  if (d.length === 12 && d.startsWith('998')) {
+    return `+998 ${d.slice(3, 5)} ${d.slice(5, 8)} ${d.slice(8, 10)} ${d.slice(10)}`;
+  }
+  return phone || '—';
+}
+
+function profileNameHtml(name) {
+  const words = String(name || '').trim().split(/\s+/).filter(Boolean);
+  if (!words.length) return '—';
+  return words
+    .map((word, i) => {
+      const dir = i % 2 === 0 ? 'from-top' : 'from-bottom';
+      const delay = (0.08 + i * 0.22).toFixed(2);
+      return `<span class="profile-name-clip"><span class="profile-name-word ${dir}" style="animation-delay:${delay}s">${esc(word)}</span></span>`;
+    })
+    .join(' ');
+}
+
+const SC_PHOTO_EMPTY =
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8.5" r="3.8"/><path d="M4.5 20.5c0-3.7 3.4-6.2 7.5-6.2s7.5 2.5 7.5 6.2"/></svg>';
+
+const SC_CAP_ICO =
+  '<svg class="cap-ico" viewBox="0 0 64 64" aria-hidden="true"><path d="M20 26h24v20.5c0 4.2-5.4 7.5-12 7.5s-12-3.3-12-7.5z" fill="#e2d8fd"/><path d="M32 33.5c6.6 0 12-3.3 12-7.5v20.5c0 4.2-5.4 7.5-12 7.5z" fill="#cdbdfa"/><path d="M34.3 6.6 60.4 21.2c1.9 1.1 1.9 3.8 0 4.9L34.3 40.7c-1.4.8-3.2.8-4.6 0L3.6 26.1c-1.9-1.1-1.9-3.8 0-4.9L29.7 6.6c1.4-.8 3.2-.8 4.6 0z" fill="#7c4dff"/><path d="M32 41.3c-.8 0-1.6-.2-2.3-.6L3.6 26.1C2.6 25.5 2.1 24.5 2.1 23.6v3.1c0 .9.5 1.9 1.5 2.5l26.1 14.6c1.4.8 3.2.8 4.6 0l26.1-14.6c1-.6 1.5-1.6 1.5-2.5v-3.1c0 .9-.5 1.9-1.5 2.5L34.3 40.7c-.7.4-1.5.6-2.3.6z" fill="#6636e0"/><path d="M29.7 6.6 3.6 21.2c-1.3.7-1.8 2.2-1.3 3.4.2-.5.6-.9 1.3-1.3L29.7 8.7c1.4-.8 3.2-.8 4.6 0l26.1 14.6c.7.4 1.1.8 1.3 1.3.5-1.2 0-2.7-1.3-3.4L34.3 6.6c-1.4-.8-3.2-.8-4.6 0z" fill="#9b78ff"/><circle cx="10.5" cy="28.5" r="3.3" fill="#7c4dff"/><rect x="9.2" y="30.5" width="2.6" height="10" rx="1.3" fill="#7c4dff"/><circle cx="10.5" cy="41.6" r="2.6" fill="#e2d8fd"/><path d="M10.5 43.6c3.3 0 5.4 4.3 4.9 7.4-.3 1.9-2.3 2.9-4.9 2.9s-4.6-1-4.9-2.9c-.5-3.1 1.6-7.4 4.9-7.4z" fill="#7c4dff"/><path d="M10.5 43.6c-3.3 0-5.4 4.3-4.9 7.4.14.9.77 1.65 1.75 2.15-.4-3.2.85-7.9 3.15-9.55z" fill="#9b78ff"/></svg>';
 
 /* Kartochka belgilari — lucide uslubidagi ingichka chiziqli ikonkalar.
    Loyihada ikonka kutubxonasi yo‘q, shuning uchun SVG shu yerda. */
@@ -336,17 +370,6 @@ function scIco(name, cls) {
     stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${SC_ICO[name]}</svg>`;
 }
 
-// Kartochkalarning navbatma-navbat almashinuvchi ranglari
-const SC_TONES = ['blue', 'green', 'purple', 'orange', 'pink'];
-
-/** Maktabning haqiqiy holati — bitta joyda hisoblanadi */
-function schoolState(s) {
-  if (!s.registered) return { cls: 'wait', ico: 'dot', text: 'Ro‘yxatdan o‘tmagan' };
-  if (!s.is_active) return { cls: 'off', ico: 'dot', text: 'Bloklangan' };
-  if (s.must_change_password) return { cls: 'warn', ico: 'dot', text: 'Parol kutilmoqda' };
-  return { cls: 'ok', ico: 'check', text: 'Ro‘yxatdan o‘tgan' };
-}
-
 function renderSchools() {
   const rows = visibleSchools();
   const el = $('#schoolList');
@@ -363,30 +386,32 @@ function renderSchools() {
 
   el.innerHTML = rows
     .map((s) => {
-      const tone = SC_TONES[(s.number - 1) % SC_TONES.length];
-      const st = schoolState(s);
-
-      // Faqat haqiqiy ma‘lumot ko‘rsatiladi
-      const meta = s.registered
-        ? [
-            s.contact_name ? `<li>${scIco('person')}${esc(s.contact_name)}</li>` : '',
-            s.phone ? `<li>${scIco('phone')}<a href="tel:${esc(s.phone)}">${esc(s.phone)}</a></li>` : '',
-            `<li>${scIco('film')}${s.video_count} video</li>`,
-            s.last_day ? `<li>${scIco('calendar')}${formatDay(s.last_day, false)}</li>` : '',
-          ]
-        : [
-            `<li>${scIco('key')}<code class="sc-code" data-copy="${esc(s.invite_code)}"
-              title="Nusxalash">${S.showCodes ? esc(s.invite_code) : '••••-••••'}</code></li>`,
-          ];
-
-      const open = s.registered
-        ? `<button class="sc-open" data-scal="${s.id}" data-uid="${s.id}" data-name="${esc(s.name)}">
-             Batafsil ${scIco('arrow', 'sc-open-arrow')}</button>`
-        : `<button class="sc-open" data-copy="${esc(s.invite_code)}">
-             Kodni nusxalash ${scIco('arrow', 'sc-open-arrow')}</button>`;
+      const personName = s.registered && s.contact_name;
+      const displayName = personName || s.name;
+      const nameHtml = personName ? profileNameHtml(displayName) : esc(displayName);
+      const subtitle = s.registered ? s.name : 'Ro‘yxatdan o‘tmagan';
+      const clubsCount = Number(s.clubs_count) || 0;
+      const students = s.students_total ? String(s.students_total) : '—';
+      const phone = s.phone
+        ? `<a href="tel:${esc(s.phone)}">${esc(prettyPhone(s.phone))}</a>`
+        : '<span>—</span>';
+      const photo = s.user_id && s.photo_updated_at
+        ? `<img src="/api/users/${s.user_id}/photo?v=${encodeURIComponent(s.photo_updated_at)}" alt=""
+             onerror="this.hidden=true;this.nextElementSibling.hidden=false" />
+           <span class="profile-photo-empty" hidden>${SC_PHOTO_EMPTY}</span>`
+        : `<span class="profile-photo-empty">${SC_PHOTO_EMPTY}</span>`;
+      const clubsChip = s.registered
+        ? `<button type="button" class="clubs-chip" data-sclubs="${s.id}" title="To‘garaklar">
+             ${SC_CAP_ICO} To‘garaklar
+             <span class="clubs-count"${clubsCount ? '' : ' hidden'}>${clubsCount}</span>
+           </button>`
+        : `<span class="clubs-chip" aria-disabled="true">
+             ${SC_CAP_ICO} To‘garaklar
+           </span>`;
 
       const tools = s.registered
         ? [
+            ['scal', 'calendar', 'Kalendar'],
             ['sedit', 'pencil', 'Nomini o‘zgartirish'],
             ['sreset', 'key', 'Parolni tiklash'],
             ['sdelacc', 'trash', 'Hisobni o‘chirish', 'danger'],
@@ -397,26 +422,48 @@ function renderSchools() {
             ['sdel', 'trash', 'Maktabni o‘chirish', 'danger'],
           ];
 
-      return `<article class="sc-card tone-${tone}">
-        <div class="sc-media">
-          <span class="sc-num">${s.number}</span>
-          <span class="sc-media-ico">${scIco('school')}</span>
-          <span class="sc-media-txt">Maktab</span>
-        </div>
+      const extra = !s.registered
+        ? `<code class="sc-code" data-copy="${esc(s.invite_code)}" title="Nusxalash">${
+            S.showCodes ? esc(s.invite_code) : '••••-••••'
+          }</code>`
+        : '';
 
-        <div class="sc-info">
-          <h3 class="sc-name">${esc(s.name)}</h3>
-          <span class="sc-badge ${st.cls}">${scIco(st.ico)}${st.text}</span>
-          <ul class="sc-meta">${meta.filter(Boolean).join('')}</ul>
+      return `<article class="profile-card sc-card">
+        <div class="profile-photo-col">
+          <div class="profile-photo">${photo}</div>
         </div>
-
-        <div class="sc-act">
-          ${open}
-          <div class="sc-icons">${tools
-            .map(([attr, icon, label, kind]) =>
-              `<button class="sc-ico-btn ${kind || ''}" data-${attr}="${s.id}"
-                 title="${label}" aria-label="${esc(s.name)}: ${label}">${scIco(icon)}</button>`)
-            .join('')}</div>
+        <div class="profile-info">
+          <h3 class="profile-name">${nameHtml}</h3>
+          <p class="profile-position">${esc(subtitle)}</p>
+          <div class="profile-rows">
+            <div class="profile-col">
+              <div class="profile-meta-item role-row">
+                <span class="profile-ico">${scIco('school')}</span>
+                <span>Maktab maslahatchisi</span>
+              </div>
+              <div class="profile-meta-item phone-row">
+                <span class="profile-ico">${scIco('phone')}</span>
+                ${phone}
+              </div>
+            </div>
+            <div class="profile-col profile-col-side">
+              <div class="profile-meta-item clubs-row">${clubsChip}</div>
+              <div class="profile-meta-item students-row">
+                <span class="profile-ico">${scIco('person')}</span>
+                <span>O‘quvchilar soni</span>
+                <span class="profile-count">${esc(students)}</span>
+              </div>
+            </div>
+          </div>
+          <div class="sc-act">
+            ${extra}
+            <div class="sc-icons">${tools
+              .map(([attr, icon, label, kind]) =>
+                `<button class="sc-ico-btn ${kind || ''}" data-${attr}="${s.id}"
+                   title="${label}" aria-label="${esc(s.name)}: ${label}">${scIco(icon)}</button>`
+              )
+              .join('')}</div>
+          </div>
         </div>
       </article>`;
     })
@@ -446,6 +493,17 @@ async function onSchoolListClick(e) {
   const edit = e.target.closest('[data-sedit]');
   if (edit) return openSchoolForm(S.schools.find((s) => s.id === Number(edit.dataset.sedit)));
 
+  const clubs = e.target.closest('[data-sclubs]');
+  if (clubs) {
+    $$('.tab').forEach((x) => x.classList.toggle('active', x.dataset.tab === 'clubs'));
+    ['overview', 'videos', 'schools', 'clubs', 'users'].forEach((n) => {
+      $(`#tab-${n}`).hidden = n !== 'clubs';
+    });
+    $('#acSchool').value = clubs.dataset.sclubs;
+    loadClubs();
+    return;
+  }
+
   const cal = e.target.closest('[data-scal]');
   if (cal) {
     const s = S.schools.find((x) => x.id === Number(cal.dataset.scal));
@@ -456,8 +514,13 @@ async function onSchoolListClick(e) {
   if (newCode) {
     const s = S.schools.find((x) => x.id === Number(newCode.dataset.snewcode));
     if (!confirm(`"${s.name}" uchun yangi kod yaratilsinmi? Eski kod ishlamay qoladi.`)) return;
+    const pw = askAdminPassword('Yangi ro‘yxat kodi yaratiladi. Eski kod ishlamay qoladi.');
+    if (!pw) return;
     try {
-      const r = await api(`/api/admin/schools/${s.id}/new-code`, { method: 'POST' });
+      const r = await api(`/api/admin/schools/${s.id}/new-code`, {
+        method: 'POST',
+        headers: { 'X-Admin-Password': pw },
+      });
       showSecret('Yangi ro‘yxat kodi', s.name, [['Ro‘yxat kodi', r.invite_code]],
         'Bu kodni maktabga bering. Eski kod endi ishlamaydi.');
       await loadSchools();
@@ -471,8 +534,13 @@ async function onSchoolListClick(e) {
   if (reset) {
     const s = S.schools.find((x) => x.id === Number(reset.dataset.sreset));
     if (!confirm(`"${s.name}" uchun vaqtinchalik parol berilsinmi? Hozirgi paroli ishlamay qoladi.`)) return;
+    const pw = askAdminPassword('Maktab paroli tiklanadi. Hozirgi parol ishlamay qoladi.');
+    if (!pw) return;
     try {
-      const r = await api(`/api/admin/schools/${s.id}/reset-password`, { method: 'POST' });
+      const r = await api(`/api/admin/schools/${s.id}/reset-password`, {
+        method: 'POST',
+        headers: { 'X-Admin-Password': pw },
+      });
       showSecret('Vaqtinchalik parol', s.name,
         [['Login', r.username], ['Vaqtinchalik parol', r.password]],
         'Maktab shu parol bilan kirib, darhol o‘z parolini qo‘yadi. Videolari saqlanib qoladi.');
@@ -487,8 +555,13 @@ async function onSchoolListClick(e) {
   if (delAcc) {
     const s = S.schools.find((x) => x.id === Number(delAcc.dataset.sdelacc));
     if (!confirm(`"${s.name}" hisobi va uning BARCHA videolari o‘chiriladi.\nMaktab qaytadan ro‘yxatdan o‘ta oladi.\n\nDavom etasizmi?`)) return;
+    const pw = askAdminPassword('Hisob va barcha videolar o‘chiriladi. Bu amalni orqaga qaytarib bo‘lmaydi.');
+    if (!pw) return;
     try {
-      await api(`/api/admin/schools/${s.id}/account`, { method: 'DELETE' });
+      await api(`/api/admin/schools/${s.id}/account`, {
+        method: 'DELETE',
+        headers: { 'X-Admin-Password': pw },
+      });
       flash('Hisob o‘chirildi, maktab qaytadan ro‘yxatdan o‘ta oladi');
       await loadSchools();
       loadOverview($('#ovDay').value);
@@ -502,8 +575,13 @@ async function onSchoolListClick(e) {
   if (del) {
     const s = S.schools.find((x) => x.id === Number(del.dataset.sdel));
     if (!confirm(`"${s.name}" ro‘yxatdan olib tashlansinmi?`)) return;
+    const pw = askAdminPassword('Maktab ro‘yxatdan olib tashlanadi.');
+    if (!pw) return;
     try {
-      await api(`/api/admin/schools/${s.id}`, { method: 'DELETE' });
+      await api(`/api/admin/schools/${s.id}`, {
+        method: 'DELETE',
+        headers: { 'X-Admin-Password': pw },
+      });
       flash('Maktab o‘chirildi');
       await loadSchools();
       loadOverview($('#ovDay').value);
@@ -633,25 +711,103 @@ async function loadClubs() {
       return;
     }
 
-    $('#clubList').innerHTML = `<div class="table-wrap"><table>
-      <thead><tr><th>To‘garak</th><th>Maktab</th><th>Rahbari</th><th>O‘quvchilar soni</th><th>O‘tish vaqti</th></tr></thead>
-      <tbody>${d.clubs
-        .map(
-          (c) => `<tr>
-            <td class="cell-main">
-              <b>${esc(c.name)}</b>
-              <div class="small muted only-sm">${esc(c.school_name)}</div>
-              <div class="small muted hide-sm">${c.school_number}-maktab</div>
-            </td>
-            <td data-label="Maktab" class="small hide-sm">${esc(c.school_name)}</td>
-            <td data-label="Rahbari" class="small">${esc(c.teacher || '—')}</td>
-            <td data-label="O‘quvchilar soni" class="small nowrap">${c.students || '—'}</td>
-            <td data-label="O‘tish vaqti" class="small muted">${esc(c.schedule || '—')}</td>
-          </tr>`
-        )
-        .join('')}</tbody></table></div>`;
+    $('#clubList').innerHTML = `<div class="ac-club-list">${d.clubs
+      .map(
+        (c) => `<article class="ac-club-card">
+          <header class="ac-club-head">
+            <h3>${esc(c.name)}</h3>
+            <p>${esc(c.school_name)}</p>
+          </header>
+          <dl class="ac-club-meta">
+            <div>
+              <dt>Rahbari</dt>
+              <dd>${esc(c.teacher || '—')}</dd>
+            </div>
+            <div>
+              <dt>O‘quvchilar soni</dt>
+              <dd>${c.students || '—'}</dd>
+            </div>
+            <div>
+              <dt>O‘tish vaqti</dt>
+              <dd>${esc(c.schedule || '—')}</dd>
+            </div>
+          </dl>
+        </article>`
+      )
+      .join('')}</div>`;
   } catch (e) {
     $('#clubList').innerHTML = `<p class="alert error">${esc(e.message)}</p>`;
+  }
+}
+
+// ---------- E'lon berish ----------
+
+function bindAnnouncements() {
+  const body = $('#announcementBody');
+  const count = $('#announcementCount');
+  const syncCount = () => {
+    count.textContent = `${body.value.length} / 200`;
+  };
+  body.addEventListener('input', syncCount);
+  syncCount();
+
+  $('#announcementForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const text = body.value.replace(/\s+/g, ' ').trim();
+    if (text.length < 3) return flash('E’lon matnini yozing', 'error');
+    const btn = $('#announcementSend');
+    btn.disabled = true;
+    try {
+      await api('/api/admin/announcements', {
+        method: 'POST',
+        body: JSON.stringify({ body: text }),
+      });
+      body.value = '';
+      syncCount();
+      flash('E’lon yuborildi — maktab sahifalarida ko‘rinadi');
+      await loadAnnouncements();
+      await loadTicker();
+    } catch (err) {
+      flash(err.message, 'error');
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  $('#announcementList').addEventListener('click', async (e) => {
+    const del = e.target.closest('[data-ann-del]');
+    if (!del) return;
+    if (!confirm('Bu e’lon o‘chirilsinmi?')) return;
+    try {
+      await api(`/api/admin/announcements/${del.dataset.annDel}`, { method: 'DELETE' });
+      await loadAnnouncements();
+      await loadTicker();
+    } catch (err) {
+      flash(err.message, 'error');
+    }
+  });
+}
+
+async function loadAnnouncements() {
+  const box = $('#announcementList');
+  if (!box) return;
+  try {
+    const { items } = await api('/api/admin/announcements');
+    if (!items.length) {
+      box.innerHTML = '<p class="small muted" style="margin:14px 0 0">Hozircha e’lon yo‘q.</p>';
+      return;
+    }
+    box.innerHTML = `<ul class="announcement-items">${items
+      .map(
+        (a) => `<li>
+          <span class="announcement-text">${esc(a.body)}</span>
+          <span class="announcement-meta">${esc(formatTime(a.created_at))}</span>
+          <button type="button" class="btn sm ghost" data-ann-del="${a.id}">O‘chirish</button>
+        </li>`
+      )
+      .join('')}</ul>`;
+  } catch (err) {
+    box.innerHTML = `<p class="small muted" style="margin:14px 0 0">${esc(err.message)}</p>`;
   }
 }
 
@@ -727,8 +883,11 @@ async function onUserListClick(e) {
   if (toggle) {
     const active = toggle.dataset.active === '1' || toggle.dataset.active === 'true';
     try {
+      const pw = askAdminPassword(active ? 'Xodim bloklanadi.' : 'Xodim blokdan chiqariladi.');
+      if (!pw) return;
       await api(`/api/admin/users/${toggle.dataset.toggle}`, {
         method: 'PATCH',
+        headers: { 'X-Admin-Password': pw },
         body: JSON.stringify({ is_active: !active }),
       });
       flash(active ? 'Xodim bloklandi' : 'Blokdan chiqarildi');
@@ -743,8 +902,13 @@ async function onUserListClick(e) {
   if (del) {
     const u = S.users.find((x) => x.id === Number(del.dataset.deluser));
     if (!confirm(`"${u.full_name || u.username}" va uning BARCHA videolari o‘chiriladi. Davom etasizmi?`)) return;
+    const pw = askAdminPassword('Xodim va uning barcha videolari o‘chiriladi.');
+    if (!pw) return;
     try {
-      await api(`/api/admin/users/${del.dataset.deluser}`, { method: 'DELETE' });
+      await api(`/api/admin/users/${del.dataset.deluser}`, {
+        method: 'DELETE',
+        headers: { 'X-Admin-Password': pw },
+      });
       flash('Xodim o‘chirildi');
       await loadUsers();
       loadOverview($('#ovDay').value);
@@ -786,10 +950,26 @@ async function saveUser(e) {
   if (!id) payload.username = $('#umUsername').value.trim().toLowerCase();
 
   try {
-    if (id) {
-      await api(`/api/admin/users/${id}`, { method: 'PATCH', body: JSON.stringify(payload) });
+    const extra = {};
+    if (!id) {
+      const pw = askAdminPassword('Yangi xodim yaratiladi.');
+      if (!pw) return;
+      extra['X-Admin-Password'] = pw;
     } else {
-      await api('/api/admin/users', { method: 'POST', body: JSON.stringify(payload) });
+      const prev = S.users.find((u) => u.id === Number(id));
+      const roleChanged = prev && prev.role !== payload.role;
+      if (payload.password || roleChanged) {
+        const pw = askAdminPassword(
+          payload.password ? 'Xodim paroli o‘zgartiriladi.' : 'Xodim roli o‘zgartiriladi.'
+        );
+        if (!pw) return;
+        extra['X-Admin-Password'] = pw;
+      }
+    }
+    if (id) {
+      await api(`/api/admin/users/${id}`, { method: 'PATCH', headers: extra, body: JSON.stringify(payload) });
+    } else {
+      await api('/api/admin/users', { method: 'POST', headers: extra, body: JSON.stringify(payload) });
     }
     closeModal('userModal');
     flash(id ? 'Saqlandi' : 'Yangi xodim qo‘shildi');
@@ -810,21 +990,40 @@ function openUserCalendar(userId, name) {
 }
 
 async function loadUserCalendar(month) {
-  const data = await api(`/api/admin/users/${S.calUserId}/calendar` + (month ? `?month=${month}` : ''));
-  S.calMonth = data.month;
-  $('#cmMonth').textContent = data.monthLabel;
-  $('#cmNext').disabled = data.month >= data.today.slice(0, 7);
-  $('#cmSent').textContent = data.stats.sent;
-  $('#cmMissed').textContent = data.stats.missed;
+  try {
+    const data = await api(`/api/admin/users/${S.calUserId}/calendar` + (month ? `?month=${month}` : ''));
+    S.calMonth = data.month;
+    $('#cmMonth').textContent = data.monthLabel;
+    $('#cmNext').disabled = data.month >= data.today.slice(0, 7);
+    const done = data.stats.sent;
+    const expected = data.stats.sent + data.stats.missed;
+    $('#cmSent').textContent = done;
+    $('#cmMissed').textContent = data.stats.missed;
+    $('#cmRest').textContent = data.stats.rest ?? 0;
+    $('#cmPercent').textContent = expected ? Math.round((done / expected) * 100) + '%' : '—';
 
-  const cells = [];
-  for (let i = 0; i < data.firstWeekday; i++) cells.push('<div class="day empty"></div>');
-  for (const d of data.days) {
-    const cls = ['day', d.state];
-    if (d.isToday) cls.push('today');
-    cells.push(`<div class="${cls.join(' ')}" title="${formatDay(d.date)}">${d.dayNum}${d.hasVideo ? '<span class="dot"></span>' : ''}</div>`);
+    const cells = [];
+    for (let i = 0; i < data.firstWeekday; i++) cells.push('<div class="day empty"></div>');
+    for (const d of data.days) {
+      const cls = ['day', d.state];
+      if (new Date(`${d.date}T00:00:00Z`).getUTCDay() === 0) cls.push('sunday');
+      if (d.holiday) cls.push('holiday');
+      if (d.isToday) cls.push('today');
+      cells.push(
+        `<div class="${cls.join(' ')}" title="${formatDay(d.date)} — ${
+          {
+            sent: 'video yuborilgan',
+            rest: d.holiday ? d.holiday + ' — video shart emas' : 'dam olish kuni, video shart emas',
+            upcoming: 'kelgusi kun',
+            missed: 'video yuborilmagan',
+          }[d.state]
+        }"><span class="day-num">${d.dayNum}</span>${d.hasVideo ? '<span class="dot"></span>' : ''}</div>`
+      );
+    }
+    $('#cmCalendar').innerHTML = cells.join('');
+  } catch (err) {
+    $('#cmCalendar').innerHTML = `<p class="alert error">${esc(err.message)}</p>`;
   }
-  $('#cmCalendar').innerHTML = cells.join('');
 }
 
 init();

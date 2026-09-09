@@ -8,10 +8,27 @@ import { nowIso } from './util/date.js';
 
 fs.mkdirSync(path.dirname(config.dbFile), { recursive: true });
 fs.mkdirSync(config.uploadDir, { recursive: true });
+try {
+  fs.chmodSync(config.uploadDir, 0o700);
+} catch {
+  /* Windows */
+}
 
 export const db = new DatabaseSync(config.dbFile);
+try {
+  fs.chmodSync(config.dbFile, 0o600);
+} catch {
+  /* Windows da chmod ishlamasligi mumkin */
+}
 
 db.exec('PRAGMA journal_mode = WAL');
+for (const extra of [`${config.dbFile}-wal`, `${config.dbFile}-shm`]) {
+  try {
+    if (fs.existsSync(extra)) fs.chmodSync(extra, 0o600);
+  } catch {
+    /* ahamiyatsiz */
+  }
+}
 db.exec('PRAGMA foreign_keys = ON');
 db.exec('PRAGMA busy_timeout = 5000');
 
@@ -100,6 +117,15 @@ CREATE TABLE IF NOT EXISTS login_attempts (
   fails        INTEGER NOT NULL DEFAULT 0,
   locked_until TEXT NOT NULL DEFAULT '',
   updated_at   TEXT NOT NULL
+);
+
+-- Admin yuborgan pastki lenta e'lonlari
+CREATE TABLE IF NOT EXISTS announcements (
+  id         INTEGER PRIMARY KEY AUTOINCREMENT,
+  body       TEXT NOT NULL,
+  created_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  created_at TEXT NOT NULL,
+  is_active  INTEGER NOT NULL DEFAULT 1
 );
 `);
 

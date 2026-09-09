@@ -10,6 +10,27 @@ export const ROOT = path.resolve(__dirname, '..');
 
 const dataDir = path.join(ROOT, 'data');
 fs.mkdirSync(dataDir, { recursive: true });
+try {
+  fs.chmodSync(dataDir, 0o700);
+} catch {
+  /* Windows da chmod cheklangan bo'lishi mumkin */
+}
+
+const isProduction = process.env.NODE_ENV === 'production';
+
+function listenHost() {
+  const raw = String(process.env.LISTEN_HOST || '').trim();
+  if (raw) return raw;
+  // Production: faqat localhost — oldida nginx/Caddy turadi.
+  // Lokal/LAN: telefonda ochish uchun barcha interfeyslar.
+  return isProduction ? '127.0.0.1' : '0.0.0.0';
+}
+
+function envFlag(name, fallback) {
+  const v = process.env[name];
+  if (v == null || v === '') return fallback;
+  return String(v).toLowerCase() === 'true';
+}
 
 /**
  * Sessiya kaliti. .env da berilmagan bo'lsa — birinchi ishga tushganda
@@ -34,9 +55,17 @@ function loadSecret() {
 
 export const config = {
   port: Number(process.env.PORT || 5175),
+  listenHost: listenHost(),
+  // Faqat haqiqiy reverse proxy (nginx/Caddy) orqasida true qiling.
+  // Aks holda X-Forwarded-For ni istalgan mijoz soxtalashtiradi.
+  trustProxy: envFlag('TRUST_PROXY', false),
   secret: loadSecret(),
   // Sessiya necha kun amal qiladi (bir marta kirgach shuncha kun eslab qoladi)
   sessionDays: Number(process.env.SESSION_DAYS || 90),
+  // Bo'sh turgach sessiya yopiladi (soat). 0 = o'chirish.
+  sessionIdleHours: Number(process.env.SESSION_IDLE_HOURS || 24),
+  adminIdleHours: Number(process.env.ADMIN_IDLE_HOURS || 8),
+  maxConcurrentUploads: Number(process.env.MAX_CONCURRENT_UPLOADS || 3),
   // Vaqt mintaqasi — sanalar shu bo'yicha hisoblanadi
   tz: process.env.TZ_NAME || 'Asia/Tashkent',
   // Video qayerda saqlansin: 'db' (SQLite ichida BLOB) yoki 'disk' (uploads/ papka)
@@ -92,7 +121,7 @@ export const config = {
 
   // Kuniga bir nechta video yuborishga ruxsat berilsinmi
   allowMultiplePerDay: String(process.env.ALLOW_MULTIPLE_PER_DAY || 'false') === 'true',
-  isProduction: process.env.NODE_ENV === 'production',
+  isProduction,
 };
 
 export const maxVideoBytes = config.maxVideoMb * 1024 * 1024;

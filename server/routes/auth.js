@@ -20,6 +20,7 @@ import {
   wastePasswordTime,
 } from '../auth.js';
 import { nowIso } from '../util/date.js';
+import { tooMany } from '../util/rate-limit.js';
 
 const router = express.Router();
 
@@ -110,7 +111,14 @@ router.post('/login', (req, res) => {
  * Maktablar ro'yxati — kirish va ro'yxatdan o'tish sahifalari uchun.
  * Ro'yxat kodlari bu yerda YUBORILMAYDI, faqat nomlar.
  */
-router.get('/schools', (_req, res) => {
+router.get('/schools', (req, res) => {
+  const wait = tooMany(`schools:${clientIp(req)}`, 40, 60 * 1000);
+  if (wait > 0) {
+    res.setHeader('Retry-After', String(wait));
+    return res.status(429).json({
+      error: `Juda ko‘p so‘rov. ${wait} soniyadan keyin qayta urinib ko‘ring.`,
+    });
+  }
   const rows = db
     .prepare('SELECT id, number, name, user_id FROM schools ORDER BY number')
     .all();
@@ -145,6 +153,14 @@ router.post('/register', (req, res) => {
   const phoneRaw = String(req.body?.phone || '').trim();
   const ip = clientIp(req);
   const key = `reg:${ip}`;
+
+  const flood = tooMany(`reg-try:${ip}`, 15, 60 * 60 * 1000);
+  if (flood > 0) {
+    res.setHeader('Retry-After', String(flood));
+    return res.status(429).json({
+      error: `Juda ko‘p urinish. ${flood} soniyadan keyin qayta urinib ko‘ring.`,
+    });
+  }
 
   // F.I.SH.
   if (contactName.length < 5 || contactName.length > 100) {
@@ -195,29 +211,43 @@ router.post('/register', (req, res) => {
   const weak = checkPasswordStrength(password, username);
   if (weak) return res.status(400).json({ error: weak });
 
-  if (db.prepare('SELECT id FROM users WHERE username = ?').get(username)) {
+  const taken = db.prepare('SELECT id FROM users WHERE username = ?').get(username);
+  if (taken) {
     return res.status(409).json({ error: 'Bu maktab uchun hisob allaqachon mavjud' });
   }
 
   clearFailedAttempts(key);
 
-  // Hisob yaratamiz va darhol kirgizamiz — parolni o'zi qo'ygani uchun
-  // majburiy almashtirish kerak emas.
-  const info = db
-    .prepare(
-      `INSERT INTO users (username, password_hash, full_name, position, role, is_active,
-                          must_change_password, password_changed_at, school_id,
-                          contact_name, phone, created_at)
-       VALUES (?, ?, ?, '', 'user', 1, 0, ?, ?, ?, ?, ?)`
-    )
-    .run(
-      username, hashPassword(password), school.name, nowIso(), school.id,
-      contactName, phone, nowIso()
-    );
-
-  const userId = Number(info.lastInsertRowid);
-  db.prepare('UPDATE schools SET user_id = ?, registered_at = ? WHERE id = ?')
-    .run(userId, nowIso(), school.id);
+  let userId;
+  try {
+    db.exec('BEGIN IMMEDIATE');
+    const again = db.prepare('SELECT user_id FROM schools WHERE id = ?').get(school.id);
+    if (again?.user_id) {
+      db.exec('ROLLBACK');
+      return res.status(409).json({
+        error: 'Bu maktab allaqachon ro‘yxatdan o‘tgan. Parolni unutgan bo‘lsangiz admin bilan bog‘laning.',
+      });
+    }
+    const info = db
+      .prepare(
+        `INSERT INTO users (username, password_hash, full_name, position, role, is_active,
+                            must_change_password, password_changed_at, school_id,
+                            contact_name, phone, created_at)
+         VALUES (?, ?, ?, '', 'user', 1, 0, ?, ?, ?, ?, ?)`
+      )
+      .run(
+        username, hashPassword(password), school.name, nowIso(), school.id,
+        contactName, phone, nowIso()
+      );
+    userId = Number(info.lastInsertRowid);
+    db.prepare('UPDATE schools SET user_id = ?, registered_at = ? WHERE id = ?')
+      .run(userId, nowIso(), school.id);
+    db.exec('COMMIT');
+  } catch (e) {
+    try { db.exec('ROLLBACK'); } catch { /* ignore */ }
+    console.error('[register]', e);
+    return res.status(500).json({ error: 'Ro‘yxatdan o‘tib bo‘lmadi. Qayta urinib ko‘ring.' });
+  }
 
   const { token, expires } = createSession(userId, { ip, userAgent: req.get('user-agent') || '' });
   setSessionCookie(res, token, expires);

@@ -5,6 +5,7 @@ import { config } from './config.js';
 import { nowIso } from './util/date.js';
 
 export const COOKIE_NAME = 'kmd_session';
+export const CSRF_COOKIE = 'kmd_csrf';
 
 const USER_COLUMNS = 'id, username, full_name, position, role, is_active, created_at';
 
@@ -113,18 +114,60 @@ export function destroyAllSessions(userId) {
   db.prepare('DELETE FROM sessions WHERE user_id = ?').run(userId);
 }
 
-export function setSessionCookie(res, token, expires) {
-  res.cookie(COOKIE_NAME, token, {
-    httpOnly: true,       // JavaScript o'qiy olmaydi (XSS bo'lsa ham token o'g'irlanmaydi)
-    sameSite: 'lax',      // boshqa saytdan yuborilgan so'rovlarga cookie ilashmaydi (CSRF)
-    secure: config.isProduction, // production'da faqat HTTPS orqali
+export function csrfToken(sessionToken) {
+  return crypto.createHmac('sha256', config.secret).update(String(sessionToken)).digest('base64url');
+}
+
+export function verifyCsrf(sessionToken, sent) {
+  const expect = csrfToken(sessionToken);
+  const a = Buffer.from(String(sent || ''));
+  const b = Buffer.from(expect);
+  if (a.length !== b.length) return false;
+  return crypto.timingSafeEqual(a, b);
+}
+
+function cookieBase(expires) {
+  return {
+    sameSite: 'lax',
+    secure: config.isProduction,
     expires,
     path: '/',
+  };
+}
+
+export function setCsrfCookie(res, sessionToken, expires) {
+  res.cookie(CSRF_COOKIE, csrfToken(sessionToken), {
+    ...cookieBase(expires),
+    httpOnly: false, // JS o'qiydi va X-CSRF-Token headeriga qo'yadi
   });
 }
 
+export function setSessionCookie(res, token, expires) {
+  res.cookie(COOKIE_NAME, token, {
+    ...cookieBase(expires),
+    httpOnly: true,       // JavaScript o'qiy olmaydi (XSS bo'lsa ham token o'g'irlanmaydi)
+  });
+  setCsrfCookie(res, token, expires);
+}
+
 export function clearSessionCookie(res) {
-  res.clearCookie(COOKIE_NAME, { path: '/', httpOnly: true, sameSite: 'lax', secure: config.isProduction });
+  const opts = { path: '/', sameSite: 'lax', secure: config.isProduction };
+  res.clearCookie(COOKIE_NAME, { ...opts, httpOnly: true });
+  res.clearCookie(CSRF_COOKIE, { ...opts, httpOnly: false });
+}
+
+/** Kirgan foydalanuvchining POST/PATCH/DELETE so'rovlarida CSRF token shart. */
+export function requireCsrf(req, res, next) {
+  if (!req.user) return next();
+  const method = req.method;
+  if (method === 'GET' || method === 'HEAD' || method === 'OPTIONS') return next();
+  if (!verifyCsrf(req.sessionToken, req.get('x-csrf-token'))) {
+    return res.status(403).json({
+      error: 'So‘rov tasdiqlanmadi. Sahifani yangilang.',
+      code: 'CSRF',
+    });
+  }
+  next();
 }
 
 // ============ Brute force himoyasi ============
@@ -172,7 +215,7 @@ export function clientIp(req) {
 // ============ Middleware ============
 
 /** Har bir so'rovda cookie'dan foydalanuvchini aniqlaydi (req.user) */
-export function attachUser(req, _res, next) {
+export function attachUser(req, res, next) {
   req.user = null;
   const token = req.cookies?.[COOKIE_NAME];
   if (!token) return next();
@@ -181,7 +224,7 @@ export function attachUser(req, _res, next) {
   const row = db
     .prepare(
       `SELECT u.id, u.username, u.full_name, u.position, u.role, u.is_active,
-              u.must_change_password, s.expires_at
+              u.must_change_password, s.expires_at, s.last_seen, s.created_at
        FROM sessions s JOIN users u ON u.id = s.user_id
        WHERE s.token_hash = ?`
     )
@@ -194,6 +237,15 @@ export function attachUser(req, _res, next) {
     return next();
   }
 
+  const idleHours = row.role === 'admin' ? config.adminIdleHours : config.sessionIdleHours;
+  if (idleHours > 0) {
+    const last = row.last_seen || row.created_at;
+    if (Date.now() - Date.parse(last) > idleHours * 60 * 60 * 1000) {
+      db.prepare('DELETE FROM sessions WHERE token_hash = ?').run(tokenHash);
+      return next();
+    }
+  }
+
   req.user = {
     id: row.id,
     username: row.username,
@@ -204,9 +256,12 @@ export function attachUser(req, _res, next) {
   };
   req.sessionToken = token;
 
-  // Oxirgi faollik (kuniga bir marta yozamiz — bazani ortiqcha bezovta qilmaslik uchun)
-  db.prepare("UPDATE sessions SET last_seen = ? WHERE token_hash = ? AND substr(last_seen,1,10) <> ?")
-    .run(nowIso(), tokenHash, nowIso().slice(0, 10));
+  setCsrfCookie(res, token, new Date(row.expires_at));
+
+  // Oxirgi faollik — 2 daqiqada bir yozamiz (idle timeout uchun kerak)
+  const stale = new Date(Date.now() - 2 * 60 * 1000).toISOString();
+  db.prepare('UPDATE sessions SET last_seen = ? WHERE token_hash = ? AND last_seen < ?')
+    .run(nowIso(), tokenHash, stale);
 
   next();
 }

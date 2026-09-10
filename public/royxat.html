@@ -19,10 +19,11 @@
       <div class="alert info" id="info" hidden></div>
 
       <div class="field">
-        <label for="school">Maktab</label>
-        <select id="school" required>
-          <option value="">Yuklanmoqda…</option>
-        </select>
+        <label for="schoolSearch">Maktab</label>
+        <div id="schoolPicker" data-loading="1"></div>
+        <div class="small muted" style="margin-top:6px">
+          Raqamni yozing — masalan <b>12</b> — maktab darhol topiladi
+        </div>
       </div>
 
       <div class="field">
@@ -75,6 +76,7 @@
   </div>
 
   <script src="/js/common.js"></script>
+  <script src="/js/school-picker.js"></script>
   <script src="/js/royxat.js"></script>
 </body>
 </html>

@@ -1973,6 +1973,117 @@ tbody tr:hover { background: var(--surface-2); }
 }
 .login-card .input-wrap:focus-within .input-ico { color: #2f635f; }
 
+/* ---------- Qidiruvli maktab tanlash ---------- */
+.school-picker {
+  position: relative;
+}
+.school-picker-wrap {
+  position: relative;
+}
+.login-card .school-picker-input {
+  width: 100%;
+  padding-right: 64px !important;
+}
+.school-picker-clear {
+  position: absolute;
+  right: 36px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 4;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(36, 28, 77, 0.08);
+  color: #3a3558;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+}
+.school-picker-clear:hover { background: rgba(36, 28, 77, 0.14); }
+.school-picker-chevron {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  width: 14px;
+  height: 9px;
+  transform: translateY(-50%);
+  z-index: 4;
+  pointer-events: none;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='9' viewBox='0 0 14 9'%3E%3Cpath d='M1 1l6 6 6-6' fill='none' stroke='%234d7d79' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+  transition: transform 0.15s;
+}
+.school-picker.is-open .school-picker-chevron {
+  transform: translateY(-50%) rotate(180deg);
+}
+.school-picker-list {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 30;
+  max-height: min(280px, 45vh);
+  overflow: auto;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow:
+    0 12px 32px rgba(36, 28, 77, 0.18),
+    0 2px 8px rgba(36, 28, 77, 0.08);
+  border: 1px solid rgba(36, 28, 77, 0.08);
+}
+.school-picker-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  color: #241c4d;
+}
+.school-picker-option:hover,
+.school-picker-option.is-active {
+  background: rgba(109, 71, 224, 0.1);
+}
+.school-picker-option.is-selected {
+  background: rgba(47, 99, 95, 0.12);
+  font-weight: 650;
+}
+.school-picker-option .sp-num {
+  flex: 0 0 auto;
+  min-width: 2.2em;
+  padding: 3px 8px;
+  border-radius: 8px;
+  background: rgba(47, 99, 95, 0.12);
+  color: #1f4f4b;
+  font-weight: 700;
+  font-size: 13px;
+  text-align: center;
+}
+.school-picker-option .sp-name {
+  flex: 1;
+  font-size: 14px;
+  line-height: 1.3;
+}
+.school-picker-option .sp-badge {
+  flex: 0 0 auto;
+  font-size: 11px;
+  font-weight: 700;
+  color: #7a5b00;
+  background: #ffe9a8;
+  padding: 2px 7px;
+  border-radius: 999px;
+}
+.school-picker-empty {
+  padding: 14px 12px;
+  color: rgba(36, 28, 77, 0.55);
+  font-size: 14px;
+  text-align: center;
+}
+
 /* Asosiy tugma — o'sha gradiyent rangda, lekin shisha yuzali */
 .login-card .btn.big {
   width: 100%;

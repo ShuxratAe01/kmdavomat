@@ -17,10 +17,21 @@
 const form = document.getElementById('loginForm');
 const err = document.getElementById('err');
 const btn = document.getElementById('submitBtn');
-const schoolSelect = document.getElementById('school');
+const pickerRoot = document.getElementById('schoolPicker');
 
 let schools = [];
-let adminMode = false; // true bo'lsa login qo'lda yoziladi
+let adminMode = false;
+let schoolPicker = null;
+
+function showSchoolHint(school) {
+  err.hidden = true;
+  if (school && school.registered === false) {
+    err.className = 'alert info';
+    err.innerHTML =
+      'Bu maktab hali ro‘yxatdan o‘tmagan. <a href="/royxat">Ro‘yxatdan o‘ting</a> — bu bir daqiqalik ish.';
+    err.hidden = false;
+  }
+}
 
 // --- Maktablar ro'yxatini yuklaymiz ---
 (async () => {
@@ -29,40 +40,19 @@ let adminMode = false; // true bo'lsa login qo'lda yoziladi
     const d = await res.json();
     schools = d.schools || [];
 
-    schoolSelect.innerHTML =
-      '<option value="">— Maktabingizni tanlang —</option>' +
-      schools
-        .map(
-          (s) =>
-            `<option value="${s.login}" data-registered="${s.registered ? 1 : 0}">${escapeHtml(s.name)}</option>`
-        )
-        .join('');
-
-    // Oxirgi marta tanlangan maktabni eslab qolamiz
     const last = localStorage.getItem('kmd_last_school');
-    if (last && schools.some((s) => s.login === last)) schoolSelect.value = last;
+    schoolPicker = mountSchoolPicker(pickerRoot, {
+      schools,
+      valueKey: 'login',
+      placeholder: 'Raqam yoki nom yozing… masalan: 12',
+      initialValue: last && schools.some((s) => s.login === last) ? last : '',
+      onChange: showSchoolHint,
+    });
   } catch {
-    schoolSelect.innerHTML = '<option value="">Ro‘yxatni yuklab bo‘lmadi</option>';
+    pickerRoot.innerHTML =
+      '<div class="alert error">Ro‘yxatni yuklab bo‘lmadi. Sahifani yangilang.</div>';
   }
 })();
-
-function escapeHtml(str) {
-  return String(str ?? '').replace(/[&<>"']/g, (c) =>
-    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]
-  );
-}
-
-// --- Ro'yxatdan o'tmagan maktab tanlansa ogohlantiramiz ---
-schoolSelect.addEventListener('change', () => {
-  err.hidden = true;
-  const opt = schoolSelect.selectedOptions[0];
-  if (opt && opt.value && opt.dataset.registered === '0') {
-    err.className = 'alert info';
-    err.innerHTML =
-      'Bu maktab hali ro‘yxatdan o‘tmagan. <a href="/royxat">Ro‘yxatdan o‘ting</a> — bu bir daqiqalik ish.';
-    err.hidden = false;
-  }
-});
 
 // --- Admin rejimi: login qo'lda ---
 document.getElementById('toggleMode').addEventListener('click', (e) => {
@@ -73,11 +63,11 @@ document.getElementById('toggleMode').addEventListener('click', (e) => {
   document.getElementById('regHint').hidden = adminMode;
   e.target.textContent = adminMode ? 'Maktab sifatida kirish' : 'Administrator sifatida kirish';
   err.hidden = true;
-  (adminMode ? document.getElementById('username') : schoolSelect).focus();
+  (adminMode ? document.getElementById('username') : schoolPicker)?.focus?.();
+  if (!adminMode && schoolPicker) schoolPicker.focus();
 });
 
 // --- Parolni ko‘rsatish / yashirish ---
-// Yumilgan ko‘z = yashirin nuqtalar. Ochiq ko‘z = yozilgan matn ko‘rinadi.
 (function () {
   const input = document.getElementById('password');
   const btn = document.getElementById('pwToggle');
@@ -122,12 +112,13 @@ form.addEventListener('submit', async (e) => {
 
   const username = adminMode
     ? document.getElementById('username').value.trim()
-    : schoolSelect.value;
+    : schoolPicker?.getValue() || '';
 
   if (!username) {
     err.className = 'alert error';
-    err.textContent = adminMode ? 'Loginni kiriting' : 'Maktabingizni tanlang';
+    err.textContent = adminMode ? 'Loginni kiriting' : 'Maktabingizni tanlang (raqam yozib toping)';
     err.hidden = false;
+    if (!adminMode) schoolPicker?.focus();
     return;
   }
 
@@ -151,9 +142,8 @@ form.addEventListener('submit', async (e) => {
     location.href = data.redirect || '/';
   } catch (e2) {
     err.className = 'alert error';
-    // Ro'yxatdan o'tmagan maktab bo'lsa yo'l ko'rsatamiz
-    const opt = schoolSelect.selectedOptions[0];
-    if (!adminMode && opt && opt.dataset.registered === '0') {
+    const school = schoolPicker?.getSchool();
+    if (!adminMode && school && school.registered === false) {
       err.innerHTML =
         'Bu maktab hali ro‘yxatdan o‘tmagan. <a href="/royxat">Ro‘yxatdan o‘ting</a>.';
     } else {

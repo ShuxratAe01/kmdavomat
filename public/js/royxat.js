@@ -4,7 +4,9 @@ const form = $('#regForm');
 const err = $('#err');
 const info = $('#info');
 const btn = $('#submitBtn');
+const pickerRoot = $('#schoolPicker');
 let minLen = 8;
+let schoolPicker = null;
 
 // --- Maktablar ro'yxatini yuklaymiz ---
 (async () => {
@@ -14,7 +16,7 @@ let minLen = 8;
     $('#minLen').textContent = minLen;
 
     if (!d.registrationOpen) {
-      $('#school').innerHTML = '<option value="">—</option>';
+      pickerRoot.innerHTML = '';
       showAlert(err, 'Ro‘yxatdan o‘tish yopilgan. Administrator bilan bog‘laning.');
       btn.disabled = true;
       return;
@@ -23,15 +25,17 @@ let minLen = 8;
     // Faqat hali ro'yxatdan o'tmagan maktablar
     const free = d.schools.filter((s) => !s.registered);
     if (!free.length) {
-      $('#school').innerHTML = '<option value="">—</option>';
+      pickerRoot.innerHTML = '';
       showAlert(err, 'Barcha maktablar allaqachon ro‘yxatdan o‘tgan.');
       btn.disabled = true;
       return;
     }
 
-    $('#school').innerHTML =
-      '<option value="">— Maktabni tanlang —</option>' +
-      free.map((s) => `<option value="${s.id}">${esc(s.name)}</option>`).join('');
+    schoolPicker = mountSchoolPicker(pickerRoot, {
+      schools: free,
+      valueKey: 'id',
+      placeholder: 'Raqam yoki nom yozing… masalan: 12',
+    });
 
     if (d.registered) {
       showAlert(info, `${d.total} ta maktabdan ${d.registered} tasi ro‘yxatdan o‘tgan.`, 'info');
@@ -93,6 +97,11 @@ form.addEventListener('submit', async (e) => {
   e.preventDefault();
   hideAlert(err);
 
+  const schoolId = Number(schoolPicker?.getValue() || 0);
+  if (!schoolId) {
+    return showAlert(err, 'Maktabni tanlang — raqam yozib toping');
+  }
+
   const password = $('#password').value;
   if (password !== $('#repeat').value) {
     return showAlert(err, 'Parollar bir-biriga mos kelmadi');
@@ -105,7 +114,7 @@ form.addEventListener('submit', async (e) => {
       method: 'POST',
       redirectOn401: false,
       body: JSON.stringify({
-        school_id: Number($('#school').value),
+        school_id: schoolId,
         contact_name: $('#fullName').value,
         phone: $('#phone').value,
         code: $('#code').value,
